@@ -9,8 +9,9 @@
                 return view('index');
             }
 
-            public function root($path = '')
+            public function root(...$segments)
             {
+                $path = implode('/', $segments);
                 if ($path !== '') {
                     if (@file_exists(APPPATH . 'Views/' . $path . '.php')) {
                         return view($path);

@@ -81,4 +81,44 @@ class Auth extends BaseController
         session()->destroy();
         return redirect()->to('/login')->with('success', 'Anda telah berhasil logout.');
     }
+
+    /**
+     * Halaman Register
+     */
+    public function register()
+    {
+        if (session()->get('is_logged_in')) {
+            return redirect()->to('/');
+        }
+
+        return view('auth/register');
+    }
+
+    /**
+     * Halaman Lupa Password
+     */
+    public function forgetPassword()
+    {
+        if (session()->get('is_logged_in')) {
+            return redirect()->to('/');
+        }
+
+        return view('auth/forgetpassword');
+    }
+
+    /**
+     * Halaman Lock Screen
+     */
+    public function lockscreen()
+    {
+        return view('auth/lockscreen');
+    }
+
+    /**
+     * Halaman Two Factor Authentication
+     */
+    public function twoFactor()
+    {
+        return view('auth/twofactor');
+    }
 }

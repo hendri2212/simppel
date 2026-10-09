@@ -71,11 +71,6 @@
                                 <button type="submit" class="btn btn-primary btn-lg bg-primary bg-opacity-75">Sign In</button>
                             </div>
 
-                            <div class="p-2 bg-dark bg-opacity-50 rounded border border-light border-opacity-10 text-center mb-3">
-                                <span class="fs-xs text-white opacity-50 d-block">Demo Akun Default:</span>
-                                <span class="fs-xs text-info font-monospace">user: <strong>admin</strong> | pass: <strong>admin123</strong></span>
-                            </div>
-
                             <div class="divider small text-white opacity-25">atau</div>
 
                             <div class="d-grid mb-2">

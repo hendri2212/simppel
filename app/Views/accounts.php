@@ -26,6 +26,58 @@
                         "pageSubText" => "Halaman manajemen akun pengguna, hak akses, dan status keaktifan user dalam sistem."
                     )) ?>
 
+                    <?php
+                    // Ambil data users dari database
+                    try {
+                        $userModel = new \App\Models\UserModel();
+                        $dbUsers = $userModel
+                            ->select('users.*, roles.name as role_name')
+                            ->join('roles', 'roles.id = users.role_id', 'left')
+                            ->orderBy('users.id', 'ASC')
+                            ->findAll();
+
+                        $usersList = array_map(function ($u) {
+                            $roleName = $u['role_name'] ?? 'USER';
+                            $isActive = (int)$u['is_active'] === 1;
+
+                            $roleBadge = match ($roleName) {
+                                'ADMINISTRATOR' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                'ADMIN PPK'     => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                'PPK'           => 'bg-info-subtle text-info border border-info-subtle',
+                                'ADMIN ULP'     => 'bg-success-subtle text-success border border-success-subtle',
+                                'DISTRIBUSI'    => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                'KEPALA ULP'    => 'bg-purple-subtle text-purple border border-purple-subtle',
+                                'POKJA'         => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
+                                'MONEV'         => 'bg-dark-subtle text-dark border border-dark-subtle',
+                                default         => 'bg-light text-dark border',
+                            };
+
+                            return [
+                                'id'              => $u['id'],
+                                'name'            => $u['full_name'],
+                                'username'        => '@' . ltrim($u['username'], '@'),
+                                'nip'             => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '-',
+                                'email'           => $u['email'] ?: '-',
+                                'whatsapp'        => $u['whatsapp_number'] ?: '-',
+                                'role'            => $roleName,
+                                'role_badge'      => $roleBadge,
+                                'status'          => $isActive ? 'Active' : 'Inactive',
+                                'status_badge'    => $isActive ? 'bg-success' : 'bg-secondary',
+                                'avatar'          => '/img/demo/avatars/avatar-admin.png',
+                                'created_at'      => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
+                            ];
+                        }, $dbUsers);
+                    } catch (\Throwable $e) {
+                        $usersList = [];
+                    }
+
+                    $totalCount    = count($usersList);
+                    $activeCount   = count(array_filter($usersList, fn($u) => $u['status'] === 'Active'));
+                    $inactiveCount = count(array_filter($usersList, fn($u) => $u['status'] === 'Inactive'));
+                    $uniqueRoles   = array_unique(array_filter(array_column($usersList, 'role')));
+                    sort($uniqueRoles);
+                    ?>
+
                     <div class="main-content">
 
                         <!-- Stat Cards -->
@@ -40,8 +92,8 @@
                                         </div>
                                         <div>
                                             <div class="text-muted fs-xs text-uppercase fw-semibold">Total Accounts</div>
-                                            <div class="fs-2 fw-bold text-dark">6</div>
-                                            <div class="fs-xs text-success"><i class="fal fa-arrow-up"></i> +2 bulan ini</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= $totalCount ?></div>
+                                            <div class="fs-xs text-muted">Seluruh pengguna sistem</div>
                                         </div>
                                     </div>
                                 </div>
@@ -57,25 +109,8 @@
                                         </div>
                                         <div>
                                             <div class="text-muted fs-xs text-uppercase fw-semibold">Active Users</div>
-                                            <div class="fs-2 fw-bold text-dark">4</div>
-                                            <div class="fs-xs text-muted">66.7% dari total</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-sm-6 col-xl-3">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body d-flex align-items-center">
-                                        <div class="rounded-circle p-3 bg-warning bg-opacity-10 text-warning me-3">
-                                            <svg class="sa-icon" style="width: 24px; height: 24px;">
-                                                <use href="/icons/sprite.svg#clock"></use>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Pending Verification</div>
-                                            <div class="fs-2 fw-bold text-dark">1</div>
-                                            <div class="fs-xs text-warning">Perlu konfirmasi</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= $activeCount ?></div>
+                                            <div class="fs-xs text-success"><?= $totalCount > 0 ? round(($activeCount / $totalCount) * 100, 1) : 0 ?>% dari total</div>
                                         </div>
                                     </div>
                                 </div>
@@ -90,9 +125,26 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Inactive / Suspended</div>
-                                            <div class="fs-2 fw-bold text-dark">1</div>
+                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Inactive Users</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= $inactiveCount ?></div>
                                             <div class="fs-xs text-danger">Akun dinonaktifkan</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-6 col-xl-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-body d-flex align-items-center">
+                                        <div class="rounded-circle p-3 bg-info bg-opacity-10 text-info me-3">
+                                            <svg class="sa-icon" style="width: 24px; height: 24px;">
+                                                <use href="/icons/sprite.svg#shield"></use>
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Total Roles</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= count($uniqueRoles) ?></div>
+                                            <div class="fs-xs text-muted">Kategori hak akses</div>
                                         </div>
                                     </div>
                                 </div>
@@ -120,37 +172,45 @@
 
                                     <!-- Filter Toolbar -->
                                     <div class="row g-2 mb-3 align-items-center">
-                                        <div class="col-md-5 col-lg-4">
+                                        <div class="col-md-4 col-lg-3">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-white">
                                                     <svg class="sa-icon" style="width: 14px; height: 14px;">
                                                         <use href="/icons/sprite.svg#search"></use>
                                                     </svg>
                                                 </span>
-                                                <input type="text" id="accountSearchInput" class="form-control" placeholder="Cari nama, email, username...">
+                                                <input type="text" id="accountSearchInput" class="form-control" placeholder="Cari nama, email, username, NIP...">
                                             </div>
                                         </div>
                                         <div class="col-md-3 col-lg-2">
                                             <select id="roleFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Role</option>
-                                                <option value="Super Admin">Super Admin</option>
-                                                <option value="Administrator">Administrator</option>
-                                                <option value="Manager">Manager</option>
-                                                <option value="Editor">Editor</option>
-                                                <option value="Staff">Staff</option>
-                                                <option value="User">User</option>
+                                                <?php foreach ($uniqueRoles as $r): ?>
+                                                    <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
+                                                <?php endforeach; ?>
                                             </select>
                                         </div>
-                                        <div class="col-md-3 col-lg-2">
+                                        <div class="col-md-2 col-lg-2">
                                             <select id="statusFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Status</option>
                                                 <option value="Active">Active</option>
-                                                <option value="Pending">Pending</option>
                                                 <option value="Inactive">Inactive</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-1 col-lg-4 text-md-end">
-                                            <span class="text-muted fs-xs" id="tableRecordCount">Menampilkan 6 akun</span>
+                                        <div class="col-md-3 col-lg-2">
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="fs-xs text-muted text-nowrap">Tampil:</span>
+                                                <select id="perPageSelect" class="form-select form-select-sm">
+                                                    <option value="10" selected>10 per hal</option>
+                                                    <option value="25">25 per hal</option>
+                                                    <option value="50">50 per hal</option>
+                                                    <option value="100">100 per hal</option>
+                                                    <option value="all">Semua</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12 col-lg-3 text-lg-end">
+                                            <span class="text-muted fs-xs" id="tableRecordCount">Menampilkan <?= min(10, $totalCount) ?> dari <?= $totalCount ?> akun</span>
                                         </div>
                                     </div>
 
@@ -161,126 +221,27 @@
                                                 <tr>
                                                     <th style="width: 50px;">#</th>
                                                     <th>User</th>
+                                                    <th>NIP</th>
                                                     <th>Email</th>
+                                                    <th>WhatsApp</th>
                                                     <th>Role</th>
                                                     <th>Status</th>
-                                                    <th>Created At</th>
-                                                    <th class="text-end" style="width: 120px;">Aksi</th>
+                                                    <th class="text-end" style="width: 100px;">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <?php
-                                                $dummyUsers = [
-                                                    [
-                                                        'id' => 1,
-                                                        'name' => 'Hendri Arifin',
-                                                        'username' => '@hendri',
-                                                        'email' => 'hendri.arifin@example.com',
-                                                        'role' => 'Super Admin',
-                                                        'role_badge' => 'bg-danger-subtle text-danger border border-danger-subtle',
-                                                        'status' => 'Active',
-                                                        'status_badge' => 'bg-success',
-                                                        'avatar' => '/img/demo/avatars/avatar-admin.png',
-                                                        'created_at' => '12 Jan 2025'
-                                                    ],
-                                                    [
-                                                        'id' => 2,
-                                                        'name' => 'Sarah Connor',
-                                                        'username' => '@sarahc',
-                                                        'email' => 'sarah.connor@example.com',
-                                                        'role' => 'Administrator',
-                                                        'role_badge' => 'bg-primary-subtle text-primary border border-primary-subtle',
-                                                        'status' => 'Active',
-                                                        'status_badge' => 'bg-success',
-                                                        'avatar' => '/img/demo/avatars/avatar-c.png',
-                                                        'created_at' => '03 Feb 2025'
-                                                    ],
-                                                    [
-                                                        'id' => 3,
-                                                        'name' => 'Ahmad Fauzi',
-                                                        'username' => '@ahmadf',
-                                                        'email' => 'ahmad.fauzi@example.com',
-                                                        'role' => 'Manager',
-                                                        'role_badge' => 'bg-info-subtle text-info border border-info-subtle',
-                                                        'status' => 'Active',
-                                                        'status_badge' => 'bg-success',
-                                                        'avatar' => '/img/demo/avatars/avatar-b.png',
-                                                        'created_at' => '18 Feb 2025'
-                                                    ],
-                                                    [
-                                                        'id' => 4,
-                                                        'name' => 'Jessica Lee',
-                                                        'username' => '@jesslee',
-                                                        'email' => 'jessica.lee@example.com',
-                                                        'role' => 'Editor',
-                                                        'role_badge' => 'bg-warning-subtle text-warning border border-warning-subtle',
-                                                        'status' => 'Pending',
-                                                        'status_badge' => 'bg-warning text-dark',
-                                                        'avatar' => '/img/demo/avatars/avatar-e.png',
-                                                        'created_at' => '25 Mar 2025'
-                                                    ],
-                                                    [
-                                                        'id' => 5,
-                                                        'name' => 'Michael Brown',
-                                                        'username' => '@mbrown',
-                                                        'email' => 'michael.brown@example.com',
-                                                        'role' => 'Staff',
-                                                        'role_badge' => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                                        'status' => 'Inactive',
-                                                        'status_badge' => 'bg-secondary',
-                                                        'avatar' => '/img/demo/avatars/avatar-d.png',
-                                                        'created_at' => '10 Apr 2025'
-                                                    ],
-                                                    [
-                                                        'id' => 6,
-                                                        'name' => 'Siti Rahma',
-                                                        'username' => '@srahma',
-                                                        'email' => 'siti.rahma@example.com',
-                                                        'role' => 'User',
-                                                        'role_badge' => 'bg-light text-dark border',
-                                                        'status' => 'Active',
-                                                        'status_badge' => 'bg-success',
-                                                        'avatar' => '/img/demo/avatars/avatar-f.png',
-                                                        'created_at' => '02 Mei 2025'
-                                                    ]
-                                                ];
-
-                                                try {
-                                                    $userModel = new \App\Models\UserModel();
-                                                    $dbUsers = $userModel->select('users.*, roles.name as role_name')->join('roles', 'roles.id = users.role_id', 'left')->findAll();
-                                                    if (! empty($dbUsers)) {
-                                                        $usersList = array_map(function ($u) {
-                                                            return [
-                                                                'id' => $u['id'],
-                                                                'name' => $u['full_name'],
-                                                                'username' => '@' . ltrim($u['username'], '@'),
-                                                                'email' => $u['email'],
-                                                                'role' => $u['role_name'] ?? 'ADMINISTRATOR',
-                                                                'role_badge' => ($u['role_name'] === 'ADMINISTRATOR') ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-primary-subtle text-primary border border-primary-subtle',
-                                                                'status' => ((int)$u['is_active'] === 1) ? 'Active' : 'Inactive',
-                                                                'status_badge' => ((int)$u['is_active'] === 1) ? 'bg-success' : 'bg-secondary',
-                                                                'avatar' => '/img/demo/avatars/avatar-admin.png',
-                                                                'created_at' => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : date('d M Y'),
-                                                            ];
-                                                        }, $dbUsers);
-                                                    } else {
-                                                        $usersList = $dummyUsers;
-                                                    }
-                                                } catch (\Throwable $e) {
-                                                    $usersList = $dummyUsers;
-                                                }
-
-                                                foreach ($usersList as $user): ?>
+                                                <?php foreach ($usersList as $user): ?>
                                                     <tr class="account-row"
                                                         data-name="<?= esc(strtolower($user['name'])) ?>"
                                                         data-email="<?= esc(strtolower($user['email'])) ?>"
                                                         data-username="<?= esc(strtolower($user['username'])) ?>"
+                                                        data-nip="<?= esc(strtolower($user['nip'])) ?>"
                                                         data-role="<?= esc($user['role']) ?>"
                                                         data-status="<?= esc($user['status']) ?>">
                                                         <td class="text-muted"><?= $user['id'] ?></td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-3" style="width: 38px; height: 38px; object-fit: cover;">
+                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-3" style="width: 36px; height: 36px; object-fit: cover;">
                                                                 <div>
                                                                     <div class="fw-semibold text-dark"><?= esc($user['name']) ?></div>
                                                                     <small class="text-muted"><?= esc($user['username']) ?></small>
@@ -288,16 +249,19 @@
                                                             </div>
                                                         </td>
                                                         <td>
-                                                            <span class="text-muted"><?= esc($user['email']) ?></span>
+                                                            <span class="font-monospace fs-xs"><?= esc($user['nip']) ?></span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="text-muted fs-xs"><?= esc($user['email']) ?></span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="text-muted fs-xs"><?= esc($user['whatsapp']) ?></span>
                                                         </td>
                                                         <td>
                                                             <span class="badge <?= $user['role_badge'] ?>"><?= esc($user['role']) ?></span>
                                                         </td>
                                                         <td>
                                                             <span class="badge <?= $user['status_badge'] ?>"><?= esc($user['status']) ?></span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="text-muted fs-xs"><?= esc($user['created_at']) ?></span>
                                                         </td>
                                                         <td class="text-end">
                                                             <div class="dropdown">
@@ -308,24 +272,18 @@
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Detail akun <?= esc($user['name']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Detail akun: <?= esc($user['name']) ?>\nEmail: <?= esc($user['email']) ?>\nRole: <?= esc($user['role']) ?>');">
                                                                             <i class="fal fa-eye me-2"></i> Lihat Detail
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Edit akun <?= esc($user['name']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Edit akun: <?= esc($user['name']) ?>');">
                                                                             <i class="fal fa-edit me-2"></i> Edit Akun
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Reset Password untuk <?= esc($user['name']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Reset Password untuk: <?= esc($user['name']) ?>');">
                                                                             <i class="fal fa-key me-2"></i> Reset Password
-                                                                        </a>
-                                                                    </li>
-                                                                    <li><hr class="dropdown-divider"></li>
-                                                                    <li>
-                                                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="if(confirm('Hapus akun <?= esc($user['name']) ?>?')) alert('Akun dihapus (dummy)');">
-                                                                            <i class="fal fa-trash-alt me-2"></i> Hapus Akun
                                                                         </a>
                                                                     </li>
                                                                 </ul>
@@ -333,21 +291,25 @@
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
+                                                <tr id="noResultsRow" style="display: none;">
+                                                    <td colspan="8" class="text-center py-4 text-muted">
+                                                        <i class="fal fa-search me-1"></i> Tidak ada data akun yang sesuai dengan pencarian atau filter.
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
 
                                     <!-- Pagination Footer -->
                                     <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                                        <div class="fs-xs text-muted">
-                                            Menampilkan 1 sampai 6 dari 6 entri
+                                        <div class="fs-xs text-muted" id="paginationInfo">
+                                            Menampilkan 1 sampai 10 dari <?= $totalCount ?> pengguna
                                         </div>
-                                        <ul class="pagination pagination-sm mb-0">
-                                            <li class="page-item disabled"><a class="page-link" href="#">Sebelumnya</a></li>
-                                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">Selanjutnya</a></li>
-                                        </ul>
+                                        <nav aria-label="Navigasi Halaman Akun">
+                                            <ul class="pagination pagination-sm mb-0" id="paginationControls">
+                                                <!-- Dynamic Page Controls Generated by JS -->
+                                            </ul>
+                                        </nav>
                                     </div>
 
                                 </div>
@@ -392,24 +354,21 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Alamat Email</label>
-                            <input type="email" class="form-control" placeholder="budi@example.com" required>
+                            <input type="email" class="form-control" placeholder="budi@simpple.id" required>
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Role</label>
                                 <select class="form-select" required>
-                                    <option value="User">User</option>
-                                    <option value="Staff">Staff</option>
-                                    <option value="Editor">Editor</option>
-                                    <option value="Manager">Manager</option>
-                                    <option value="Administrator">Administrator</option>
+                                    <?php foreach ($uniqueRoles as $r): ?>
+                                        <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Status</label>
                                 <select class="form-select" required>
                                     <option value="Active">Active</option>
-                                    <option value="Pending">Pending</option>
                                     <option value="Inactive">Inactive</option>
                                 </select>
                             </div>
@@ -430,49 +389,182 @@
 
     <?= $this->include('partials/app-scripts') ?>
 
-    <!-- Interactive Client-side Filter Script -->
+    <!-- Interactive Client-side Pagination & Filter Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('accountSearchInput');
             const roleFilter = document.getElementById('roleFilter');
             const statusFilter = document.getElementById('statusFilter');
-            const rows = document.querySelectorAll('.account-row');
+            const perPageSelect = document.getElementById('perPageSelect');
+            const allRows = Array.from(document.querySelectorAll('.account-row'));
             const recordCount = document.getElementById('tableRecordCount');
+            const paginationInfo = document.getElementById('paginationInfo');
+            const paginationControls = document.getElementById('paginationControls');
+            const noResultsRow = document.getElementById('noResultsRow');
 
-            function filterRows() {
-                const searchVal = (searchInput.value || '').toLowerCase().trim();
-                const roleVal = roleFilter.value;
-                const statusVal = statusFilter.value;
+            let currentPage = 1;
+            let perPage = 10;
+            let filteredRows = [...allRows];
 
-                let visibleCount = 0;
+            function applyFilter() {
+                const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
+                const roleVal = roleFilter ? roleFilter.value : '';
+                const statusVal = statusFilter ? statusFilter.value : '';
 
-                rows.forEach(function (row) {
+                filteredRows = allRows.filter(function (row) {
                     const name = row.getAttribute('data-name') || '';
                     const email = row.getAttribute('data-email') || '';
                     const username = row.getAttribute('data-username') || '';
+                    const nip = row.getAttribute('data-nip') || '';
                     const role = row.getAttribute('data-role') || '';
                     const status = row.getAttribute('data-status') || '';
 
-                    const matchesSearch = !searchVal || name.includes(searchVal) || email.includes(searchVal) || username.includes(searchVal);
+                    const matchesSearch = !searchVal || 
+                        name.includes(searchVal) || 
+                        email.includes(searchVal) || 
+                        username.includes(searchVal) || 
+                        nip.includes(searchVal);
                     const matchesRole = !roleVal || role === roleVal;
                     const matchesStatus = !statusVal || status === statusVal;
 
-                    if (matchesSearch && matchesRole && matchesStatus) {
-                        row.style.display = '';
-                        visibleCount++;
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    return matchesSearch && matchesRole && matchesStatus;
                 });
 
-                if (recordCount) {
-                    recordCount.textContent = `Menampilkan ${visibleCount} dari ${rows.length} akun`;
-                }
+                currentPage = 1;
+                renderTable();
             }
 
-            if (searchInput) searchInput.addEventListener('input', filterRows);
-            if (roleFilter) roleFilter.addEventListener('change', filterRows);
-            if (statusFilter) statusFilter.addEventListener('change', filterRows);
+            function renderTable() {
+                const totalFiltered = filteredRows.length;
+                const limit = (perPage === 'all') ? totalFiltered : parseInt(perPage, 10);
+                const totalPages = Math.max(1, Math.ceil(totalFiltered / (limit || 1)));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                const startIndex = (currentPage - 1) * limit;
+                const endIndex = (perPage === 'all') ? totalFiltered : Math.min(startIndex + limit, totalFiltered);
+
+                // Hide all rows initially
+                allRows.forEach(row => { row.style.display = 'none'; });
+
+                // Show only rows in active page slice
+                if (totalFiltered > 0) {
+                    if (noResultsRow) noResultsRow.style.display = 'none';
+                    for (let i = startIndex; i < endIndex; i++) {
+                        if (filteredRows[i]) {
+                            filteredRows[i].style.display = '';
+                        }
+                    }
+                } else {
+                    if (noResultsRow) noResultsRow.style.display = '';
+                }
+
+                // Update text counters
+                const startDisplay = totalFiltered === 0 ? 0 : startIndex + 1;
+                if (paginationInfo) {
+                    if (totalFiltered === allRows.length) {
+                        paginationInfo.textContent = `Menampilkan ${startDisplay} sampai ${endIndex} dari ${totalFiltered} pengguna`;
+                    } else {
+                        paginationInfo.textContent = `Menampilkan ${startDisplay} sampai ${endIndex} dari ${totalFiltered} pengguna (disaring dari ${allRows.length} total)`;
+                    }
+                }
+                if (recordCount) {
+                    recordCount.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+                }
+
+                renderPagination(totalPages, totalFiltered);
+            }
+
+            function renderPagination(totalPages, totalFiltered) {
+                if (!paginationControls) return;
+                paginationControls.innerHTML = '';
+
+                if (totalPages <= 1 && perPage === 'all') {
+                    return;
+                }
+
+                // Previous Button
+                const prevLi = document.createElement('li');
+                prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+                prevLi.innerHTML = `<button class="page-link" type="button" aria-label="Sebelumnya">&lsaquo;</button>`;
+                if (currentPage > 1) {
+                    prevLi.querySelector('button').addEventListener('click', () => {
+                        currentPage--;
+                        renderTable();
+                    });
+                }
+                paginationControls.appendChild(prevLi);
+
+                // Calculate smart page window (e.g. 1 ... 4 5 6 ... 14)
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, currentPage + 2);
+
+                if (startPage > 1) {
+                    addPageButton(1);
+                    if (startPage > 2) {
+                        addEllipsis();
+                    }
+                }
+
+                for (let p = startPage; p <= endPage; p++) {
+                    addPageButton(p);
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        addEllipsis();
+                    }
+                    addPageButton(totalPages);
+                }
+
+                // Next Button
+                const nextLi = document.createElement('li');
+                nextLi.className = `page-item ${currentPage === totalPages || totalFiltered === 0 ? 'disabled' : ''}`;
+                nextLi.innerHTML = `<button class="page-link" type="button" aria-label="Selanjutnya">&rsaquo;</button>`;
+                if (currentPage < totalPages) {
+                    nextLi.querySelector('button').addEventListener('click', () => {
+                        currentPage++;
+                        renderTable();
+                    });
+                }
+                paginationControls.appendChild(nextLi);
+            }
+
+            function addPageButton(pageNumber) {
+                const li = document.createElement('li');
+                li.className = `page-item ${pageNumber === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<button class="page-link" type="button">${pageNumber}</button>`;
+                if (pageNumber !== currentPage) {
+                    li.querySelector('button').addEventListener('click', () => {
+                        currentPage = pageNumber;
+                        renderTable();
+                    });
+                }
+                paginationControls.appendChild(li);
+            }
+
+            function addEllipsis() {
+                const li = document.createElement('li');
+                li.className = 'page-item disabled';
+                li.innerHTML = '<span class="page-link">&hellip;</span>';
+                paginationControls.appendChild(li);
+            }
+
+            if (searchInput) searchInput.addEventListener('input', applyFilter);
+            if (roleFilter) roleFilter.addEventListener('change', applyFilter);
+            if (statusFilter) statusFilter.addEventListener('change', applyFilter);
+            if (perPageSelect) {
+                perPageSelect.addEventListener('change', function () {
+                    perPage = this.value;
+                    currentPage = 1;
+                    renderTable();
+                });
+            }
+
+            // Initial render
+            applyFilter();
         });
     </script>
 

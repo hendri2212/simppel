@@ -42,18 +42,18 @@ $routes->setAutoRoute(true);
 // Authentication Routes (Guest Only)
 $routes->get('/login', 'Auth::login', ['filter' => 'guest']);
 $routes->post('/login', 'Auth::loginProcess', ['filter' => 'guest']);
-$routes->addRedirect('auth-login', 'login');
+$routes->get('/auth-login', 'Auth::login', ['filter' => 'guest']);
 $routes->get('/logout', 'Auth::logout');
 
 // Public Pages (Bypass Auth if needed, e.g. register, forgot password)
-$routes->get('/register', 'Home::root/auth/register', ['filter' => 'guest']);
-$routes->get('/auth-register', 'Home::root/auth/register', ['filter' => 'guest']);
-$routes->get('/forgetpassword', 'Home::root/auth/forgetpassword', ['filter' => 'guest']);
-$routes->get('/auth-forgetpassword', 'Home::root/auth/forgetpassword', ['filter' => 'guest']);
-$routes->get('/lockscreen', 'Home::root/auth/lockscreen', ['filter' => 'guest']);
-$routes->get('/auth-lockscreen', 'Home::root/auth/lockscreen', ['filter' => 'guest']);
-$routes->get('/twofactor', 'Home::root/auth/twofactor', ['filter' => 'guest']);
-$routes->get('/auth-twofactor', 'Home::root/auth/twofactor', ['filter' => 'guest']);
+$routes->get('/register', 'Auth::register', ['filter' => 'guest']);
+$routes->get('/auth-register', 'Auth::register', ['filter' => 'guest']);
+$routes->get('/forgetpassword', 'Auth::forgetPassword', ['filter' => 'guest']);
+$routes->get('/auth-forgetpassword', 'Auth::forgetPassword', ['filter' => 'guest']);
+$routes->get('/lockscreen', 'Auth::lockscreen');
+$routes->get('/auth-lockscreen', 'Auth::lockscreen');
+$routes->get('/twofactor', 'Auth::twoFactor');
+$routes->get('/auth-twofactor', 'Auth::twoFactor');
 
 // Protected Routes (Requires Login / AuthFilter)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
