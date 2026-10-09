@@ -33,6 +33,12 @@ class CreateUsersTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
+            'agency_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
             'nip' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 30,
@@ -60,6 +66,7 @@ class CreateUsersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
+        $this->forge->addForeignKey('agency_id', 'agencies', 'id', 'CASCADE', 'SET NULL');
         $this->forge->createTable('users', true);
     }
 

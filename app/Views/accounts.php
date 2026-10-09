@@ -27,14 +27,13 @@
                     )) ?>
 
                     <?php
-                    // Ambil data users dari database
+                    // Ambil data users dengan relasi role dan agency
                     try {
                         $userModel = new \App\Models\UserModel();
-                        $dbUsers = $userModel
-                            ->select('users.*, roles.name as role_name')
-                            ->join('roles', 'roles.id = users.role_id', 'left')
-                            ->orderBy('users.id', 'ASC')
-                            ->findAll();
+                        $dbUsers = $userModel->getUsersWithDetails();
+
+                        $agencyModel = new \App\Models\AgencyModel();
+                        $allAgencies = $agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
                         $usersList = array_map(function ($u) {
                             $roleName = $u['role_name'] ?? 'USER';
@@ -61,6 +60,10 @@
                                 'whatsapp'        => $u['whatsapp_number'] ?: '-',
                                 'role'            => $roleName,
                                 'role_badge'      => $roleBadge,
+                                'agency_id'       => $u['agency_id'] ?? null,
+                                'agency_name'     => $u['agency_name'] ?? null,
+                                'agency_abbr'     => $u['agency_abbr'] ?? null,
+                                'agency_code'     => $u['agency_code'] ?? null,
                                 'status'          => $isActive ? 'Active' : 'Inactive',
                                 'status_badge'    => $isActive ? 'bg-success' : 'bg-secondary',
                                 'avatar'          => '/img/demo/avatars/avatar-admin.png',
@@ -69,13 +72,27 @@
                         }, $dbUsers);
                     } catch (\Throwable $e) {
                         $usersList = [];
+                        $allAgencies = [];
                     }
 
-                    $totalCount    = count($usersList);
-                    $activeCount   = count(array_filter($usersList, fn($u) => $u['status'] === 'Active'));
-                    $inactiveCount = count(array_filter($usersList, fn($u) => $u['status'] === 'Inactive'));
-                    $uniqueRoles   = array_unique(array_filter(array_column($usersList, 'role')));
+                    $totalCount          = count($usersList);
+                    $activeCount         = count(array_filter($usersList, fn($u) => $u['status'] === 'Active'));
+                    $inactiveCount       = count(array_filter($usersList, fn($u) => $u['status'] === 'Inactive'));
+                    $usersWithAgency     = count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
+                    $uniqueRoles         = array_unique(array_filter(array_column($usersList, 'role')));
                     sort($uniqueRoles);
+
+                    // Daftar Agency unik yang ada di list user untuk filter
+                    $userAgenciesMap = [];
+                    foreach ($usersList as $u) {
+                        if (!empty($u['agency_name'])) {
+                            $userAgenciesMap[$u['agency_name']] = [
+                                'name' => $u['agency_name'],
+                                'abbr' => $u['agency_abbr'],
+                            ];
+                        }
+                    }
+                    ksort($userAgenciesMap);
                     ?>
 
                     <div class="main-content">
@@ -138,13 +155,13 @@
                                     <div class="card-body d-flex align-items-center">
                                         <div class="rounded-circle p-3 bg-info bg-opacity-10 text-info me-3">
                                             <svg class="sa-icon" style="width: 24px; height: 24px;">
-                                                <use href="/icons/sprite.svg#shield"></use>
+                                                <use href="/icons/sprite.svg#briefcase"></use>
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Total Roles</div>
-                                            <div class="fs-2 fw-bold text-dark"><?= count($uniqueRoles) ?></div>
-                                            <div class="fs-xs text-muted">Kategori hak akses</div>
+                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Total SKPD</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= count($allAgencies) ?></div>
+                                            <div class="fs-xs text-info"><?= $usersWithAgency ?> akun terhubung SKPD</div>
                                         </div>
                                     </div>
                                 </div>
@@ -172,21 +189,32 @@
 
                                     <!-- Filter Toolbar -->
                                     <div class="row g-2 mb-3 align-items-center">
-                                        <div class="col-md-4 col-lg-3">
+                                        <div class="col-md-3 col-lg-3">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-white">
                                                     <svg class="sa-icon" style="width: 14px; height: 14px;">
                                                         <use href="/icons/sprite.svg#search"></use>
                                                     </svg>
                                                 </span>
-                                                <input type="text" id="accountSearchInput" class="form-control" placeholder="Cari nama, email, username, NIP...">
+                                                <input type="text" id="accountSearchInput" class="form-control" placeholder="Cari nama, NIP, email, SKPD...">
                                             </div>
                                         </div>
-                                        <div class="col-md-3 col-lg-2">
+                                        <div class="col-md-2 col-lg-2">
                                             <select id="roleFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Role</option>
                                                 <?php foreach ($uniqueRoles as $r): ?>
                                                     <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 col-lg-3">
+                                            <select id="agencyFilter" class="form-select form-select-sm">
+                                                <option value="">Semua SKPD</option>
+                                                <option value="__none__">-- Tanpa SKPD --</option>
+                                                <?php foreach ($userAgenciesMap as $agName => $ag): ?>
+                                                    <option value="<?= esc($agName) ?>">
+                                                        <?= esc($ag['abbr'] ? $ag['abbr'] . ' - ' : '') ?><?= esc($agName) ?>
+                                                    </option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -197,20 +225,17 @@
                                                 <option value="Inactive">Inactive</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-3 col-lg-2">
-                                            <div class="d-flex align-items-center gap-1">
+                                        <div class="col-md-2 col-lg-2">
+                                            <div class="d-flex align-items-center gap-1 justify-content-md-end">
                                                 <span class="fs-xs text-muted text-nowrap">Tampil:</span>
-                                                <select id="perPageSelect" class="form-select form-select-sm">
-                                                    <option value="10" selected>10 per hal</option>
-                                                    <option value="25">25 per hal</option>
-                                                    <option value="50">50 per hal</option>
-                                                    <option value="100">100 per hal</option>
+                                                <select id="perPageSelect" class="form-select form-select-sm" style="width: auto;">
+                                                    <option value="10" selected>10</option>
+                                                    <option value="25">25</option>
+                                                    <option value="50">50</option>
+                                                    <option value="100">100</option>
                                                     <option value="all">Semua</option>
                                                 </select>
                                             </div>
-                                        </div>
-                                        <div class="col-md-12 col-lg-3 text-lg-end">
-                                            <span class="text-muted fs-xs" id="tableRecordCount">Menampilkan <?= min(10, $totalCount) ?> dari <?= $totalCount ?> akun</span>
                                         </div>
                                     </div>
 
@@ -219,14 +244,15 @@
                                         <table class="table table-hover table-striped align-middle mb-0" id="accountsTable">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th style="width: 50px;">#</th>
+                                                    <th style="width: 45px;">#</th>
                                                     <th>User</th>
                                                     <th>NIP</th>
+                                                    <th>SKPD</th>
                                                     <th>Email</th>
                                                     <th>WhatsApp</th>
                                                     <th>Role</th>
                                                     <th>Status</th>
-                                                    <th class="text-end" style="width: 100px;">Aksi</th>
+                                                    <th class="text-end" style="width: 80px;">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -236,20 +262,36 @@
                                                         data-email="<?= esc(strtolower($user['email'])) ?>"
                                                         data-username="<?= esc(strtolower($user['username'])) ?>"
                                                         data-nip="<?= esc(strtolower($user['nip'])) ?>"
+                                                        data-agency="<?= esc(strtolower(($user['agency_abbr'] ?? '') . ' ' . ($user['agency_name'] ?? ''))) ?>"
+                                                        data-agency-name="<?= esc($user['agency_name'] ?? '') ?>"
                                                         data-role="<?= esc($user['role']) ?>"
                                                         data-status="<?= esc($user['status']) ?>">
                                                         <td class="text-muted"><?= $user['id'] ?></td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-3" style="width: 36px; height: 36px; object-fit: cover;">
+                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2" style="width: 36px; height: 36px; object-fit: cover;">
                                                                 <div>
-                                                                    <div class="fw-semibold text-dark"><?= esc($user['name']) ?></div>
+                                                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 170px;" title="<?= esc($user['name']) ?>"><?= esc($user['name']) ?></div>
                                                                     <small class="text-muted"><?= esc($user['username']) ?></small>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td>
                                                             <span class="font-monospace fs-xs"><?= esc($user['nip']) ?></span>
+                                                        </td>
+                                                        <td>
+                                                            <?php if (!empty($user['agency_name'])): ?>
+                                                                <?php if (!empty($user['agency_abbr'])): ?>
+                                                                    <div>
+                                                                        <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1"><?= esc($user['agency_abbr']) ?></span>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                                <div class="fs-xs text-dark text-truncate" style="max-width: 240px;" title="<?= esc($user['agency_name']) ?>">
+                                                                    <?= esc($user['agency_name']) ?>
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <span class="text-muted fs-xs fst-italic">-</span>
+                                                            <?php endif; ?>
                                                         </td>
                                                         <td>
                                                             <span class="text-muted fs-xs"><?= esc($user['email']) ?></span>
@@ -272,17 +314,17 @@
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Detail akun: <?= esc($user['name']) ?>\nEmail: <?= esc($user['email']) ?>\nRole: <?= esc($user['role']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Detail Akun:\nNama: <?= esc(addslashes($user['name'])) ?>\nUsername: <?= esc(addslashes($user['username'])) ?>\nRole: <?= esc(addslashes($user['role'])) ?>\nSKPD: <?= esc(addslashes($user['agency_name'] ?? '-')) ?>\nEmail: <?= esc(addslashes($user['email'])) ?>\nKontak: <?= esc(addslashes($user['whatsapp'])) ?>');">
                                                                             <i class="fal fa-eye me-2"></i> Lihat Detail
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Edit akun: <?= esc($user['name']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Edit akun: <?= esc(addslashes($user['name'])) ?>');">
                                                                             <i class="fal fa-edit me-2"></i> Edit Akun
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Reset Password untuk: <?= esc($user['name']) ?>');">
+                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Reset Password untuk: <?= esc(addslashes($user['name'])) ?>');">
                                                                             <i class="fal fa-key me-2"></i> Reset Password
                                                                         </a>
                                                                     </li>
@@ -292,7 +334,7 @@
                                                     </tr>
                                                 <?php endforeach; ?>
                                                 <tr id="noResultsRow" style="display: none;">
-                                                    <td colspan="8" class="text-center py-4 text-muted">
+                                                    <td colspan="9" class="text-center py-4 text-muted">
                                                         <i class="fal fa-search me-1"></i> Tidak ada data akun yang sesuai dengan pencarian atau filter.
                                                     </td>
                                                 </tr>
@@ -353,6 +395,17 @@
                             </div>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">SKPD</label>
+                            <select class="form-select" name="agency_id">
+                                <option value="">-- Pilih SKPD --</option>
+                                <?php foreach ($allAgencies as $ag): ?>
+                                    <option value="<?= $ag['id'] ?>">
+                                        <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Alamat Email</label>
                             <input type="email" class="form-control" placeholder="budi@simpple.id" required>
                         </div>
@@ -394,10 +447,10 @@
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('accountSearchInput');
             const roleFilter = document.getElementById('roleFilter');
+            const agencyFilter = document.getElementById('agencyFilter');
             const statusFilter = document.getElementById('statusFilter');
             const perPageSelect = document.getElementById('perPageSelect');
             const allRows = Array.from(document.querySelectorAll('.account-row'));
-            const recordCount = document.getElementById('tableRecordCount');
             const paginationInfo = document.getElementById('paginationInfo');
             const paginationControls = document.getElementById('paginationControls');
             const noResultsRow = document.getElementById('noResultsRow');
@@ -409,6 +462,7 @@
             function applyFilter() {
                 const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
                 const roleVal = roleFilter ? roleFilter.value : '';
+                const agencyVal = agencyFilter ? agencyFilter.value : '';
                 const statusVal = statusFilter ? statusFilter.value : '';
 
                 filteredRows = allRows.filter(function (row) {
@@ -416,6 +470,8 @@
                     const email = row.getAttribute('data-email') || '';
                     const username = row.getAttribute('data-username') || '';
                     const nip = row.getAttribute('data-nip') || '';
+                    const agency = row.getAttribute('data-agency') || '';
+                    const agencyName = row.getAttribute('data-agency-name') || '';
                     const role = row.getAttribute('data-role') || '';
                     const status = row.getAttribute('data-status') || '';
 
@@ -423,11 +479,15 @@
                         name.includes(searchVal) || 
                         email.includes(searchVal) || 
                         username.includes(searchVal) || 
-                        nip.includes(searchVal);
+                        nip.includes(searchVal) ||
+                        agency.includes(searchVal);
+
                     const matchesRole = !roleVal || role === roleVal;
+                    const matchesAgency = !agencyVal || 
+                        (agencyVal === '__none__' ? !agencyName : agencyName === agencyVal);
                     const matchesStatus = !statusVal || status === statusVal;
 
-                    return matchesSearch && matchesRole && matchesStatus;
+                    return matchesSearch && matchesRole && matchesAgency && matchesStatus;
                 });
 
                 currentPage = 1;
@@ -446,10 +506,10 @@
                 const startIndex = (currentPage - 1) * limit;
                 const endIndex = (perPage === 'all') ? totalFiltered : Math.min(startIndex + limit, totalFiltered);
 
-                // Hide all rows initially
+                // Sembunyikan semua baris
                 allRows.forEach(row => { row.style.display = 'none'; });
 
-                // Show only rows in active page slice
+                // Tampilkan hanya baris pada halaman aktif
                 if (totalFiltered > 0) {
                     if (noResultsRow) noResultsRow.style.display = 'none';
                     for (let i = startIndex; i < endIndex; i++) {
@@ -461,7 +521,7 @@
                     if (noResultsRow) noResultsRow.style.display = '';
                 }
 
-                // Update text counters
+                // Update info pagination
                 const startDisplay = totalFiltered === 0 ? 0 : startIndex + 1;
                 if (paginationInfo) {
                     if (totalFiltered === allRows.length) {
@@ -469,9 +529,6 @@
                     } else {
                         paginationInfo.textContent = `Menampilkan ${startDisplay} sampai ${endIndex} dari ${totalFiltered} pengguna (disaring dari ${allRows.length} total)`;
                     }
-                }
-                if (recordCount) {
-                    recordCount.textContent = `Halaman ${currentPage} dari ${totalPages}`;
                 }
 
                 renderPagination(totalPages, totalFiltered);
@@ -485,7 +542,7 @@
                     return;
                 }
 
-                // Previous Button
+                // Tombol Sebelumnya
                 const prevLi = document.createElement('li');
                 prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
                 prevLi.innerHTML = `<button class="page-link" type="button" aria-label="Sebelumnya">&lsaquo;</button>`;
@@ -497,7 +554,7 @@
                 }
                 paginationControls.appendChild(prevLi);
 
-                // Calculate smart page window (e.g. 1 ... 4 5 6 ... 14)
+                // Smart windowing halaman
                 let startPage = Math.max(1, currentPage - 2);
                 let endPage = Math.min(totalPages, currentPage + 2);
 
@@ -519,11 +576,11 @@
                     addPageButton(totalPages);
                 }
 
-                // Next Button
+                // Tombol Selanjutnya
                 const nextLi = document.createElement('li');
                 nextLi.className = `page-item ${currentPage === totalPages || totalFiltered === 0 ? 'disabled' : ''}`;
                 nextLi.innerHTML = `<button class="page-link" type="button" aria-label="Selanjutnya">&rsaquo;</button>`;
-                if (currentPage < totalPages) {
+                if (currentPage < totalPages && totalFiltered > 0) {
                     nextLi.querySelector('button').addEventListener('click', () => {
                         currentPage++;
                         renderTable();
@@ -554,6 +611,7 @@
 
             if (searchInput) searchInput.addEventListener('input', applyFilter);
             if (roleFilter) roleFilter.addEventListener('change', applyFilter);
+            if (agencyFilter) agencyFilter.addEventListener('change', applyFilter);
             if (statusFilter) statusFilter.addEventListener('change', applyFilter);
             if (perPageSelect) {
                 perPageSelect.addEventListener('change', function () {
@@ -563,7 +621,7 @@
                 });
             }
 
-            // Initial render
+            // Inisialisasi awal
             applyFilter();
         });
     </script>
