@@ -81,18 +81,6 @@
                     $usersWithAgency     = count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
                     $uniqueRoles         = array_unique(array_filter(array_column($usersList, 'role')));
                     sort($uniqueRoles);
-
-                    // Daftar Agency unik yang ada di list user untuk filter
-                    $userAgenciesMap = [];
-                    foreach ($usersList as $u) {
-                        if (!empty($u['agency_name'])) {
-                            $userAgenciesMap[$u['agency_name']] = [
-                                'name' => $u['agency_name'],
-                                'abbr' => $u['agency_abbr'],
-                            ];
-                        }
-                    }
-                    ksort($userAgenciesMap);
                     ?>
 
                     <div class="main-content">
@@ -189,7 +177,7 @@
 
                                     <!-- Filter Toolbar -->
                                     <div class="row g-2 mb-3 align-items-center">
-                                        <div class="col-md-3 col-lg-3">
+                                        <div class="col-md-5 col-lg-4">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-white">
                                                     <svg class="sa-icon" style="width: 14px; height: 14px;">
@@ -199,22 +187,11 @@
                                                 <input type="text" id="accountSearchInput" class="form-control" placeholder="Cari nama, NIP, email, SKPD...">
                                             </div>
                                         </div>
-                                        <div class="col-md-2 col-lg-2">
+                                        <div class="col-md-3 col-lg-3">
                                             <select id="roleFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Role</option>
                                                 <?php foreach ($uniqueRoles as $r): ?>
                                                     <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-3 col-lg-3">
-                                            <select id="agencyFilter" class="form-select form-select-sm">
-                                                <option value="">Semua SKPD</option>
-                                                <option value="__none__">-- Tanpa SKPD --</option>
-                                                <?php foreach ($userAgenciesMap as $agName => $ag): ?>
-                                                    <option value="<?= esc($agName) ?>">
-                                                        <?= esc($ag['abbr'] ? $ag['abbr'] . ' - ' : '') ?><?= esc($agName) ?>
-                                                    </option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </div>
@@ -225,7 +202,7 @@
                                                 <option value="Inactive">Inactive</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2 col-lg-2">
+                                        <div class="col-md-2 col-lg-3">
                                             <div class="d-flex align-items-center gap-1 justify-content-md-end">
                                                 <span class="fs-xs text-muted text-nowrap">Tampil:</span>
                                                 <select id="perPageSelect" class="form-select form-select-sm" style="width: auto;">
@@ -245,13 +222,13 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th style="width: 45px;">#</th>
-                                                    <th>User</th>
-                                                    <th>NIP</th>
-                                                    <th>SKPD</th>
-                                                    <th>Email</th>
-                                                    <th>WhatsApp</th>
-                                                    <th>Role</th>
-                                                    <th>Status</th>
+                                                    <th style="min-width: 220px;">User</th>
+                                                    <th class="text-nowrap" style="min-width: 170px;">NIP</th>
+                                                    <th style="min-width: 200px;">SKPD</th>
+                                                    <th class="text-nowrap">Email</th>
+                                                    <th class="text-nowrap">WhatsApp</th>
+                                                    <th class="text-nowrap text-center">Role</th>
+                                                    <th class="text-nowrap text-center">Status</th>
                                                     <th class="text-end" style="width: 80px;">Aksi</th>
                                                 </tr>
                                             </thead>
@@ -269,15 +246,15 @@
                                                         <td class="text-muted"><?= $user['id'] ?></td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2" style="width: 36px; height: 36px; object-fit: cover;">
-                                                                <div>
-                                                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 170px;" title="<?= esc($user['name']) ?>"><?= esc($user['name']) ?></div>
-                                                                    <small class="text-muted"><?= esc($user['username']) ?></small>
+                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2 flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
+                                                                <div class="flex-grow-1" style="min-width: 0;">
+                                                                    <div class="fw-semibold text-dark text-break lh-sm" title="<?= esc($user['name']) ?>"><?= esc($user['name']) ?></div>
+                                                                    <small class="text-muted d-block font-monospace fs-nano mt-1"><?= esc($user['username']) ?></small>
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td>
-                                                            <span class="font-monospace fs-xs"><?= esc($user['nip']) ?></span>
+                                                        <td class="text-nowrap">
+                                                            <span class="font-monospace fs-xs text-dark fw-medium"><?= esc($user['nip']) ?></span>
                                                         </td>
                                                         <td>
                                                             <?php if (!empty($user['agency_name'])): ?>
@@ -286,23 +263,23 @@
                                                                         <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1"><?= esc($user['agency_abbr']) ?></span>
                                                                     </div>
                                                                 <?php endif; ?>
-                                                                <div class="fs-xs text-dark text-truncate" style="max-width: 240px;" title="<?= esc($user['agency_name']) ?>">
+                                                                <div class="fs-xs text-dark text-break" style="max-width: 280px;" title="<?= esc($user['agency_name']) ?>">
                                                                     <?= esc($user['agency_name']) ?>
                                                                 </div>
                                                             <?php else: ?>
                                                                 <span class="text-muted fs-xs fst-italic">-</span>
                                                             <?php endif; ?>
                                                         </td>
-                                                        <td>
+                                                        <td class="text-nowrap">
                                                             <span class="text-muted fs-xs"><?= esc($user['email']) ?></span>
                                                         </td>
-                                                        <td>
+                                                        <td class="text-nowrap">
                                                             <span class="text-muted fs-xs"><?= esc($user['whatsapp']) ?></span>
                                                         </td>
-                                                        <td>
+                                                        <td class="text-nowrap text-center">
                                                             <span class="badge <?= $user['role_badge'] ?>"><?= esc($user['role']) ?></span>
                                                         </td>
-                                                        <td>
+                                                        <td class="text-nowrap text-center">
                                                             <span class="badge <?= $user['status_badge'] ?>"><?= esc($user['status']) ?></span>
                                                         </td>
                                                         <td class="text-end">
@@ -447,7 +424,6 @@
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('accountSearchInput');
             const roleFilter = document.getElementById('roleFilter');
-            const agencyFilter = document.getElementById('agencyFilter');
             const statusFilter = document.getElementById('statusFilter');
             const perPageSelect = document.getElementById('perPageSelect');
             const allRows = Array.from(document.querySelectorAll('.account-row'));
@@ -462,7 +438,6 @@
             function applyFilter() {
                 const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
                 const roleVal = roleFilter ? roleFilter.value : '';
-                const agencyVal = agencyFilter ? agencyFilter.value : '';
                 const statusVal = statusFilter ? statusFilter.value : '';
 
                 filteredRows = allRows.filter(function (row) {
@@ -471,7 +446,6 @@
                     const username = row.getAttribute('data-username') || '';
                     const nip = row.getAttribute('data-nip') || '';
                     const agency = row.getAttribute('data-agency') || '';
-                    const agencyName = row.getAttribute('data-agency-name') || '';
                     const role = row.getAttribute('data-role') || '';
                     const status = row.getAttribute('data-status') || '';
 
@@ -483,11 +457,9 @@
                         agency.includes(searchVal);
 
                     const matchesRole = !roleVal || role === roleVal;
-                    const matchesAgency = !agencyVal || 
-                        (agencyVal === '__none__' ? !agencyName : agencyName === agencyVal);
                     const matchesStatus = !statusVal || status === statusVal;
 
-                    return matchesSearch && matchesRole && matchesAgency && matchesStatus;
+                    return matchesSearch && matchesRole && matchesStatus;
                 });
 
                 currentPage = 1;
@@ -611,7 +583,6 @@
 
             if (searchInput) searchInput.addEventListener('input', applyFilter);
             if (roleFilter) roleFilter.addEventListener('change', applyFilter);
-            if (agencyFilter) agencyFilter.addEventListener('change', applyFilter);
             if (statusFilter) statusFilter.addEventListener('change', applyFilter);
             if (perPageSelect) {
                 perPageSelect.addEventListener('change', function () {
