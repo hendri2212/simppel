@@ -46,6 +46,17 @@
         </a>
     </li>
 
+    <li class="nav-title"><span>User Management</span></li>
+
+    <li>
+        <a href="/accounts" title="Accounts" data-filter-tags="user management account accounts users">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#users"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Accounts</span>
+        </a>
+    </li>
+
     <li class="nav-title"><span>Layouts</span></li>
 
     <li class="nav-item">
@@ -57,39 +68,6 @@
         </a>
 
         <ul>
-            <li class="nav-item">
-                <a href="#" title="Authentication" data-filter-tags>
-                    <span class="nav-link-text" data-i18n>Authentication Pages</span>
-                </a>
-
-                <ul>
-                    <li>
-                        <a href="/auth-login">
-                            <span class="nav-link-text" data-i18n>Login</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/auth-register">
-                            <span class="nav-link-text" data-i18n>Register</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/auth-forgetpassword">
-                            <span class="nav-link-text" data-i18n>Forget Password</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/auth-twofactor">
-                            <span class="nav-link-text" data-i18n>2FA</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/auth-lockscreen">
-                            <span class="nav-link-text" data-i18n>Lock Screen</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
             <li>
                 <a href="/emaildesign">
                     <span class="nav-link-text" data-i18n>Email Templates</span>

@@ -14,7 +14,7 @@
                 <img src="/img/logo-light.svg" alt="logo">
             </a>
             <div class="ms-auto d-flex gap-2">
-                <a href="/auth-login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
+                <a href="/login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
                 <a href="/auth-register" class="btn btn-link text-white border-0 text-decoration-none">Register</a>
             </div>
         </div>
@@ -46,7 +46,7 @@
                             <h2 class="text-center mb-4">Sent Email</h2>
                             <p class="text-center text-white mb-4">Please check your email for the reset password link</p>
                             <div class="d-grid">
-                                <a href="/auth-login" class="btn btn-dark bg-opacity-50 border-dark btn-lg">
+                                <a href="/login" class="btn btn-dark bg-opacity-50 border-dark btn-lg">
                                     Back to Login
                                 </a>
                             </div>
@@ -66,7 +66,7 @@
     <script src="/plugins/three/three.min.js"></script>
     <script src="/plugins/vanta/vanta.halo.min.js"></script>
     <script src="/plugins/vanta/vanta.net.min.js"></script>
-    <script src="scripts/pages/auth-animation.js"></script>
+    <script src="/scripts/pages/auth-animation.js"></script>
 
 </body>
 

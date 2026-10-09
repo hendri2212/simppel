@@ -17,7 +17,7 @@
             </a>
 
             <div class="ms-auto d-flex gap-2">
-                <a href="/auth-login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
+                <a href="/login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
                 <a href="/auth-register" class="btn btn-link text-white border-0 text-decoration-none">Register</a>
             </div>
         </div>

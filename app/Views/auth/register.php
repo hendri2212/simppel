@@ -14,7 +14,7 @@
                 <img src="/img/logo-light.svg" alt="logo">
             </a>
             <div class="ms-auto d-flex gap-2">
-                <a href="/auth-login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
+                <a href="/login" class="btn btn-link text-white border-0 text-decoration-none">Login</a>
                 <a href="/auth-register" class="btn btn-link text-white border-0 text-decoration-none">Register</a>
             </div>
         </div>
@@ -56,7 +56,7 @@
                                 <button type="submit" class="btn btn-primary btn-lg bg-primary bg-opacity-75">Register</button>
                             </div>
                             <div class="opacity-75">
-                                Already have an account? <a href="/auth-login" class="text-decoration-underline text-white fw-500">Login here</a>
+                                Already have an account? <a href="/login" class="text-decoration-underline text-white fw-500">Login here</a>
                             </div>
 
                         </form>
@@ -76,7 +76,7 @@
     <script src="/plugins/three/three.min.js"></script>
     <script src="/plugins/vanta/vanta.halo.min.js"></script>
     <script src="/plugins/vanta/vanta.net.min.js"></script>
-    <script src="scripts/pages/auth-animation.js"></script>
+    <script src="/scripts/pages/auth-animation.js"></script>
 
 </body>
 

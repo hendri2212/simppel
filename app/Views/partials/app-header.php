@@ -81,8 +81,8 @@
                     <img src="/img/demo/avatars/avatar-admin.png" class="profile-image rounded-circle" alt="Sunny A.">
                 </span>
                 <div class="info-card-text">
-                    <div class="fs-lg text-truncate text-truncate-lg">Sunny A.</div>
-                    <span class="text-truncate text-truncate-md opacity-80 fs-sm">sunnya@sadim.com</span>
+                    <div class="fs-lg text-truncate text-truncate-lg"><?= esc(session('full_name') ?? 'Administrator') ?></div>
+                    <span class="text-truncate text-truncate-md opacity-80 fs-sm"><?= esc(session('email') ?? 'admin@simpple.com') ?></span>
                 </div>
             </div>
         </div>
@@ -132,9 +132,9 @@
 
         <div class="dropdown-divider m-0"></div>
 
-        <a class="dropdown-item py-3 fw-500 d-flex justify-content-between" href="/auth-login">
+        <a class="dropdown-item py-3 fw-500 d-flex justify-content-between" href="/logout">
             <span class="text-danger" data-i18n="drpdwn.page-logout">Logout</span>
-            <span class="d-block text-truncate text-truncate-sm">@sunnyahmed</span>
+            <span class="d-block text-truncate text-truncate-sm">@<?= esc(session('username') ?? 'admin') ?></span>
         </a>
     </div>
 </header>
