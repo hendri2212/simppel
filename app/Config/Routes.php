@@ -58,7 +58,8 @@ $routes->get('/auth-twofactor', 'Auth::twoFactor');
 // Protected Routes (Requires Login / AuthFilter)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'Home::index');
-    $routes->get('/account', 'Home::root/accounts');
+    $routes->get('/accounts', 'AccountController::index');
+    $routes->get('/account', 'AccountController::index');
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

@@ -4,6 +4,10 @@
     <?php echo view("partials/app-meta-title", array("pageTitle" => "User Accounts")) ?>
 
     <?= $this->include('partials/app-head-css') ?>
+
+    <!-- Select2 CSS & Bootstrap 5 Theme via CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 </head>
 
 <body>
@@ -27,60 +31,15 @@
                     )) ?>
 
                     <?php
-                    // Ambil data users dengan relasi role dan agency
-                    try {
-                        $userModel = new \App\Models\UserModel();
-                        $dbUsers = $userModel->getUsersWithDetails();
-
-                        $agencyModel = new \App\Models\AgencyModel();
-                        $allAgencies = $agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
-
-                        $usersList = array_map(function ($u) {
-                            $roleName = $u['role_name'] ?? 'USER';
-                            $isActive = (int)$u['is_active'] === 1;
-
-                            $roleBadge = match ($roleName) {
-                                'ADMINISTRATOR' => 'bg-danger-subtle text-danger border border-danger-subtle',
-                                'ADMIN PPK'     => 'bg-primary-subtle text-primary border border-primary-subtle',
-                                'PPK'           => 'bg-info-subtle text-info border border-info-subtle',
-                                'ADMIN ULP'     => 'bg-success-subtle text-success border border-success-subtle',
-                                'DISTRIBUSI'    => 'bg-warning-subtle text-warning border border-warning-subtle',
-                                'KEPALA ULP'    => 'bg-purple-subtle text-purple border border-purple-subtle',
-                                'POKJA'         => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                'MONEV'         => 'bg-dark-subtle text-dark border border-dark-subtle',
-                                default         => 'bg-light text-dark border',
-                            };
-
-                            return [
-                                'id'              => $u['id'],
-                                'name'            => $u['full_name'],
-                                'username'        => '@' . ltrim($u['username'], '@'),
-                                'nip'             => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '-',
-                                'email'           => $u['email'] ?: '-',
-                                'whatsapp'        => $u['whatsapp_number'] ?: '-',
-                                'role'            => $roleName,
-                                'role_badge'      => $roleBadge,
-                                'agency_id'       => $u['agency_id'] ?? null,
-                                'agency_name'     => $u['agency_name'] ?? null,
-                                'agency_abbr'     => $u['agency_abbr'] ?? null,
-                                'agency_code'     => $u['agency_code'] ?? null,
-                                'status'          => $isActive ? 'Active' : 'Inactive',
-                                'status_badge'    => $isActive ? 'bg-success' : 'bg-secondary',
-                                'avatar'          => '/img/demo/avatars/avatar-admin.png',
-                                'created_at'      => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
-                            ];
-                        }, $dbUsers);
-                    } catch (\Throwable $e) {
-                        $usersList = [];
-                        $allAgencies = [];
-                    }
-
-                    $totalCount          = count($usersList);
-                    $activeCount         = count(array_filter($usersList, fn($u) => $u['status'] === 'Active'));
-                    $inactiveCount       = count(array_filter($usersList, fn($u) => $u['status'] === 'Inactive'));
-                    $usersWithAgency     = count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
-                    $uniqueRoles         = array_unique(array_filter(array_column($usersList, 'role')));
-                    sort($uniqueRoles);
+                    // Data akun, SKPD, dan role disediakan oleh AccountController
+                    $usersList       = $usersList ?? [];
+                    $allAgencies     = $allAgencies ?? [];
+                    $allRoles        = $allRoles ?? [];
+                    $totalCount      = $totalCount ?? count($usersList);
+                    $activeCount     = $activeCount ?? count(array_filter($usersList, fn($u) => ($u['status'] ?? '') === 'Active'));
+                    $inactiveCount   = $inactiveCount ?? count(array_filter($usersList, fn($u) => ($u['status'] ?? '') === 'Inactive'));
+                    $usersWithAgency = $usersWithAgency ?? count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
+                    $uniqueRoles     = $uniqueRoles ?? array_unique(array_filter(array_column($usersList, 'role')));
                     ?>
 
                     <div class="main-content">
@@ -372,8 +331,8 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">SKPD</label>
-                            <select class="form-select" name="agency_id">
+                            <label class="form-label" for="addUserAgencySelect">SKPD</label>
+                            <select class="form-select select2-agency" name="agency_id" id="addUserAgencySelect" style="width: 100%;">
                                 <option value="">-- Pilih SKPD --</option>
                                 <?php foreach ($allAgencies as $ag): ?>
                                     <option value="<?= $ag['id'] ?>">
@@ -389,10 +348,17 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Role</label>
-                                <select class="form-select" required>
-                                    <?php foreach ($uniqueRoles as $r): ?>
-                                        <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
-                                    <?php endforeach; ?>
+                                <select class="form-select" name="role_id" required>
+                                    <option value="">-- Pilih Role --</option>
+                                    <?php if (!empty($allRoles)): ?>
+                                        <?php foreach ($allRoles as $role): ?>
+                                            <option value="<?= esc($role['id']) ?>"><?= esc($role['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <?php foreach ($uniqueRoles as $r): ?>
+                                            <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -418,6 +384,28 @@
     </div>
 
     <?= $this->include('partials/app-scripts') ?>
+
+    <!-- jQuery & Select2 JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Inisialisasi Select2 pada dropdown SKPD dengan dropdownParent modal agar pencarian dapat difokuskan
+            $('#addUserAgencySelect').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#addUserModal'),
+                placeholder: '-- Pilih SKPD --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Reset Select2 ketika modal ditutup
+            $('#addUserModal').on('hidden.bs.modal', function () {
+                $('#addUserAgencySelect').val(null).trigger('change');
+            });
+        });
+    </script>
 
     <!-- Interactive Client-side Pagination & Filter Script -->
     <script>

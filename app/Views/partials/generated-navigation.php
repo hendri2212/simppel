@@ -35,6 +35,44 @@
         </ul>
     </li>
 
+    <li class="nav-title"><span>Perencanaan Pengadaan</span></li>
+
+    <li>
+        <a href="/procurement-plans" title="Daftar Paket RUP" data-filter-tags="perencanaan pengadaan rup paket daftar">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#file-text"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Daftar Paket RUP</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/procurement-plans/create" title="Tambah Paket RUP" data-filter-tags="perencanaan pengadaan rup tambah buat paket">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#plus-circle"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Tambah Paket RUP</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/procurement-plans/sync" title="Sinkronisasi SiRUP" data-filter-tags="perencanaan pengadaan rup sinkronisasi sirup lkpp">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#refresh-cw"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Sinkronisasi SiRUP</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/procurement-plans/summary" title="Rekapitulasi Pagu" data-filter-tags="perencanaan pengadaan rup rekapitulasi pagu anggaran">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#bar-chart-2"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Rekapitulasi Pagu</span>
+        </a>
+    </li>
+
     <li class="nav-title"><span>Config</span></li>
 
     <li>
