@@ -28,7 +28,7 @@
                     <div id="regular-login" class="login-card p-4 p-md-6 bg-dark bg-opacity-50 translucent-dark rounded-4">
                         <h2 class="text-center mb-4">Forgot Password</h2>
                         <p class="text-center text-white opacity-50 mb-4">Confirmation email will be sent to your email address</p>
-                        <form action="/appintel">
+                        <form action="#">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email or Phone</label>
                                 <input type="email" class="form-control form-control-lg text-white bg-dark border-light border-opacity-25 bg-opacity-25" id="email" required="">

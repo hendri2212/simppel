@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call('SelectionMethodSeeder');
         $this->call('SpecialAllocationTypeSeeder');
         $this->call('UserSeeder');
+        $this->call('ProcurementPlanSeeder');
     }
 }

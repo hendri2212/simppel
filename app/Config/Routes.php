@@ -60,6 +60,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'Home::index');
     $routes->get('/accounts', 'AccountController::index');
     $routes->get('/account', 'AccountController::index');
+    $routes->get('/procurement-plans', 'ProcurementPlanController::index');
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

@@ -73,16 +73,6 @@
         </a>
     </li>
 
-    <li class="nav-title"><span>Config</span></li>
-
-    <li>
-        <a href="/appintel">
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#cpu"></use>
-            </svg>
-            <span class="nav-link-text">Application Intel</span>
-        </a>
-    </li>
 
     <li class="nav-title"><span>User Management</span></li>
 
