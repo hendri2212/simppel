@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\AgencyModel;
+use App\Models\CommitmentOfficerModel;
 use App\Models\RoleModel;
 use App\Models\UserModel;
 
@@ -11,12 +12,14 @@ class AccountController extends BaseController
     protected UserModel $userModel;
     protected AgencyModel $agencyModel;
     protected RoleModel $roleModel;
+    protected CommitmentOfficerModel $commitmentOfficerModel;
 
     public function __construct()
     {
-        $this->userModel   = new UserModel();
-        $this->agencyModel = new AgencyModel();
-        $this->roleModel   = new RoleModel();
+        $this->userModel               = new UserModel();
+        $this->agencyModel             = new AgencyModel();
+        $this->roleModel               = new RoleModel();
+        $this->commitmentOfficerModel = new CommitmentOfficerModel();
     }
 
     /**
@@ -25,9 +28,10 @@ class AccountController extends BaseController
     public function index()
     {
         try {
-            $dbUsers     = $this->userModel->getUsersWithDetails();
-            $allAgencies = $this->agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
-            $allRoles    = $this->roleModel->orderBy('id', 'ASC')->findAll();
+            $dbUsers            = $this->userModel->getUsersWithDetails();
+            $allAgencies        = $this->agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $allRoles           = $this->roleModel->orderBy('id', 'ASC')->findAll();
+            $commitmentOfficers = $this->commitmentOfficerModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
             $usersList = array_map(function ($u) {
                 $roleName = $u['role_name'] ?? 'USER';
@@ -46,35 +50,38 @@ class AccountController extends BaseController
                 };
 
                 return [
-                    'id'           => $u['id'],
-                    'name'         => $u['full_name'],
-                    'username'     => '@' . ltrim($u['username'], '@'),
-                    'raw_username' => ltrim($u['username'], '@'),
-                    'nip'          => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '-',
-                    'raw_nip'      => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '',
-                    'email'        => $u['email'] ?: '-',
-                    'raw_email'    => $u['email'] ?: '',
-                    'whatsapp'     => $u['whatsapp_number'] ?: '-',
-                    'raw_whatsapp' => $u['whatsapp_number'] ?: '',
-                    'role'         => $roleName,
-                    'role_id'      => $u['role_id'] ?? null,
-                    'role_badge'   => $roleBadge,
-                    'agency_id'    => $u['agency_id'] ?? null,
-                    'agency_name'  => $u['agency_name'] ?? null,
-                    'agency_abbr'  => $u['agency_abbr'] ?? null,
-                    'agency_code'  => $u['agency_code'] ?? null,
-                    'status'       => $isActive ? 'Active' : 'Inactive',
-                    'is_active'    => $isActive ? 1 : 0,
-                    'status_badge' => $isActive ? 'bg-success' : 'bg-secondary',
-                    'avatar'       => '/img/demo/avatars/avatar-admin.png',
-                    'created_at'   => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
+                    'id'                     => $u['id'],
+                    'name'                   => $u['full_name'],
+                    'username'               => '@' . ltrim($u['username'], '@'),
+                    'raw_username'           => ltrim($u['username'], '@'),
+                    'nip'                    => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '-',
+                    'raw_nip'                => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '',
+                    'email'                  => $u['email'] ?: '-',
+                    'raw_email'              => $u['email'] ?: '',
+                    'whatsapp'               => $u['whatsapp_number'] ?: '-',
+                    'raw_whatsapp'           => $u['whatsapp_number'] ?: '',
+                    'role'                   => $roleName,
+                    'role_id'                => $u['role_id'] ?? null,
+                    'role_badge'             => $roleBadge,
+                    'agency_id'              => $u['agency_id'] ?? null,
+                    'agency_name'            => $u['agency_name'] ?? null,
+                    'agency_abbr'            => $u['agency_abbr'] ?? null,
+                    'agency_code'            => $u['agency_code'] ?? null,
+                    'commitment_officer_id'   => $u['commitment_officer_id'] ?? null,
+                    'commitment_officer_name' => $u['commitment_officer_name'] ?? null,
+                    'status'                 => $isActive ? 'Active' : 'Inactive',
+                    'is_active'              => $isActive ? 1 : 0,
+                    'status_badge'           => $isActive ? 'bg-success' : 'bg-secondary',
+                    'avatar'                 => '/img/demo/avatars/avatar-admin.png',
+                    'created_at'             => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
                 ];
             }, $dbUsers);
         } catch (\Throwable $e) {
             log_message('error', 'Error in AccountController::index: ' . $e->getMessage());
-            $usersList   = [];
-            $allAgencies = [];
-            $allRoles    = [];
+            $usersList           = [];
+            $allAgencies         = [];
+            $allRoles            = [];
+            $commitmentOfficers  = [];
         }
 
         $totalCount      = count($usersList);
@@ -87,16 +94,125 @@ class AccountController extends BaseController
         sort($uniqueRoles);
 
         return view('accounts', [
-            'pageTitle'       => 'User Accounts',
-            'usersList'       => $usersList,
-            'allAgencies'     => $allAgencies,
-            'allRoles'        => $allRoles,
-            'totalCount'      => $totalCount,
-            'activeCount'     => $activeCount,
-            'inactiveCount'   => $inactiveCount,
-            'usersWithAgency' => $usersWithAgency,
-            'uniqueRoles'     => $uniqueRoles,
+            'pageTitle'           => 'User Accounts',
+            'usersList'           => $usersList,
+            'allAgencies'         => $allAgencies,
+            'allRoles'            => $allRoles,
+            'commitmentOfficers'  => $commitmentOfficers,
+            'totalCount'          => $totalCount,
+            'activeCount'         => $activeCount,
+            'inactiveCount'       => $inactiveCount,
+            'usersWithAgency'     => $usersWithAgency,
+            'uniqueRoles'         => $uniqueRoles,
         ]);
+    }
+
+    /**
+     * API: Ambil daftar PPK / Bidang (Commitment Officers) berdasarkan SKPD (agency_id)
+     */
+    public function getCommitmentOfficers($agencyId = null)
+    {
+        $agencyId = $agencyId ?? $this->request->getGet('agency_id');
+
+        if (!$agencyId) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data'   => [],
+            ]);
+        }
+
+        try {
+            $officers = $this->commitmentOfficerModel
+                ->where('agency_id', (int) $agencyId)
+                ->where('is_active', 1)
+                ->orderBy('name', 'ASC')
+                ->findAll();
+
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data'   => $officers,
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in getCommitmentOfficers: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status'  => 'error',
+                'message' => 'Gagal mengambil data PPK/Bidang: ' . $e->getMessage(),
+            ])->setStatusCode(500);
+        }
+    }
+
+    /**
+     * Tambah akun pengguna baru
+     */
+    public function store()
+    {
+        $rules = [
+            'full_name' => 'required|min_length[3]|max_length[255]',
+            'username'  => 'required|min_length[3]|max_length[100]|is_unique[users.username]',
+            'email'     => 'permit_empty|valid_email|is_unique[users.email]',
+            'role_id'   => 'required|is_not_unique[roles.id]',
+            'password'  => 'required|min_length[6]',
+        ];
+
+        if (! $this->validate($rules)) {
+            $errors = implode(', ', $this->validator->getErrors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => $errors,
+                    'errors'  => $this->validator->getErrors(),
+                ])->setStatusCode(422);
+            }
+            return redirect()->back()->withInput()->with('error', $errors);
+        }
+
+        $username = trim((string) $this->request->getPost('username'));
+        $username = ltrim($username, '@');
+
+        $agencyId = $this->request->getPost('agency_id');
+        $agencyId = !empty($agencyId) ? (int) $agencyId : null;
+
+        $commitmentOfficerId = $this->request->getPost('commitment_officer_id');
+        $commitmentOfficerId = !empty($commitmentOfficerId) ? (int) $commitmentOfficerId : null;
+
+        $email = trim((string) $this->request->getPost('email')) ?: null;
+        if (empty($email)) {
+            // Generate dummy unique email jika kosong
+            $email = $username . '@simpple.local';
+        }
+
+        $userData = [
+            'full_name'             => trim((string) $this->request->getPost('full_name')),
+            'username'              => $username,
+            'email'                 => $email,
+            'password'              => password_hash(trim((string) $this->request->getPost('password')), PASSWORD_BCRYPT),
+            'role_id'               => (int) $this->request->getPost('role_id'),
+            'agency_id'             => $agencyId,
+            'commitment_officer_id' => $commitmentOfficerId,
+            'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
+            'whatsapp_number'       => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
+            'is_active'             => (int) ($this->request->getPost('is_active') ?? 1),
+        ];
+
+        try {
+            $insertId = $this->userModel->insert($userData);
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'success',
+                    'message' => 'Akun pengguna baru berhasil ditambahkan!',
+                    'id'      => $insertId,
+                ]);
+            }
+
+            return redirect()->to('/accounts')->with('success', 'Akun pengguna baru berhasil ditambahkan!');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error store user: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal menambahkan akun: ' . $e->getMessage()])->setStatusCode(500);
+            }
+            return redirect()->back()->withInput()->with('error', 'Gagal menambahkan akun: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -145,15 +261,19 @@ class AccountController extends BaseController
         $agencyId = $this->request->getPost('agency_id');
         $agencyId = !empty($agencyId) ? (int) $agencyId : null;
 
+        $commitmentOfficerId = $this->request->getPost('commitment_officer_id');
+        $commitmentOfficerId = !empty($commitmentOfficerId) ? (int) $commitmentOfficerId : null;
+
         $updateData = [
-            'full_name'       => trim((string) $this->request->getPost('full_name')),
-            'username'        => $username,
-            'role_id'         => (int) $this->request->getPost('role_id'),
-            'agency_id'       => $agencyId,
-            'nip'             => trim((string) $this->request->getPost('nip')) ?: null,
-            'email'           => trim((string) $this->request->getPost('email')) ?: null,
-            'whatsapp_number' => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
-            'is_active'       => (int) ($this->request->getPost('is_active') ?? 0),
+            'full_name'             => trim((string) $this->request->getPost('full_name')),
+            'username'              => $username,
+            'role_id'               => (int) $this->request->getPost('role_id'),
+            'agency_id'             => $agencyId,
+            'commitment_officer_id' => $commitmentOfficerId,
+            'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
+            'email'                 => trim((string) $this->request->getPost('email')) ?: null,
+            'whatsapp_number'       => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
+            'is_active'             => (int) ($this->request->getPost('is_active') ?? 0),
         ];
 
         // Jika password diisi, update password

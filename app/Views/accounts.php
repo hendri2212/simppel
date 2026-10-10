@@ -244,6 +244,13 @@
                                                                 <div class="fs-xs text-dark text-break" style="max-width: 280px;" title="<?= esc($user['agency_name']) ?>">
                                                                     <?= esc($user['agency_name']) ?>
                                                                 </div>
+                                                                <?php if (!empty($user['commitment_officer_name'])): ?>
+                                                                    <div class="mt-1">
+                                                                        <span class="badge bg-info-subtle text-info border border-info-subtle fs-nano" title="Pejabat Pembuat Komitmen (PPK) / Bidang">
+                                                                            <i class="fal fa-user-tie me-1"></i><?= esc($user['commitment_officer_name']) ?>
+                                                                        </span>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             <?php else: ?>
                                                                 <span class="text-muted fs-xs fst-italic">-</span>
                                                             <?php endif; ?>
@@ -381,6 +388,14 @@
                                             <div class="fs-sm text-dark fw-medium text-break" id="detailModalAgencyName">-</div>
                                         </div>
                                     </div>
+                                    <div class="mb-3" id="detailModalCommitmentOfficerContainer" style="display: none;">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">PPK / Bidang (Commitment Officer)</label>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle fs-xs">
+                                                <i class="fal fa-user-tie me-1"></i><span id="detailModalCommitmentOfficerName">-</span>
+                                            </span>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Role / Hak Akses Sistem</label>
                                         <div class="fs-sm fw-semibold text-dark" id="detailModalRole">-</div>
@@ -516,6 +531,15 @@
                                 </select>
                             </div>
 
+                            <!-- PPK / Bidang (Commitment Officer) -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserCommitmentOfficerSelect">PPK / Bidang</label>
+                                <select class="form-select" name="commitment_officer_id" id="editUserCommitmentOfficerSelect">
+                                    <option value="">-- Tanpa PPK / Bidang --</option>
+                                </select>
+                                <small class="text-muted fs-nano">Otomatis terfilter berdasarkan SKPD yang dipilih.</small>
+                            </div>
+
                             <!-- Email -->
                             <div class="col-md-6">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Alamat Email</label>
@@ -646,74 +670,133 @@
 
     <!-- Modal Tambah Akun -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addUserModalLabel">Tambah Akun Baru</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white py-3 px-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="fal fa-user-plus fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fs-base fw-bold text-white mb-0" id="addUserModalLabel">Tambah Akun Pengguna Baru</h5>
+                            <small class="text-white-50 fs-nano">Masukkan kelengkapan data identitas, SKPD, PPK, dan role akun</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="dummyAddUserForm" onsubmit="event.preventDefault(); alert('Akun baru berhasil ditambahkan (simulasi dummy)!'); const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal')); modal.hide();">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" placeholder="Contoh: Budi Santoso" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <div class="input-group">
-                                <span class="input-group-text">@</span>
-                                <input type="text" class="form-control" placeholder="budisantoso" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label" for="addUserAgencySelect">SKPD</label>
-                            <select class="form-select select2-agency" name="agency_id" id="addUserAgencySelect" style="width: 100%;">
-                                <option value="">-- Pilih SKPD --</option>
-                                <?php foreach ($allAgencies as $ag): ?>
-                                    <option value="<?= $ag['id'] ?>">
-                                        <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Alamat Email</label>
-                            <input type="email" class="form-control" placeholder="budi@simpple.id" required>
-                        </div>
-                        <div class="row g-2 mb-3">
+                <form id="addUserForm" action="/accounts/store" method="POST">
+                    <?= csrf_field() ?>
+
+                    <div class="modal-body p-4">
+                        <div id="addAlertContainer" class="d-none mb-3"></div>
+
+                        <div class="row g-3">
+                            <!-- Nama Lengkap -->
                             <div class="col-md-6">
-                                <label class="form-label">Role</label>
-                                <select class="form-select" name="role_id" required>
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="full_name" id="addUserFullName" placeholder="Nama lengkap beserta gelar" required>
+                            </div>
+
+                            <!-- Username -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Username <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">@</span>
+                                    <input type="text" class="form-control" name="username" id="addUserUsername" placeholder="username" required>
+                                </div>
+                            </div>
+
+                            <!-- NIP -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">NIP (Nomor Induk Pegawai)</label>
+                                <input type="text" class="form-control font-monospace" name="nip" id="addUserNip" placeholder="18 digit NIP (jika PNS)">
+                            </div>
+
+                            <!-- Role / Hak Akses -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Role / Hak Akses <span class="text-danger">*</span></label>
+                                <select class="form-select" name="role_id" id="addUserRoleId" required>
                                     <option value="">-- Pilih Role --</option>
-                                    <?php if (!empty($allRoles)): ?>
-                                        <?php foreach ($allRoles as $role): ?>
-                                            <option value="<?= esc($role['id']) ?>"><?= esc($role['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <?php foreach ($uniqueRoles as $r): ?>
-                                            <option value="<?= esc($r) ?>"><?= esc($r) ?></option>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
+                                    <?php foreach ($allRoles as $role): ?>
+                                        <option value="<?= esc($role['id']) ?>"><?= esc($role['name']) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
+
+                            <!-- SKPD / Agency Select2 -->
                             <div class="col-md-6">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" required>
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserAgencySelect">Instansi / SKPD</label>
+                                <select class="form-select select2-agency" name="agency_id" id="addUserAgencySelect" style="width: 100%;">
+                                    <option value="">-- Pilih SKPD --</option>
+                                    <?php foreach ($allAgencies as $ag): ?>
+                                        <option value="<?= $ag['id'] ?>">
+                                            <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- PPK / Bidang (Commitment Officer) Terfilter Berdasarkan SKPD -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserCommitmentOfficerSelect">PPK / Bidang (Commitment Officer)</label>
+                                <select class="form-select" name="commitment_officer_id" id="addUserCommitmentOfficerSelect">
+                                    <option value="">-- Pilih SKPD terlebih dahulu --</option>
+                                </select>
+                                <small class="text-muted fs-nano" id="addUserCommitmentOfficerHelp">Otomatis menampilkan bidang/PPK yang berelasi dengan SKPD.</small>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Alamat Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        <i class="fal fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" name="email" id="addUserEmail" placeholder="nama@domain.com">
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">WhatsApp / Nomor Telepon</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </span>
+                                    <input type="text" class="form-control" name="whatsapp_number" id="addUserWhatsapp" placeholder="08xxxxxxxxxx">
+                                </div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Password <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        <i class="fal fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" name="password" id="addUserPassword" placeholder="Default: 12345678" value="12345678" required>
+                                </div>
+                                <small class="text-muted fs-nano">Default diset 12345678 (dapat diubah jika diperlukan).</small>
+                            </div>
+
+                            <!-- Status Akun -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Status Akun <span class="text-danger">*</span></label>
+                                <select class="form-select" name="is_active" id="addUserIsActive" required>
+                                    <option value="1" selected>Active (Dapat Login)</option>
+                                    <option value="0">Inactive (Dinonaktifkan)</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password Sementara</label>
-                            <input type="password" class="form-control" placeholder="Minimal 8 karakter" required>
-                        </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary btn-sm">Simpan Akun</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="addUserSubmitBtn">
+                            <i class="fal fa-save me-1"></i> Simpan Akun Baru
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -725,6 +808,64 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // Global master data commitment officers untuk pencarian instan
+        const allCommitmentOfficers = <?= json_encode($commitmentOfficers ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+
+        /**
+         * Helper untuk mengisi dropdown PPK berdasarkan agencyId yang dipilih
+         */
+        function populateCommitmentOfficers(selectElement, agencyId, selectedOfficerId = null, helpElement = null) {
+            if (!selectElement) return;
+
+            selectElement.innerHTML = '';
+
+            if (!agencyId) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- Pilih SKPD terlebih dahulu --';
+                selectElement.appendChild(opt);
+                selectElement.disabled = false;
+                if (helpElement) {
+                    helpElement.textContent = 'Pilih SKPD untuk memfilter daftar bidang/PPK yang tersedia.';
+                }
+                return;
+            }
+
+            // Filter dari data master lokal
+            const filtered = allCommitmentOfficers.filter(item => String(item.agency_id) === String(agencyId));
+
+            if (filtered.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- Tidak ada PPK / Bidang terdaftar pada SKPD ini --';
+                selectElement.appendChild(opt);
+                if (helpElement) {
+                    helpElement.textContent = 'SKPD ini belum memiliki daftar bidang/PPK di database commitment_officers.';
+                }
+                return;
+            }
+
+            // Opsi default kosong
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '-- Pilih PPK / Bidang (' + filtered.length + ' bidang tersedia) --';
+            selectElement.appendChild(defaultOpt);
+
+            filtered.forEach(item => {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.textContent = item.name;
+                if (selectedOfficerId && String(item.id) === String(selectedOfficerId)) {
+                    opt.selected = true;
+                }
+                selectElement.appendChild(opt);
+            });
+
+            if (helpElement) {
+                helpElement.textContent = `Menampilkan ${filtered.length} bidang/PPK untuk SKPD terpilih.`;
+            }
+        }
+
         $(document).ready(function () {
             // Inisialisasi Select2 pada dropdown SKPD dengan dropdownParent modal agar pencarian dapat difokuskan
             $('#addUserAgencySelect').select2({
@@ -743,10 +884,34 @@
                 width: '100%'
             });
 
-            // Reset Select2 ketika modal ditutup
+            // Event saat SKPD berubah pada Modal Tambah Akun
+            $('#addUserAgencySelect').on('change', function () {
+                const agencyId = $(this).val();
+                const ppkSelect = document.getElementById('addUserCommitmentOfficerSelect');
+                const helpEl = document.getElementById('addUserCommitmentOfficerHelp');
+                populateCommitmentOfficers(ppkSelect, agencyId, null, helpEl);
+            });
+
+            // Event saat SKPD berubah pada Modal Edit Akun
+            $('#editUserAgencySelect').on('change', function () {
+                const agencyId = $(this).val();
+                const ppkSelect = document.getElementById('editUserCommitmentOfficerSelect');
+                // Pertahankan nilai jika ada data sebelumnya
+                const currentVal = $(ppkSelect).data('pending-officer-id') || $(ppkSelect).val();
+                populateCommitmentOfficers(ppkSelect, agencyId, currentVal);
+                $(ppkSelect).removeData('pending-officer-id');
+            });
+
+            // Reset Select2 dan form ketika modal ditutup
             $('#addUserModal').on('hidden.bs.modal', function () {
                 $('#addUserAgencySelect').val(null).trigger('change');
+                const ppkSelect = document.getElementById('addUserCommitmentOfficerSelect');
+                if (ppkSelect) {
+                    populateCommitmentOfficers(ppkSelect, null);
+                }
+                $('#addAlertContainer').addClass('d-none').empty();
             });
+
             $('#editUserModal').on('hidden.bs.modal', function () {
                 $('#editAlertContainer').addClass('d-none').empty();
             });
@@ -976,6 +1141,17 @@
                         agencyNameEl.innerHTML = '<span class="text-muted fst-italic">Belum dihubungkan ke SKPD</span>';
                     }
 
+                    // PPK / Bidang (Commitment Officer)
+                    const officerContainer = document.getElementById('detailModalCommitmentOfficerContainer');
+                    const officerNameEl = document.getElementById('detailModalCommitmentOfficerName');
+                    if (u.commitment_officer_name) {
+                        officerContainer.style.display = 'block';
+                        officerNameEl.textContent = u.commitment_officer_name;
+                    } else {
+                        officerContainer.style.display = 'none';
+                        officerNameEl.textContent = '-';
+                    }
+
                     // Email Link
                     const emailLink = document.getElementById('detailModalEmailLink');
                     if (u.email && u.email !== '-') {
@@ -1164,8 +1340,16 @@
                 const isActiveVal = (typeof u.is_active !== 'undefined') ? u.is_active : (u.status === 'Active' ? 1 : 0);
                 document.getElementById('editUserIsActive').value = String(isActiveVal);
 
-                // Set SKPD Select2
+                // Set SKPD Select2 & PPK/Bidang
                 const agencyVal = u.agency_id ? String(u.agency_id) : '';
+                const ppkVal = u.commitment_officer_id ? String(u.commitment_officer_id) : '';
+
+                // Simpan pending officer ID agar terpilih setelah trigger change
+                const ppkSelect = document.getElementById('editUserCommitmentOfficerSelect');
+                if (ppkSelect) {
+                    $(ppkSelect).data('pending-officer-id', ppkVal);
+                }
+
                 $('#editUserAgencySelect').val(agencyVal).trigger('change');
 
                 // Buka modal
@@ -1233,6 +1417,57 @@
                     })
                     .catch(error => {
                         console.error('Error updating user:', error);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                        alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                        alertBox.innerHTML = '<i class="fal fa-exclamation-triangle fs-5"></i> <div>Gagal menghubungi server. Silakan coba beberapa saat lagi.</div>';
+                    });
+                });
+            }
+
+            // AJAX Handler Form Tambah Akun Pengguna Baru
+            const addForm = document.getElementById('addUserForm');
+            if (addForm) {
+                addForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.getElementById('addUserSubmitBtn');
+                    const originalBtnHtml = submitBtn.innerHTML;
+                    const alertBox = document.getElementById('addAlertContainer');
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Menyimpan...';
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+
+                    const formData = new FormData(addForm);
+
+                    fetch('/accounts/store', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(({ ok, body }) => {
+                        if (ok && body.status === 'success') {
+                            alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${body.message || 'Akun pengguna berhasil ditambahkan!'}</div>`;
+
+                            // Tutup modal dan reload halaman
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 700);
+                        } else {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHtml;
+                            alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${body.message || 'Terjadi kesalahan saat menyimpan akun baru.'}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding user:', error);
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = originalBtnHtml;
                         alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
