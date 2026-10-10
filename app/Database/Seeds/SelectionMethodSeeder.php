@@ -75,6 +75,15 @@ class SelectionMethodSeeder extends Seeder
                 'created_at'  => $now,
                 'updated_at'  => $now,
             ],
+            [
+                'id'          => 13,
+                'code'        => 'SELEKSI_KONSULTANSI',
+                'name'        => 'Seleksi (Jasa Konsultansi)',
+                'description' => 'Seleksi Jasa Konsultansi (ID Metode 13 dari SiRUP)',
+                'is_active'   => 1,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
         ];
 
         foreach ($selectionMethods as $method) {

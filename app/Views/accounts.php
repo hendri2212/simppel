@@ -207,7 +207,7 @@
                                                             <div class="d-flex align-items-center">
                                                                 <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2 flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
                                                                 <div class="flex-grow-1" style="min-width: 0;">
-                                                                    <div class="fw-semibold text-dark text-break lh-sm" title="<?= esc($user['name']) ?>"><?= esc($user['name']) ?></div>
+                                                                    <a href="javascript:void(0);" class="fw-semibold text-dark text-break lh-sm text-decoration-none btn-view-user" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>' title="Klik untuk lihat detail <?= esc($user['name']) ?>"><?= esc($user['name']) ?></a>
                                                                     <small class="text-muted d-block font-monospace fs-nano mt-1"><?= esc($user['username']) ?></small>
                                                                 </div>
                                                             </div>
@@ -250,8 +250,8 @@
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Detail Akun:\nNama: <?= esc(addslashes($user['name'])) ?>\nUsername: <?= esc(addslashes($user['username'])) ?>\nRole: <?= esc(addslashes($user['role'])) ?>\nSKPD: <?= esc(addslashes($user['agency_name'] ?? '-')) ?>\nEmail: <?= esc(addslashes($user['email'])) ?>\nKontak: <?= esc(addslashes($user['whatsapp'])) ?>');">
-                                                                            <i class="fal fa-eye me-2"></i> Lihat Detail
+                                                                        <a class="dropdown-item btn-view-user" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                            <i class="fal fa-eye me-2 text-primary"></i> Lihat Detail
                                                                         </a>
                                                                     </li>
                                                                     <li>
@@ -307,6 +307,132 @@
 
         <?= $this->include('partials/app-settings') ?>
 
+    </div>
+
+    <!-- Modal Detail Akun Pengguna -->
+    <div class="modal fade" id="detailUserModal" tabindex="-1" aria-labelledby="detailUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content overflow-hidden border-0 shadow-lg">
+                <!-- Cover Header Profil dengan Gradient Menarik -->
+                <div class="modal-header border-0 text-white p-4 position-relative" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0284c7 100%);">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    
+                    <div class="d-flex align-items-center gap-3 w-100 pe-4 flex-wrap flex-sm-nowrap">
+                        <div class="position-relative flex-shrink-0">
+                            <img id="detailModalAvatar" src="/img/demo/avatars/avatar-admin.png" alt="Avatar" class="rounded-circle border border-3 border-white shadow bg-white" style="width: 76px; height: 76px; object-fit: cover;">
+                            <span id="detailModalStatusIndicator" class="position-absolute bottom-0 end-0 border border-2 border-white rounded-circle bg-success" style="width: 18px; height: 18px;" title="Status Pengguna"></span>
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 0;">
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                <h4 class="mb-0 fw-bold text-white text-break" id="detailModalName">-</h4>
+                                <span class="badge" id="detailModalRoleBadge">-</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="text-white-50 font-monospace fs-sm" id="detailModalUsername">@-</span>
+                                <span class="badge" id="detailModalStatusBadge">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4 bg-light bg-opacity-50">
+                    <div class="row g-3">
+                        <!-- Kartu Informasi Kepegawaian & Instansi -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                    <div class="rounded p-1 bg-primary bg-opacity-10 text-primary">
+                                        <svg class="sa-icon" style="width: 15px; height: 15px;">
+                                            <use href="/icons/sprite.svg#briefcase"></use>
+                                        </svg>
+                                    </div>
+                                    <span class="fw-semibold text-dark fs-xs text-uppercase">Instansi & Kepegawaian</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Nomor Induk Pegawai (NIP)</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="font-monospace fs-sm fw-bold text-dark" id="detailModalNip">-</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Instansi / SKPD</label>
+                                        <div id="detailModalAgencyContainer">
+                                            <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1" id="detailModalAgencyAbbr">DPUPR</span>
+                                            <div class="fs-sm text-dark fw-medium text-break" id="detailModalAgencyName">-</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Role / Hak Akses Sistem</label>
+                                        <div class="fs-sm fw-semibold text-dark" id="detailModalRole">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kartu Kontak & Akun -->
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-header bg-white py-2 px-3 border-bottom d-flex align-items-center gap-2">
+                                    <div class="rounded p-1 bg-info bg-opacity-10 text-info">
+                                        <svg class="sa-icon" style="width: 15px; height: 15px;">
+                                            <use href="/icons/sprite.svg#mail"></use>
+                                        </svg>
+                                    </div>
+                                    <span class="fw-semibold text-dark fs-xs text-uppercase">Kontak & Informasi Akun</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Alamat Email</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <svg class="sa-icon text-muted flex-shrink-0" style="width: 14px; height: 14px;">
+                                                <use href="/icons/sprite.svg#mail"></use>
+                                            </svg>
+                                            <a href="#" id="detailModalEmailLink" class="fs-sm text-primary text-decoration-none fw-medium text-break">-</a>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">WhatsApp / Nomor Telepon</label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <svg class="sa-icon text-muted flex-shrink-0" style="width: 14px; height: 14px;">
+                                                <use href="/icons/sprite.svg#phone"></use>
+                                            </svg>
+                                            <span class="fs-sm font-monospace text-dark" id="detailModalWhatsapp">-</span>
+                                            <a href="#" id="detailModalWaBtn" target="_blank" class="btn btn-xs btn-outline-success ms-auto d-none text-nowrap">
+                                                <svg class="sa-icon me-1" style="width: 11px; height: 11px;">
+                                                    <use href="/icons/sprite.svg#message-circle"></use>
+                                                </svg>
+                                                WhatsApp
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">ID Akun</label>
+                                            <span class="badge bg-light text-dark border font-monospace" id="detailModalId">#1</span>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Terdaftar Sejak</label>
+                                            <span class="fs-xs text-dark fw-medium" id="detailModalCreatedAt">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-white border-top py-2 px-4 d-flex justify-content-between align-items-center">
+                    <span class="fs-xs text-muted">SIMPPLE &bull; Manajemen Pengguna</span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="detailModalEditBtn">
+                            <i class="fal fa-edit me-1"></i> Edit Akun
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Tambah Akun -->
@@ -579,6 +705,101 @@
                     renderTable();
                 });
             }
+
+            // Event Listener untuk Tombol Detail Akun Pengguna (.btn-view-user)
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-view-user');
+                if (!btn) return;
+
+                e.preventDefault();
+                const rawData = btn.getAttribute('data-user');
+                if (!rawData) return;
+
+                try {
+                    const u = JSON.parse(rawData);
+
+                    document.getElementById('detailModalName').textContent = u.name || '-';
+                    document.getElementById('detailModalUsername').textContent = u.username || '@-';
+                    document.getElementById('detailModalId').textContent = '#' + (u.id || '-');
+                    document.getElementById('detailModalNip').textContent = u.nip || '-';
+                    document.getElementById('detailModalCreatedAt').textContent = u.created_at || '-';
+                    document.getElementById('detailModalAvatar').src = u.avatar || '/img/demo/avatars/avatar-admin.png';
+
+                    // Role & Badge
+                    const roleBadge = document.getElementById('detailModalRoleBadge');
+                    roleBadge.className = 'badge ' + (u.role_badge || 'bg-light text-dark');
+                    roleBadge.textContent = u.role || 'USER';
+                    document.getElementById('detailModalRole').textContent = u.role || 'USER';
+
+                    // Status & Badge
+                    const statusBadge = document.getElementById('detailModalStatusBadge');
+                    const isActive = (u.status === 'Active');
+                    statusBadge.className = 'badge ' + (isActive ? 'bg-success' : 'bg-secondary');
+                    statusBadge.textContent = u.status || 'Inactive';
+
+                    const statusIndicator = document.getElementById('detailModalStatusIndicator');
+                    statusIndicator.className = 'position-absolute bottom-0 end-0 border border-2 border-white rounded-circle ' + (isActive ? 'bg-success' : 'bg-secondary');
+
+                    // SKPD
+                    const agencyAbbrEl = document.getElementById('detailModalAgencyAbbr');
+                    const agencyNameEl = document.getElementById('detailModalAgencyName');
+                    if (u.agency_name) {
+                        agencyNameEl.textContent = u.agency_name;
+                        if (u.agency_abbr) {
+                            agencyAbbrEl.style.display = 'inline-block';
+                            agencyAbbrEl.textContent = u.agency_abbr;
+                        } else {
+                            agencyAbbrEl.style.display = 'none';
+                        }
+                    } else {
+                        agencyAbbrEl.style.display = 'none';
+                        agencyNameEl.innerHTML = '<span class="text-muted fst-italic">Belum dihubungkan ke SKPD</span>';
+                    }
+
+                    // Email Link
+                    const emailLink = document.getElementById('detailModalEmailLink');
+                    if (u.email && u.email !== '-') {
+                        emailLink.textContent = u.email;
+                        emailLink.href = 'mailto:' + u.email;
+                        emailLink.classList.remove('text-muted');
+                        emailLink.classList.add('text-primary');
+                    } else {
+                        emailLink.textContent = '-';
+                        emailLink.removeAttribute('href');
+                        emailLink.classList.add('text-muted');
+                        emailLink.classList.remove('text-primary');
+                    }
+
+                    // WhatsApp Link
+                    const waText = document.getElementById('detailModalWhatsapp');
+                    const waBtn = document.getElementById('detailModalWaBtn');
+                    waText.textContent = u.whatsapp || '-';
+                    if (u.whatsapp && u.whatsapp !== '-' && u.whatsapp.replace(/\D/g, '').length >= 8) {
+                        let phoneClean = u.whatsapp.replace(/\D/g, '');
+                        if (phoneClean.startsWith('0')) {
+                            phoneClean = '62' + phoneClean.slice(1);
+                        }
+                        waBtn.href = 'https://wa.me/' + phoneClean;
+                        waBtn.classList.remove('d-none');
+                    } else {
+                        waBtn.classList.add('d-none');
+                    }
+
+                    // Tombol Edit di Modal Detail
+                    const editBtn = document.getElementById('detailModalEditBtn');
+                    editBtn.onclick = function() {
+                        const modalEl = document.getElementById('detailUserModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+                        alert('Buka form edit untuk pengguna: ' + u.name);
+                    };
+
+                    const detailModal = new bootstrap.Modal(document.getElementById('detailUserModal'));
+                    detailModal.show();
+                } catch (err) {
+                    console.error('Error parsing user data:', err);
+                }
+            });
 
             // Inisialisasi awal
             applyFilter();

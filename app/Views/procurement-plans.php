@@ -86,7 +86,7 @@
 
                     $totalPlans       = $totalPlans ?? count($plans);
                     $totalBudget      = $totalBudget ?? array_sum(array_column($plans, 'budget_ceiling'));
-                    $announcedCount   = $announcedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 0) === 1));
+                    $announcedCount   = $announcedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 0) >= 1));
                     $syncedCount      = $syncedCount ?? count(array_filter($plans, fn($p) => (int)($p['is_synced'] ?? 0) === 1));
                     $dakCount         = $dakCount ?? count(array_filter($plans, fn($p) => (int)($p['special_allocation_type_id'] ?? 2) === 1));
 
@@ -296,7 +296,7 @@
                                                 <?php foreach ($plans as $p): ?>
                                                     <?php
                                                     $planJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
-                                                    $isAnnounced = (int) ($p['rup_status'] ?? 0) === 1;
+                                                    $isAnnounced = (int) ($p['rup_status'] ?? 0) >= 1;
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
                                                     $isDak = ($p['special_allocation_type_name'] ?? '') === 'DAK';
                                                     ?>
@@ -869,8 +869,8 @@
                     try {
                         const p = JSON.parse(rawData);
                         document.getElementById('modalPlanCode').textContent = p.package_code || ('DRAFT-' + p.id);
-                        document.getElementById('modalPlanRupStatus').textContent = (parseInt(p.rup_status) === 1) ? 'Terumumkan' : 'Draf';
-                        document.getElementById('modalPlanRupStatus').className = (parseInt(p.rup_status) === 1) 
+                        document.getElementById('modalPlanRupStatus').textContent = (parseInt(p.rup_status) >= 1) ? 'Terumumkan' : 'Draf';
+                        document.getElementById('modalPlanRupStatus').className = (parseInt(p.rup_status) >= 1) 
                             ? 'badge bg-success-subtle text-success border border-success-subtle'
                             : 'badge bg-warning-subtle text-warning border border-warning-subtle';
 
@@ -936,7 +936,7 @@
 
                     const matchesProcType = !procTypeVal || procType === procTypeVal;
                     const matchesMethod = !methodVal || method === methodVal;
-                    const matchesRupStatus = !rupStatusVal || rupStatus === rupStatusVal;
+                    const matchesRupStatus = !rupStatusVal || (rupStatusVal === '1' ? (parseInt(rupStatus) >= 1) : (parseInt(rupStatus) === 0));
                     const matchesDak = !dakVal || dak === dakVal;
 
                     return matchesSearch && matchesProcType && matchesMethod && matchesRupStatus && matchesDak;
