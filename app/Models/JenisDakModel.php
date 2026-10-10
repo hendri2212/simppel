@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class ProcurementTypeModel extends Model
+class JenisDakModel extends Model
 {
-    protected $table            = 'procurement_types';
+    protected $table            = 'jenis_dak';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -25,7 +25,7 @@ class ProcurementTypeModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
-     * Get active procurement types
+     * Get active special allocation types
      */
     public function getActiveTypes()
     {

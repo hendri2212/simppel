@@ -5,13 +5,13 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class ProcurementTypeSeeder extends Seeder
+class JenisPengadaanSeeder extends Seeder
 {
     public function run()
     {
         $now = Time::now()->toDateTimeString();
 
-        $procurementTypes = [
+        $jenisPengadaan = [
             [
                 'id'          => 1,
                 'code'        => 'BARANG',
@@ -59,17 +59,17 @@ class ProcurementTypeSeeder extends Seeder
             ],
         ];
 
-        foreach ($procurementTypes as $type) {
-            $existing = $this->db->table('procurement_types')
+        foreach ($jenisPengadaan as $type) {
+            $existing = $this->db->table('jenis_pengadaan')
                 ->where('id', $type['id'])
                 ->orWhere('name', $type['name'])
                 ->get()
                 ->getRow();
 
             if ($existing) {
-                $this->db->table('procurement_types')->where('id', $existing->id)->update($type);
+                $this->db->table('jenis_pengadaan')->where('id', $existing->id)->update($type);
             } else {
-                $this->db->table('procurement_types')->insert($type);
+                $this->db->table('jenis_pengadaan')->insert($type);
             }
         }
     }

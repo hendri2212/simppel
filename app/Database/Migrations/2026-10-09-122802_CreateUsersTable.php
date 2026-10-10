@@ -80,7 +80,7 @@ class CreateUsersTable extends Migration
 
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('role_id', 'roles', 'id', 'CASCADE', 'SET NULL');
-        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('skpd_id', 'skpd', 'id', 'CASCADE', 'SET NULL');
         $this->forge->addForeignKey('ppk_id', 'ppk', 'id', 'CASCADE', 'SET NULL');
         $this->forge->createTable('users', true);
     }

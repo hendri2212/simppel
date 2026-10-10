@@ -66,8 +66,8 @@ class Auth extends BaseController
             'role_id'                 => $user['role_id'],
             'role_name'               => $user['role_name'] ?? 'USER',
             'skpd_id'               => $user['skpd_id'] ?? null,
-            'agency_name'             => $user['agency_name'] ?? null,
-            'agency_abbr'             => $user['agency_abbr'] ?? null,
+            'skpd_name'             => $user['skpd_name'] ?? null,
+            'skpd_abbr'             => $user['skpd_abbr'] ?? null,
             'ppk_id'   => $user['ppk_id'] ?? null,
             'ppk_name' => $user['ppk_name'] ?? null,
         ];

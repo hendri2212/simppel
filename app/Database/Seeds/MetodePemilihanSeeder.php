@@ -5,13 +5,13 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class SelectionMethodSeeder extends Seeder
+class MetodePemilihanSeeder extends Seeder
 {
     public function run()
     {
         $now = Time::now()->toDateTimeString();
 
-        $selectionMethods = [
+        $metodePemilihan = [
             [
                 'id'          => 1,
                 'code'        => 'E_PURCHASING',
@@ -86,17 +86,17 @@ class SelectionMethodSeeder extends Seeder
             ],
         ];
 
-        foreach ($selectionMethods as $method) {
-            $existing = $this->db->table('selection_methods')
+        foreach ($metodePemilihan as $method) {
+            $existing = $this->db->table('metode_pemilihan')
                 ->where('id', $method['id'])
                 ->orWhere('name', $method['name'])
                 ->get()
                 ->getRow();
 
             if ($existing) {
-                $this->db->table('selection_methods')->where('id', $existing->id)->update($method);
+                $this->db->table('metode_pemilihan')->where('id', $existing->id)->update($method);
             } else {
-                $this->db->table('selection_methods')->insert($method);
+                $this->db->table('metode_pemilihan')->insert($method);
             }
         }
     }

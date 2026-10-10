@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class SpecialAllocationTypeModel extends Model
+class SkpdModel extends Model
 {
-    protected $table            = 'special_allocation_types';
+    protected $table            = 'skpd';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -14,8 +14,11 @@ class SpecialAllocationTypeModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'name',
+        'abbreviation',
         'code',
-        'description',
+        'address',
+        'contact',
+        'work_unit_id',
         'is_active',
     ];
 
@@ -23,12 +26,4 @@ class SpecialAllocationTypeModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-
-    /**
-     * Get active special allocation types
-     */
-    public function getActiveTypes()
-    {
-        return $this->where('is_active', 1)->orderBy('id', 'ASC')->findAll();
-    }
 }

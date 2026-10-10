@@ -31,13 +31,13 @@ class UserModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
-     * Get user by username or email along with role and agency name
+     * Get user by username or email along with role and skpd name
      */
     public function getUserWithRole(string $identifier)
     {
-        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, ppk.name as ppk_name')
+        return $this->select('users.*, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
             ->join('roles', 'roles.id = users.role_id', 'left')
-            ->join('agencies', 'agencies.id = users.skpd_id', 'left')
+            ->join('skpd', 'skpd.id = users.skpd_id', 'left')
             ->join('ppk', 'ppk.id = users.ppk_id', 'left')
             ->groupStart()
                 ->where('users.username', $identifier)
@@ -47,13 +47,13 @@ class UserModel extends Model
     }
 
     /**
-     * Get all users with roles and agency details
+     * Get all users with roles and skpd details
      */
     public function getUsersWithDetails()
     {
-        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, agencies.code as agency_code, ppk.name as ppk_name')
+        return $this->select('users.*, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, skpd.code as skpd_code, ppk.name as ppk_name')
             ->join('roles', 'roles.id = users.role_id', 'left')
-            ->join('agencies', 'agencies.id = users.skpd_id', 'left')
+            ->join('skpd', 'skpd.id = users.skpd_id', 'left')
             ->join('ppk', 'ppk.id = users.ppk_id', 'left')
             ->orderBy('users.id', 'ASC')
             ->findAll();

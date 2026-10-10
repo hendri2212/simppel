@@ -8,15 +8,15 @@ class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        $this->call('AgencySeeder');
+        $this->call('SkpdSeeder');
         $this->call('PpkSeeder');
         $this->call('RoleSeeder');
-        $this->call('ExpenseTypeSeeder');
-        $this->call('ProcurementTypeSeeder');
-        $this->call('FundingSourceSeeder');
-        $this->call('SelectionMethodSeeder');
-        $this->call('SpecialAllocationTypeSeeder');
+        $this->call('JenisBelanjaSeeder');
+        $this->call('JenisPengadaanSeeder');
+        $this->call('SumberDanaSeeder');
+        $this->call('MetodePemilihanSeeder');
+        $this->call('JenisDakSeeder');
         $this->call('UserSeeder');
-        $this->call('ProcurementPlanSeeder');
+        $this->call('RupSeeder');
     }
 }

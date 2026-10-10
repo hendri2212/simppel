@@ -5,13 +5,13 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class AgencySeeder extends Seeder
+class SkpdSeeder extends Seeder
 {
     public function run()
     {
         $now = Time::now()->toDateTimeString();
 
-        $agencies = [
+        $skpd = [
             [
                 'id'           => 1,
                 'name'         => 'BADAN KEPEGAWAIAN DAN PENGEMBANGAN SDM',
@@ -686,12 +686,12 @@ class AgencySeeder extends Seeder
             ],
         ];
 
-        foreach ($agencies as $agency) {
-            $existing = $this->db->table('agencies')->where('id', $agency['id'])->get()->getRow();
+        foreach ($skpd as $skpd) {
+            $existing = $this->db->table('skpd')->where('id', $skpd['id'])->get()->getRow();
             if ($existing) {
-                $this->db->table('agencies')->where('id', $agency['id'])->update($agency);
+                $this->db->table('skpd')->where('id', $skpd['id'])->update($skpd);
             } else {
-                $this->db->table('agencies')->insert($agency);
+                $this->db->table('skpd')->insert($skpd);
             }
         }
     }

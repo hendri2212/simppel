@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateSpecialAllocationTypesTable extends Migration
+class CreateSumberDanaTable extends Migration
 {
     public function up()
     {
@@ -48,11 +48,11 @@ class CreateSpecialAllocationTypesTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('special_allocation_types', true);
+        $this->forge->createTable('sumber_dana', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('special_allocation_types', true);
+        $this->forge->dropTable('sumber_dana', true);
     }
 }

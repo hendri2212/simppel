@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateProcurementTypesTable extends Migration
+class CreateMetodePemilihanTable extends Migration
 {
     public function up()
     {
@@ -48,11 +48,11 @@ class CreateProcurementTypesTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('procurement_types', true);
+        $this->forge->createTable('metode_pemilihan', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('procurement_types', true);
+        $this->forge->dropTable('metode_pemilihan', true);
     }
 }

@@ -76,19 +76,19 @@
                     <?php
                     // Pastikan variabel terdefinisi
                     $plans            = $plans ?? [];
-                    $agencies         = $agencies ?? [];
+                    $skpd         = $skpd ?? [];
                     $officers         = $officers ?? [];
-                    $expenseTypes     = $expenseTypes ?? [];
-                    $procurementTypes = $procurementTypes ?? [];
-                    $fundingSources   = $fundingSources ?? [];
-                    $selectionMethods = $selectionMethods ?? [];
-                    $allocationTypes  = $allocationTypes ?? [];
+                    $jenisBelanja     = $jenisBelanja ?? [];
+                    $jenisPengadaan = $jenisPengadaan ?? [];
+                    $sumberDana   = $sumberDana ?? [];
+                    $metodePemilihan = $metodePemilihan ?? [];
+                    $jenisDaks  = $jenisDaks ?? [];
 
                     $totalPlans       = $totalPlans ?? count($plans);
                     $totalBudget      = $totalBudget ?? array_sum(array_column($plans, 'budget_ceiling'));
                     $announcedCount   = $announcedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 0) >= 1));
                     $syncedCount      = $syncedCount ?? count(array_filter($plans, fn($p) => (int)($p['is_synced'] ?? 0) === 1));
-                    $dakCount         = $dakCount ?? count(array_filter($plans, fn($p) => (int)($p['special_allocation_type_id'] ?? 2) === 1));
+                    $dakCount         = $dakCount ?? count(array_filter($plans, fn($p) => (int)($p['jenis_dak_id'] ?? 2) === 1));
 
                     // Helper format rupiah singkat untuk stat cards
                     $formatShortRupiah = function($amount) {
@@ -315,19 +315,19 @@
                                                     $planJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
                                                     $isAnnounced = (int) ($p['rup_status'] ?? 0) >= 1;
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
-                                                    $isDak = ($p['special_allocation_type_name'] ?? '') === 'DAK';
+                                                    $isDak = ($p['jenis_dak_name'] ?? '') === 'DAK';
                                                     ?>
                                                     <tr class="plan-row"
                                                         data-id="<?= $p['id'] ?>"
                                                         data-code="<?= esc(strtolower($p['package_code'] ?? '')) ?>"
                                                         data-name="<?= esc(strtolower($p['package_name'] ?? '')) ?>"
                                                         data-activity="<?= esc(strtolower($p['activity'] ?? '')) ?>"
-                                                        data-agency="<?= esc(strtolower(($p['agency_abbreviation'] ?? '') . ' ' . ($p['agency_name'] ?? ''))) ?>"
+                                                        data-skpd="<?= esc(strtolower(($p['skpd_abbreviation'] ?? '') . ' ' . ($p['skpd_name'] ?? ''))) ?>"
                                                         data-mak="<?= esc(strtolower($p['account_code'] ?? '')) ?>"
-                                                        data-proc-type="<?= esc($p['procurement_type_name'] ?? '') ?>"
-                                                        data-method="<?= esc($p['selection_method_name'] ?? '') ?>"
+                                                        data-proc-type="<?= esc($p['jenis_pengadaan_name'] ?? '') ?>"
+                                                        data-method="<?= esc($p['metode_pemilihan_name'] ?? '') ?>"
                                                         data-rup-status="<?= (int) ($p['rup_status'] ?? 0) ?>"
-                                                        data-dak="<?= esc($p['special_allocation_type_name'] ?? 'NON DAK') ?>"
+                                                        data-dak="<?= esc($p['jenis_dak_name'] ?? 'NON DAK') ?>"
                                                         data-year="<?= esc($p['fiscal_year'] ?? '') ?>">
                                                         
                                                         <td class="text-muted fs-xs"><?= $p['id'] ?></td>
@@ -349,7 +349,7 @@
                                                             <div class="rup-meta-tag">
                                                                 <span class="badge bg-light text-secondary border">TA <?= esc($p['fiscal_year']) ?></span>
                                                                 <span class="badge <?= $isDak ? 'badge-dak' : 'badge-non-dak' ?>">
-                                                                    <?= esc($p['special_allocation_type_name'] ?? 'NON DAK') ?>
+                                                                    <?= esc($p['jenis_dak_name'] ?? 'NON DAK') ?>
                                                                 </span>
                                                             </div>
                                                         </td>
@@ -378,13 +378,13 @@
                                                         <!-- Instansi / SKPD & PPK -->
                                                         <td>
                                                             <div>
-                                                                <?php if (!empty($p['agency_abbreviation'])): ?>
+                                                                <?php if (!empty($p['skpd_abbreviation'])): ?>
                                                                     <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle me-1 mb-1">
-                                                                        <?= esc($p['agency_abbreviation']) ?>
+                                                                        <?= esc($p['skpd_abbreviation']) ?>
                                                                     </span>
                                                                 <?php endif; ?>
-                                                                <span class="fs-xs text-dark fw-medium d-block" title="<?= esc($p['agency_name']) ?>">
-                                                                    <?= esc($p['agency_name']) ?>
+                                                                <span class="fs-xs text-dark fw-medium d-block" title="<?= esc($p['skpd_name']) ?>">
+                                                                    <?= esc($p['skpd_name']) ?>
                                                                 </span>
                                                             </div>
                                                             <div class="fs-nano text-muted mt-1">
@@ -399,11 +399,11 @@
                                                         <td>
                                                             <div class="mb-1">
                                                                 <span class="badge <?= $p['proc_badge'] ?? 'bg-light text-dark border' ?>">
-                                                                    <?= esc($p['procurement_type_name'] ?? 'Barang') ?>
+                                                                    <?= esc($p['jenis_pengadaan_name'] ?? 'Barang') ?>
                                                                 </span>
                                                             </div>
                                                             <div class="fs-xs text-secondary">
-                                                                <?= esc($p['selection_method_name'] ?? '-') ?>
+                                                                <?= esc($p['metode_pemilihan_name'] ?? '-') ?>
                                                             </div>
                                                         </td>
 
@@ -413,7 +413,7 @@
                                                                 Rp <?= number_format((float) $p['budget_ceiling'], 0, ',', '.') ?>
                                                             </div>
                                                             <div class="fs-nano text-muted">
-                                                                <?= esc($p['funding_source_name'] ?? 'APBD') ?> &bull; <?= esc($p['expense_type_name'] ?? 'Modal') ?>
+                                                                <?= esc($p['sumber_dana_name'] ?? 'APBD') ?> &bull; <?= esc($p['jenis_belanja_name'] ?? 'Modal') ?>
                                                             </div>
                                                             <?php if (!empty($p['account_code'])): ?>
                                                                 <div class="font-monospace fs-nano text-muted text-truncate" title="MAK: <?= esc($p['account_code']) ?>">
@@ -578,7 +578,7 @@
                                 <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Informasi Satuan Kerja & PPK</h6>
                                 <div class="mb-2">
                                     <div class="detail-label">Instansi / SKPD</div>
-                                    <div class="detail-value" id="modalPlanAgency">-</div>
+                                    <div class="detail-value" id="modalPlanSkpd">-</div>
                                 </div>
                                 <div class="mb-2">
                                     <div class="detail-label">Pejabat Pembuat Komitmen (PPK)</div>
@@ -618,7 +618,7 @@
                                 </div>
                                 <div>
                                     <div class="detail-label">Jenis Belanja</div>
-                                    <div class="detail-value" id="modalPlanExpenseType">-</div>
+                                    <div class="detail-value" id="modalPlanJenisBelanja">-</div>
                                 </div>
                             </div>
                         </div>
@@ -718,7 +718,7 @@
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <span class="badge bg-light text-dark border font-monospace fs-nano" title="Instansi / SKPD">
                                     <i class="fal fa-building text-primary me-1"></i>
-                                    <?= esc(!empty($currentUser['agency_name']) ? ($currentUser['agency_abbr'] ? $currentUser['agency_abbr'] . ' - ' : '') . $currentUser['agency_name'] : 'Instansi Akun Login') ?>
+                                    <?= esc(!empty($currentUser['skpd_name']) ? ($currentUser['skpd_abbr'] ? $currentUser['skpd_abbr'] . ' - ' : '') . $currentUser['skpd_name'] : 'Instansi Akun Login') ?>
                                 </span>
                                 <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace fs-nano" title="Pejabat Pembuat Komitmen (PPK)">
                                     <i class="fal fa-user-tie text-info me-1"></i>
@@ -749,10 +749,10 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Jenis Pengadaan <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" name="procurement_type_id" required>
+                                <select class="form-select form-select-sm" name="jenis_pengadaan_id" required>
                                     <option value="">-- Pilih Jenis Pengadaan --</option>
-                                    <?php if (!empty($procurementTypes)): ?>
-                                        <?php foreach ($procurementTypes as $pt): ?>
+                                    <?php if (!empty($jenisPengadaan)): ?>
+                                        <?php foreach ($jenisPengadaan as $pt): ?>
                                             <option value="<?= $pt['id'] ?>" <?= $pt['name'] === 'Pekerjaan Konstruksi' ? 'selected' : '' ?>><?= esc($pt['name']) ?></option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -766,10 +766,10 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Metode Pemilihan <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" name="selection_method_id" required>
+                                <select class="form-select form-select-sm" name="metode_pemilihan_id" required>
                                     <option value="">-- Pilih Metode Pemilihan --</option>
-                                    <?php if (!empty($selectionMethods)): ?>
-                                        <?php foreach ($selectionMethods as $sm): ?>
+                                    <?php if (!empty($metodePemilihan)): ?>
+                                        <?php foreach ($metodePemilihan as $sm): ?>
                                             <option value="<?= $sm['id'] ?>" <?= $sm['name'] === 'Tender' ? 'selected' : '' ?>><?= esc($sm['name']) ?></option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -797,9 +797,9 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Sumber Dana <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" name="funding_source_id" required>
-                                    <?php if (!empty($fundingSources)): ?>
-                                        <?php foreach ($fundingSources as $fs): ?>
+                                <select class="form-select form-select-sm" name="sumber_dana_id" required>
+                                    <?php if (!empty($sumberDana)): ?>
+                                        <?php foreach ($sumberDana as $fs): ?>
                                             <option value="<?= $fs['id'] ?>" <?= $fs['name'] === 'APBD' ? 'selected' : '' ?>><?= esc($fs['name']) ?></option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -813,9 +813,9 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Status DAK</label>
-                                <select class="form-select form-select-sm" name="special_allocation_type_id">
-                                    <?php if (!empty($allocationTypes)): ?>
-                                        <?php foreach ($allocationTypes as $at): ?>
+                                <select class="form-select form-select-sm" name="jenis_dak_id">
+                                    <?php if (!empty($jenisDaks)): ?>
+                                        <?php foreach ($jenisDaks as $at): ?>
                                             <option value="<?= $at['id'] ?>" <?= $at['name'] === 'NON DAK' ? 'selected' : '' ?>><?= esc($at['name']) ?></option>
                                         <?php endforeach; ?>
                                     <?php else: ?>
@@ -916,19 +916,19 @@
                         document.getElementById('modalPlanName').textContent = p.package_name || '-';
                         document.getElementById('modalPlanActivity').textContent = p.activity || '-';
 
-                        document.getElementById('modalPlanAgency').textContent = p.agency_name || '-';
+                        document.getElementById('modalPlanSkpd').textContent = p.skpd_name || '-';
                         document.getElementById('modalPlanOfficer').textContent = p.ppk_name || '-';
                         document.getElementById('modalPlanLocation').textContent = p.location || '-';
                         document.getElementById('modalPlanVolume').textContent = p.volume || '-';
 
                         document.getElementById('modalPlanBudget').textContent = formatRupiah(p.budget_ceiling || 0);
                         document.getElementById('modalPlanMak').textContent = p.account_code || '-';
-                        document.getElementById('modalPlanFunding').textContent = p.funding_source_name || '-';
-                        document.getElementById('modalPlanDak').textContent = p.special_allocation_type_name || 'NON DAK';
-                        document.getElementById('modalPlanExpenseType').textContent = p.expense_type_name || '-';
+                        document.getElementById('modalPlanFunding').textContent = p.sumber_dana_name || '-';
+                        document.getElementById('modalPlanDak').textContent = p.jenis_dak_name || 'NON DAK';
+                        document.getElementById('modalPlanJenisBelanja').textContent = p.jenis_belanja_name || '-';
 
-                        document.getElementById('modalPlanProcType').textContent = p.procurement_type_name || '-';
-                        document.getElementById('modalPlanMethod').textContent = p.selection_method_name || '-';
+                        document.getElementById('modalPlanProcType').textContent = p.jenis_pengadaan_name || '-';
+                        document.getElementById('modalPlanMethod').textContent = p.metode_pemilihan_name || '-';
                         document.getElementById('modalPlanDuration').textContent = (p.work_duration || 0) + ' Hari Kalender';
                         document.getElementById('modalPlanDate').textContent = p.submission_date || '-';
 
@@ -959,7 +959,7 @@
                     const code = row.getAttribute('data-code') || '';
                     const name = row.getAttribute('data-name') || '';
                     const act = row.getAttribute('data-activity') || '';
-                    const ag = row.getAttribute('data-agency') || '';
+                    const ag = row.getAttribute('data-skpd') || '';
                     const mak = row.getAttribute('data-mak') || '';
                     const procType = row.getAttribute('data-proc-type') || '';
                     const method = row.getAttribute('data-method') || '';

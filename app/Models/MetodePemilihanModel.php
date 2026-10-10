@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class ExpenseTypeModel extends Model
+class MetodePemilihanModel extends Model
 {
-    protected $table            = 'expense_types';
+    protected $table            = 'metode_pemilihan';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -25,9 +25,9 @@ class ExpenseTypeModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
-     * Get active expense types
+     * Get active selection methods
      */
-    public function getActiveTypes()
+    public function getActiveMethods()
     {
         return $this->where('is_active', 1)->orderBy('id', 'ASC')->findAll();
     }

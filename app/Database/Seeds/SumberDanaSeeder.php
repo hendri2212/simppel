@@ -5,13 +5,13 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class FundingSourceSeeder extends Seeder
+class SumberDanaSeeder extends Seeder
 {
     public function run()
     {
         $now = Time::now()->toDateTimeString();
 
-        $fundingSources = [
+        $sumberDana = [
             [
                 'id'          => 1,
                 'code'        => 'APBD',
@@ -113,17 +113,17 @@ class FundingSourceSeeder extends Seeder
             ],
         ];
 
-        foreach ($fundingSources as $source) {
-            $existing = $this->db->table('funding_sources')
+        foreach ($sumberDana as $source) {
+            $existing = $this->db->table('sumber_dana')
                 ->where('id', $source['id'])
                 ->orWhere('name', $source['name'])
                 ->get()
                 ->getRow();
 
             if ($existing) {
-                $this->db->table('funding_sources')->where('id', $existing->id)->update($source);
+                $this->db->table('sumber_dana')->where('id', $existing->id)->update($source);
             } else {
-                $this->db->table('funding_sources')->insert($source);
+                $this->db->table('sumber_dana')->insert($source);
             }
         }
     }

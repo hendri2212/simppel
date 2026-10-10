@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class FundingSourceModel extends Model
+class SumberDanaModel extends Model
 {
-    protected $table            = 'funding_sources';
+    protected $table            = 'sumber_dana';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';

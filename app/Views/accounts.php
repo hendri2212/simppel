@@ -33,12 +33,12 @@
                     <?php
                     // Data akun, SKPD, dan role disediakan oleh AccountController
                     $usersList       = $usersList ?? [];
-                    $allAgencies     = $allAgencies ?? [];
+                    $allSkpd     = $allSkpd ?? [];
                     $allRoles        = $allRoles ?? [];
                     $totalCount      = $totalCount ?? count($usersList);
                     $activeCount     = $activeCount ?? count(array_filter($usersList, fn($u) => ($u['status'] ?? '') === 'Active'));
                     $inactiveCount   = $inactiveCount ?? count(array_filter($usersList, fn($u) => ($u['status'] ?? '') === 'Inactive'));
-                    $usersWithAgency = $usersWithAgency ?? count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
+                    $usersWithSkpd = $usersWithSkpd ?? count(array_filter($usersList, fn($u) => !empty($u['skpd_name'])));
                     $uniqueRoles     = $uniqueRoles ?? array_unique(array_filter(array_column($usersList, 'role')));
                     ?>
 
@@ -126,8 +126,8 @@
                                         </div>
                                         <div>
                                             <div class="text-muted fs-xs text-uppercase fw-semibold">Total SKPD</div>
-                                            <div class="fs-2 fw-bold text-dark"><?= count($allAgencies) ?></div>
-                                            <div class="fs-xs text-info"><?= $usersWithAgency ?> akun terhubung SKPD</div>
+                                            <div class="fs-2 fw-bold text-dark"><?= count($allSkpd) ?></div>
+                                            <div class="fs-xs text-info"><?= $usersWithSkpd ?> akun terhubung SKPD</div>
                                         </div>
                                     </div>
                                 </div>
@@ -217,8 +217,8 @@
                                                         data-email="<?= esc(strtolower($user['email'])) ?>"
                                                         data-username="<?= esc(strtolower($user['username'])) ?>"
                                                         data-nip="<?= esc(strtolower($user['nip'])) ?>"
-                                                        data-agency="<?= esc(strtolower(($user['agency_abbr'] ?? '') . ' ' . ($user['agency_name'] ?? ''))) ?>"
-                                                        data-agency-name="<?= esc($user['agency_name'] ?? '') ?>"
+                                                        data-skpd="<?= esc(strtolower(($user['skpd_abbr'] ?? '') . ' ' . ($user['skpd_name'] ?? ''))) ?>"
+                                                        data-skpd-name="<?= esc($user['skpd_name'] ?? '') ?>"
                                                         data-role="<?= esc($user['role']) ?>"
                                                         data-status="<?= esc($user['status']) ?>">
                                                         <td class="text-muted"><?= $user['id'] ?></td>
@@ -235,14 +235,14 @@
                                                             <span class="font-monospace fs-xs text-dark fw-medium"><?= esc($user['nip']) ?></span>
                                                         </td>
                                                         <td>
-                                                            <?php if (!empty($user['agency_name'])): ?>
-                                                                <?php if (!empty($user['agency_abbr'])): ?>
+                                                            <?php if (!empty($user['skpd_name'])): ?>
+                                                                <?php if (!empty($user['skpd_abbr'])): ?>
                                                                     <div>
-                                                                        <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1"><?= esc($user['agency_abbr']) ?></span>
+                                                                        <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1"><?= esc($user['skpd_abbr']) ?></span>
                                                                     </div>
                                                                 <?php endif; ?>
-                                                                <div class="fs-xs text-dark text-break" style="max-width: 280px;" title="<?= esc($user['agency_name']) ?>">
-                                                                    <?= esc($user['agency_name']) ?>
+                                                                <div class="fs-xs text-dark text-break" style="max-width: 280px;" title="<?= esc($user['skpd_name']) ?>">
+                                                                    <?= esc($user['skpd_name']) ?>
                                                                 </div>
                                                                 <?php if (!empty($user['ppk_name'])): ?>
                                                                     <div class="mt-1">
@@ -383,9 +383,9 @@
                                     </div>
                                     <div class="mb-3">
                                         <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Instansi / SKPD</label>
-                                        <div id="detailModalAgencyContainer">
-                                            <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1" id="detailModalAgencyAbbr">DPUPR</span>
-                                            <div class="fs-sm text-dark fw-medium text-break" id="detailModalAgencyName">-</div>
+                                        <div id="detailModalSkpdContainer">
+                                            <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle mb-1" id="detailModalSkpdAbbr">DPUPR</span>
+                                            <div class="fs-sm text-dark fw-medium text-break" id="detailModalSkpdName">-</div>
                                         </div>
                                     </div>
                                     <div class="mb-3" id="detailModalPpkContainer" style="display: none;">
@@ -518,12 +518,12 @@
                                 <input type="text" class="form-control font-monospace" name="nip" id="editUserNip" placeholder="18 digit NIP (jika PNS)">
                             </div>
 
-                            <!-- SKPD / Agency Select2 -->
+                            <!-- SKPD Select2 -->
                             <div class="col-md-6">
-                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserAgencySelect">Instansi / SKPD</label>
-                                <select class="form-select select2-edit-agency" name="skpd_id" id="editUserAgencySelect" style="width: 100%;">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserSkpdSelect">Instansi / SKPD</label>
+                                <select class="form-select select2-edit-skpd" name="skpd_id" id="editUserSkpdSelect" style="width: 100%;">
                                     <option value="">-- Tanpa SKPD / Instansi --</option>
-                                    <?php foreach ($allAgencies as $ag): ?>
+                                    <?php foreach ($allSkpd as $ag): ?>
                                         <option value="<?= $ag['id'] ?>">
                                             <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
                                         </option>
@@ -723,12 +723,12 @@
                                 </select>
                             </div>
 
-                            <!-- SKPD / Agency Select2 -->
+                            <!-- SKPD Select2 -->
                             <div class="col-md-6">
-                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserAgencySelect">Instansi / SKPD</label>
-                                <select class="form-select select2-agency" name="skpd_id" id="addUserAgencySelect" style="width: 100%;">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserSkpdSelect">Instansi / SKPD</label>
+                                <select class="form-select select2-skpd" name="skpd_id" id="addUserSkpdSelect" style="width: 100%;">
                                     <option value="">-- Pilih SKPD --</option>
-                                    <?php foreach ($allAgencies as $ag): ?>
+                                    <?php foreach ($allSkpd as $ag): ?>
                                         <option value="<?= $ag['id'] ?>">
                                             <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
                                         </option>
@@ -812,14 +812,14 @@
         const allPpk = <?= json_encode($ppkList ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
         /**
-         * Helper untuk mengisi dropdown PPK berdasarkan agencyId yang dipilih
+         * Helper untuk mengisi dropdown PPK berdasarkan skpdId yang dipilih
          */
-        function populatePpk(selectElement, agencyId, selectedOfficerId = null, helpElement = null) {
+        function populatePpk(selectElement, skpdId, selectedOfficerId = null, helpElement = null) {
             if (!selectElement) return;
 
             selectElement.innerHTML = '';
 
-            if (!agencyId) {
+            if (!skpdId) {
                 const opt = document.createElement('option');
                 opt.value = '';
                 opt.textContent = '-- Pilih SKPD terlebih dahulu --';
@@ -832,7 +832,7 @@
             }
 
             // Filter dari data master lokal
-            const filtered = allPpk.filter(item => String(item.skpd_id) === String(agencyId));
+            const filtered = allPpk.filter(item => String(item.skpd_id) === String(skpdId));
 
             if (filtered.length === 0) {
                 const opt = document.createElement('option');
@@ -868,7 +868,7 @@
 
         $(document).ready(function () {
             // Inisialisasi Select2 pada dropdown SKPD dengan dropdownParent modal agar pencarian dapat difokuskan
-            $('#addUserAgencySelect').select2({
+            $('#addUserSkpdSelect').select2({
                 theme: 'bootstrap-5',
                 dropdownParent: $('#addUserModal'),
                 placeholder: '-- Pilih SKPD --',
@@ -876,7 +876,7 @@
                 width: '100%'
             });
 
-            $('#editUserAgencySelect').select2({
+            $('#editUserSkpdSelect').select2({
                 theme: 'bootstrap-5',
                 dropdownParent: $('#editUserModal'),
                 placeholder: '-- Tanpa SKPD / Instansi --',
@@ -885,26 +885,26 @@
             });
 
             // Event saat SKPD berubah pada Modal Tambah Akun
-            $('#addUserAgencySelect').on('change', function () {
-                const agencyId = $(this).val();
+            $('#addUserSkpdSelect').on('change', function () {
+                const skpdId = $(this).val();
                 const ppkSelect = document.getElementById('addUserPpkSelect');
                 const helpEl = document.getElementById('addUserPpkHelp');
-                populatePpk(ppkSelect, agencyId, null, helpEl);
+                populatePpk(ppkSelect, skpdId, null, helpEl);
             });
 
             // Event saat SKPD berubah pada Modal Edit Akun
-            $('#editUserAgencySelect').on('change', function () {
-                const agencyId = $(this).val();
+            $('#editUserSkpdSelect').on('change', function () {
+                const skpdId = $(this).val();
                 const ppkSelect = document.getElementById('editUserPpkSelect');
                 // Pertahankan nilai jika ada data sebelumnya
                 const currentVal = $(ppkSelect).data('pending-officer-id') || $(ppkSelect).val();
-                populatePpk(ppkSelect, agencyId, currentVal);
+                populatePpk(ppkSelect, skpdId, currentVal);
                 $(ppkSelect).removeData('pending-officer-id');
             });
 
             // Reset Select2 dan form ketika modal ditutup
             $('#addUserModal').on('hidden.bs.modal', function () {
-                $('#addUserAgencySelect').val(null).trigger('change');
+                $('#addUserSkpdSelect').val(null).trigger('change');
                 const ppkSelect = document.getElementById('addUserPpkSelect');
                 if (ppkSelect) {
                     populatePpk(ppkSelect, null);
@@ -944,7 +944,7 @@
                     const email = row.getAttribute('data-email') || '';
                     const username = row.getAttribute('data-username') || '';
                     const nip = row.getAttribute('data-nip') || '';
-                    const agency = row.getAttribute('data-agency') || '';
+                    const skpd = row.getAttribute('data-skpd') || '';
                     const role = row.getAttribute('data-role') || '';
                     const status = row.getAttribute('data-status') || '';
 
@@ -953,7 +953,7 @@
                         email.includes(searchVal) || 
                         username.includes(searchVal) || 
                         nip.includes(searchVal) ||
-                        agency.includes(searchVal);
+                        skpd.includes(searchVal);
 
                     const matchesRole = !roleVal || role === roleVal;
                     const matchesStatus = !statusVal || status === statusVal;
@@ -1126,19 +1126,19 @@
                     statusIndicator.className = 'position-absolute bottom-0 end-0 border border-2 border-white rounded-circle ' + (isActive ? 'bg-success' : 'bg-secondary');
 
                     // SKPD
-                    const agencyAbbrEl = document.getElementById('detailModalAgencyAbbr');
-                    const agencyNameEl = document.getElementById('detailModalAgencyName');
-                    if (u.agency_name) {
-                        agencyNameEl.textContent = u.agency_name;
-                        if (u.agency_abbr) {
-                            agencyAbbrEl.style.display = 'inline-block';
-                            agencyAbbrEl.textContent = u.agency_abbr;
+                    const skpdAbbrEl = document.getElementById('detailModalSkpdAbbr');
+                    const skpdNameEl = document.getElementById('detailModalSkpdName');
+                    if (u.skpd_name) {
+                        skpdNameEl.textContent = u.skpd_name;
+                        if (u.skpd_abbr) {
+                            skpdAbbrEl.style.display = 'inline-block';
+                            skpdAbbrEl.textContent = u.skpd_abbr;
                         } else {
-                            agencyAbbrEl.style.display = 'none';
+                            skpdAbbrEl.style.display = 'none';
                         }
                     } else {
-                        agencyAbbrEl.style.display = 'none';
-                        agencyNameEl.innerHTML = '<span class="text-muted fst-italic">Belum dihubungkan ke SKPD</span>';
+                        skpdAbbrEl.style.display = 'none';
+                        skpdNameEl.innerHTML = '<span class="text-muted fst-italic">Belum dihubungkan ke SKPD</span>';
                     }
 
                     // PPK / Bidang (PPK)
@@ -1341,7 +1341,7 @@
                 document.getElementById('editUserIsActive').value = String(isActiveVal);
 
                 // Set SKPD Select2 & PPK/Bidang
-                const agencyVal = u.skpd_id ? String(u.skpd_id) : '';
+                const skpdVal = u.skpd_id ? String(u.skpd_id) : '';
                 const ppkVal = u.ppk_id ? String(u.ppk_id) : '';
 
                 // Simpan pending officer ID agar terpilih setelah trigger change
@@ -1350,7 +1350,7 @@
                     $(ppkSelect).data('pending-officer-id', ppkVal);
                 }
 
-                $('#editUserAgencySelect').val(agencyVal).trigger('change');
+                $('#editUserSkpdSelect').val(skpdVal).trigger('change');
 
                 // Buka modal
                 const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));

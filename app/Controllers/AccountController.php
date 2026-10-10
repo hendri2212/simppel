@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Models\AgencyModel;
+use App\Models\SkpdModel;
 use App\Models\PpkModel;
 use App\Models\RoleModel;
 use App\Models\UserModel;
@@ -10,14 +10,14 @@ use App\Models\UserModel;
 class AccountController extends BaseController
 {
     protected UserModel $userModel;
-    protected AgencyModel $agencyModel;
+    protected SkpdModel $skpdModel;
     protected RoleModel $roleModel;
     protected PpkModel $ppkModel;
 
     public function __construct()
     {
         $this->userModel               = new UserModel();
-        $this->agencyModel             = new AgencyModel();
+        $this->skpdModel             = new SkpdModel();
         $this->roleModel               = new RoleModel();
         $this->ppkModel = new PpkModel();
     }
@@ -29,7 +29,7 @@ class AccountController extends BaseController
     {
         try {
             $dbUsers            = $this->userModel->getUsersWithDetails();
-            $allAgencies        = $this->agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $allSkpd        = $this->skpdModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $allRoles           = $this->roleModel->orderBy('id', 'ASC')->findAll();
             $ppkList = $this->ppkModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
@@ -64,9 +64,9 @@ class AccountController extends BaseController
                     'role_id'                => $u['role_id'] ?? null,
                     'role_badge'             => $roleBadge,
                     'skpd_id'              => $u['skpd_id'] ?? null,
-                    'agency_name'            => $u['agency_name'] ?? null,
-                    'agency_abbr'            => $u['agency_abbr'] ?? null,
-                    'agency_code'            => $u['agency_code'] ?? null,
+                    'skpd_name'            => $u['skpd_name'] ?? null,
+                    'skpd_abbr'            => $u['skpd_abbr'] ?? null,
+                    'skpd_code'            => $u['skpd_code'] ?? null,
                     'ppk_id'   => $u['ppk_id'] ?? null,
                     'ppk_name' => $u['ppk_name'] ?? null,
                     'status'                 => $isActive ? 'Active' : 'Inactive',
@@ -79,7 +79,7 @@ class AccountController extends BaseController
         } catch (\Throwable $e) {
             log_message('error', 'Error in AccountController::index: ' . $e->getMessage());
             $usersList           = [];
-            $allAgencies         = [];
+            $allSkpd         = [];
             $allRoles            = [];
             $ppkList  = [];
         }
@@ -87,7 +87,7 @@ class AccountController extends BaseController
         $totalCount      = count($usersList);
         $activeCount     = count(array_filter($usersList, fn($u) => $u['status'] === 'Active'));
         $inactiveCount   = count(array_filter($usersList, fn($u) => $u['status'] === 'Inactive'));
-        $usersWithAgency = count(array_filter($usersList, fn($u) => !empty($u['agency_name'])));
+        $usersWithSkpd = count(array_filter($usersList, fn($u) => !empty($u['skpd_name'])));
         $uniqueRoles     = !empty($allRoles)
             ? array_column($allRoles, 'name')
             : array_unique(array_filter(array_column($usersList, 'role')));
@@ -96,13 +96,13 @@ class AccountController extends BaseController
         return view('accounts', [
             'pageTitle'           => 'User Accounts',
             'usersList'           => $usersList,
-            'allAgencies'         => $allAgencies,
+            'allSkpd'         => $allSkpd,
             'allRoles'            => $allRoles,
             'ppkList'  => $ppkList,
             'totalCount'          => $totalCount,
             'activeCount'         => $activeCount,
             'inactiveCount'       => $inactiveCount,
-            'usersWithAgency'     => $usersWithAgency,
+            'usersWithSkpd'     => $usersWithSkpd,
             'uniqueRoles'         => $uniqueRoles,
         ]);
     }
@@ -110,11 +110,11 @@ class AccountController extends BaseController
     /**
      * API: Ambil daftar PPK / Bidang (PPK) berdasarkan SKPD (skpd_id)
      */
-    public function getPpk($agencyId = null)
+    public function getPpk($skpdId = null)
     {
-        $agencyId = $agencyId ?? $this->request->getGet('skpd_id');
+        $skpdId = $skpdId ?? $this->request->getGet('skpd_id');
 
-        if (!$agencyId) {
+        if (!$skpdId) {
             return $this->response->setJSON([
                 'status' => 'success',
                 'data'   => [],
@@ -123,7 +123,7 @@ class AccountController extends BaseController
 
         try {
             $officers = $this->ppkModel
-                ->where('skpd_id', (int) $agencyId)
+                ->where('skpd_id', (int) $skpdId)
                 ->where('is_active', 1)
                 ->orderBy('name', 'ASC')
                 ->findAll();
@@ -169,8 +169,8 @@ class AccountController extends BaseController
         $username = trim((string) $this->request->getPost('username'));
         $username = ltrim($username, '@');
 
-        $agencyId = $this->request->getPost('skpd_id');
-        $agencyId = !empty($agencyId) ? (int) $agencyId : null;
+        $skpdId = $this->request->getPost('skpd_id');
+        $skpdId = !empty($skpdId) ? (int) $skpdId : null;
 
         $ppkId = $this->request->getPost('ppk_id');
         $ppkId = !empty($ppkId) ? (int) $ppkId : null;
@@ -187,7 +187,7 @@ class AccountController extends BaseController
             'email'                 => $email,
             'password'              => password_hash(trim((string) $this->request->getPost('password')), PASSWORD_BCRYPT),
             'role_id'               => (int) $this->request->getPost('role_id'),
-            'skpd_id'             => $agencyId,
+            'skpd_id'             => $skpdId,
             'ppk_id' => $ppkId,
             'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
             'whatsapp_number'       => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
@@ -258,8 +258,8 @@ class AccountController extends BaseController
         $username = trim((string) $this->request->getPost('username'));
         $username = ltrim($username, '@');
 
-        $agencyId = $this->request->getPost('skpd_id');
-        $agencyId = !empty($agencyId) ? (int) $agencyId : null;
+        $skpdId = $this->request->getPost('skpd_id');
+        $skpdId = !empty($skpdId) ? (int) $skpdId : null;
 
         $ppkId = $this->request->getPost('ppk_id');
         $ppkId = !empty($ppkId) ? (int) $ppkId : null;
@@ -268,7 +268,7 @@ class AccountController extends BaseController
             'full_name'             => trim((string) $this->request->getPost('full_name')),
             'username'              => $username,
             'role_id'               => (int) $this->request->getPost('role_id'),
-            'skpd_id'             => $agencyId,
+            'skpd_id'             => $skpdId,
             'ppk_id' => $ppkId,
             'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
             'email'                 => trim((string) $this->request->getPost('email')) ?: null,

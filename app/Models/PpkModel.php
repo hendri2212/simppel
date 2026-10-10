@@ -24,12 +24,12 @@ class PpkModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
-     * Get PPK along with agency details
+     * Get PPK along with skpd details
      */
-    public function getWithAgency(?int $id = null)
+    public function getWithSkpd(?int $id = null)
     {
-        $builder = $this->select('ppk.*, agencies.name as agency_name, agencies.abbreviation as agency_abbreviation')
-            ->join('agencies', 'agencies.id = ppk.skpd_id', 'inner');
+        $builder = $this->select('ppk.*, skpd.name as skpd_name, skpd.abbreviation as skpd_abbreviation')
+            ->join('skpd', 'skpd.id = ppk.skpd_id', 'inner');
 
         if ($id !== null) {
             return $builder->where('ppk.id', $id)->first();

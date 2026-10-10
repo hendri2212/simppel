@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class AgencyModel extends Model
+class JenisPengadaanModel extends Model
 {
-    protected $table            = 'agencies';
+    protected $table            = 'jenis_pengadaan';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -14,11 +14,8 @@ class AgencyModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'name',
-        'abbreviation',
         'code',
-        'address',
-        'contact',
-        'work_unit_id',
+        'description',
         'is_active',
     ];
 
@@ -26,4 +23,12 @@ class AgencyModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+
+    /**
+     * Get active procurement types
+     */
+    public function getActiveTypes()
+    {
+        return $this->where('is_active', 1)->orderBy('id', 'ASC')->findAll();
+    }
 }

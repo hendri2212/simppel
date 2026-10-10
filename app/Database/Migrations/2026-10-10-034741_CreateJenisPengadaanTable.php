@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateFundingSourcesTable extends Migration
+class CreateJenisPengadaanTable extends Migration
 {
     public function up()
     {
@@ -48,11 +48,11 @@ class CreateFundingSourcesTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('funding_sources', true);
+        $this->forge->createTable('jenis_pengadaan', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('funding_sources', true);
+        $this->forge->dropTable('jenis_pengadaan', true);
     }
 }

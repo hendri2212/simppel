@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateSelectionMethodsTable extends Migration
+class CreateSkpdTable extends Migration
 {
     public function up()
     {
@@ -17,19 +17,32 @@ class CreateSelectionMethodsTable extends Migration
             ],
             'name' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 100,
-                'unique'     => true,
+                'constraint' => 255,
+            ],
+            'abbreviation' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
             ],
             'code' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
-                'null'       => true,
-                'unique'     => true,
             ],
-            'description' => [
+            'address' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
                 'null'       => true,
+            ],
+            'contact' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 100,
+                'null'       => true,
+            ],
+            'work_unit_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'default'    => 0,
+                'comment'    => 'ID Satuan Kerja (Satker)',
             ],
             'is_active' => [
                 'type'       => 'TINYINT',
@@ -48,11 +61,11 @@ class CreateSelectionMethodsTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('selection_methods', true);
+        $this->forge->createTable('skpd', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('selection_methods', true);
+        $this->forge->dropTable('skpd', true);
     }
 }

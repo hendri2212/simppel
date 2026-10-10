@@ -5,7 +5,7 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class SpecialAllocationTypeSeeder extends Seeder
+class JenisDakSeeder extends Seeder
 {
     public function run()
     {
@@ -33,16 +33,16 @@ class SpecialAllocationTypeSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            $existing = $this->db->table('special_allocation_types')
+            $existing = $this->db->table('jenis_dak')
                 ->where('id', $type['id'])
                 ->orWhere('name', $type['name'])
                 ->get()
                 ->getRow();
 
             if ($existing) {
-                $this->db->table('special_allocation_types')->where('id', $existing->id)->update($type);
+                $this->db->table('jenis_dak')->where('id', $existing->id)->update($type);
             } else {
-                $this->db->table('special_allocation_types')->insert($type);
+                $this->db->table('jenis_dak')->insert($type);
             }
         }
     }

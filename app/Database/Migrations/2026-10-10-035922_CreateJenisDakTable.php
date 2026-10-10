@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateAgenciesTable extends Migration
+class CreateJenisDakTable extends Migration
 {
     public function up()
     {
@@ -17,32 +17,19 @@ class CreateAgenciesTable extends Migration
             ],
             'name' => [
                 'type'       => 'VARCHAR',
-                'constraint' => 255,
-            ],
-            'abbreviation' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 50,
+                'constraint' => 100,
+                'unique'     => true,
             ],
             'code' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 50,
+                'null'       => true,
+                'unique'     => true,
             ],
-            'address' => [
+            'description' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
                 'null'       => true,
-            ],
-            'contact' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 100,
-                'null'       => true,
-            ],
-            'work_unit_id' => [
-                'type'       => 'INT',
-                'constraint' => 11,
-                'unsigned'   => true,
-                'default'    => 0,
-                'comment'    => 'ID Satuan Kerja (Satker)',
             ],
             'is_active' => [
                 'type'       => 'TINYINT',
@@ -61,11 +48,11 @@ class CreateAgenciesTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->createTable('agencies', true);
+        $this->forge->createTable('jenis_dak', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('agencies', true);
+        $this->forge->dropTable('jenis_dak', true);
     }
 }

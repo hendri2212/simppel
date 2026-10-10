@@ -42,7 +42,7 @@ class CreatePpkTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('skpd_id', 'skpd', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->createTable('ppk', true);
     }
 

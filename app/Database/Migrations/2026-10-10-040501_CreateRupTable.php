@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateProcurementPlansTable extends Migration
+class CreateRupTable extends Migration
 {
     public function up()
     {
@@ -51,13 +51,13 @@ class CreateProcurementPlansTable extends Migration
                 'null'    => true,
                 'comment' => 'Lokasi Pekerjaan',
             ],
-            'expense_type_id' => [
+            'jenis_belanja_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'comment'    => 'ID Jenis Belanja (id_jbelanja)',
             ],
-            'procurement_type_id' => [
+            'jenis_pengadaan_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -74,7 +74,7 @@ class CreateProcurementPlansTable extends Migration
                 'null'    => true,
                 'comment' => 'Uraian / Deskripsi Pekerjaan',
             ],
-            'selection_method_id' => [
+            'metode_pemilihan_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -97,7 +97,7 @@ class CreateProcurementPlansTable extends Migration
                 'default'    => 1,
                 'comment'    => 'Status RUP',
             ],
-            'funding_source_id' => [
+            'sumber_dana_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -121,7 +121,7 @@ class CreateProcurementPlansTable extends Migration
                 'null'       => true,
                 'comment'    => 'Mata Anggaran Kegiatan (MAK)',
             ],
-            'special_allocation_type_id' => [
+            'jenis_dak_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -154,19 +154,19 @@ class CreateProcurementPlansTable extends Migration
         $this->forge->addKey('package_code');
 
         // Foreign keys to referenced tables
-        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('skpd_id', 'skpd', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('ppk_id', 'ppk', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('expense_type_id', 'expense_types', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('procurement_type_id', 'procurement_types', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('funding_source_id', 'funding_sources', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('selection_method_id', 'selection_methods', 'id', 'CASCADE', 'SET NULL');
-        $this->forge->addForeignKey('special_allocation_type_id', 'special_allocation_types', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('jenis_belanja_id', 'jenis_belanja', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('jenis_pengadaan_id', 'jenis_pengadaan', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('sumber_dana_id', 'sumber_dana', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('metode_pemilihan_id', 'metode_pemilihan', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('jenis_dak_id', 'jenis_dak', 'id', 'CASCADE', 'RESTRICT');
 
-        $this->forge->createTable('procurement_plans', true);
+        $this->forge->createTable('rup', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('procurement_plans', true);
+        $this->forge->dropTable('rup', true);
     }
 }
