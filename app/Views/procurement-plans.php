@@ -182,6 +182,23 @@
                             </div>
                         </div>
 
+                        <!-- Flash Message Alert -->
+                        <?php if (session()->getFlashdata('success')): ?>
+                            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm" role="alert">
+                                <i class="fal fa-check-circle fs-5"></i>
+                                <div><?= session()->getFlashdata('success') ?></div>
+                                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (session()->getFlashdata('error')): ?>
+                            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-3 shadow-sm" role="alert">
+                                <i class="fal fa-exclamation-triangle fs-5"></i>
+                                <div><?= session()->getFlashdata('error') ?></div>
+                                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Panel Tabel Utama Procurement Plans -->
                         <div id="panel-procurement-plans" class="panel">
                             <div class="panel-hdr">
@@ -684,137 +701,159 @@
                     <h5 class="modal-title" id="addPlanModalLabel">Tambah Paket Rencana Pengadaan (RUP)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <form id="dummyAddPlanForm" onsubmit="event.preventDefault(); alert('Paket RUP baru berhasil disimpan ke sistem (simulasi)!'); const modal = bootstrap.Modal.getInstance(document.getElementById('addPlanModal')); modal.hide();">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Tahun Anggaran <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" value="2026" required>
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label">Kode Paket / Kode SiRUP</label>
-                                <input type="text" class="form-control form-control-sm" placeholder="Contoh: RUP-2026-99182310 (opsional)">
-                            </div>
+                <div class="modal-body p-4">
+                    <form id="addPlanForm" action="/procurement-plans/store" method="POST">
+                        <?= csrf_field() ?>
+                        <div id="addPlanAlertContainer" class="d-none mb-3"></div>
 
-                            <div class="col-md-6">
-                                <label class="form-label">Instansi / SKPD <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" required>
-                                    <option value="">-- Pilih SKPD --</option>
-                                    <?php if (!empty($agencies)): ?>
-                                        <?php foreach ($agencies as $ag): ?>
-                                            <option value="<?= $ag['id'] ?>"><?= esc($ag['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="1">Dinas Pekerjaan Umum dan Penataan Ruang</option>
-                                        <option value="2">Dinas Kesehatan</option>
-                                        <option value="3">Dinas Pendidikan</option>
-                                        <option value="4">Dinas Komunikasi, Informatika dan Statistik</option>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Pejabat Pembuat Komitmen (PPK) <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" required>
-                                    <option value="">-- Pilih PPK --</option>
-                                    <?php if (!empty($officers)): ?>
-                                        <?php foreach ($officers as $off): ?>
-                                            <option value="<?= $off['id'] ?>"><?= esc($off['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <option value="1">Ir. Hendra Gunawan, S.T., M.T.</option>
-                                        <option value="2">drg. Ratna Juwita, M.Kes.</option>
-                                        <option value="3">Drs. Ahmad Fauzi, M.Pd.</option>
-                                    <?php endif; ?>
-                                </select>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Nama Kegiatan / Program <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" placeholder="Contoh: Program Penyelenggaraan Jalan dan Jembatan" required>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Nama Paket Pengadaan <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control form-control-sm" placeholder="Contoh: Pembangunan Jembatan Sei Siak Ruas Simpang Tiga" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Jenis Pengadaan <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" required>
-                                    <option value="">-- Pilih Jenis Pengadaan --</option>
-                                    <option value="1">Barang</option>
-                                    <option value="2">Jasa Konsultansi</option>
-                                    <option value="3">Jasa Lainnya</option>
-                                    <option value="4" selected>Pekerjaan Konstruksi</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Metode Pemilihan <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" required>
-                                    <option value="">-- Pilih Metode Pemilihan --</option>
-                                    <option value="1">E-purchasing</option>
-                                    <option value="2">Pengadaan Langsung</option>
-                                    <option value="3">Penunjukan Langsung</option>
-                                    <option value="4" selected>Tender</option>
-                                    <option value="5">Seleksi</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Pagu Anggaran (Rp) <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control" placeholder="0" min="0" required>
+                        <!-- Info Otomatisasi SKPD & PPK Berdasarkan User Login -->
+                        <div class="alert alert-info border-info-subtle bg-info-subtle bg-opacity-10 py-2 px-3 mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2 rounded-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fal fa-shield-check text-info fs-4 flex-shrink-0"></i>
+                                <div>
+                                    <div class="fs-xs fw-bold text-dark text-uppercase">Instansi / SKPD & PPK Terisi Otomatis</div>
+                                    <small class="text-muted fs-nano">Paket ini secara otomatis dikaitkan dengan akun & instansi Anda di backend.</small>
                                 </div>
                             </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Mata Anggaran Kegiatan (MAK)</label>
-                                <input type="text" class="form-control form-control-sm" placeholder="Contoh: 5.2.04.01.01.0001">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Sumber Dana <span class="text-danger">*</span></label>
-                                <select class="form-select form-select-sm" required>
-                                    <option value="1" selected>APBD</option>
-                                    <option value="2">APBN</option>
-                                    <option value="3">DAK Fisik</option>
-                                    <option value="4">BLUD</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Status DAK</label>
-                                <select class="form-select form-select-sm">
-                                    <option value="2" selected>NON DAK</option>
-                                    <option value="1">DAK</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label">Waktu Pekerjaan (Hari)</label>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" placeholder="90" min="1">
-                                    <span class="input-group-text">Hari</span>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Lokasi Pekerjaan</label>
-                                <input type="text" class="form-control form-control-sm" placeholder="Contoh: Kota Pekanbaru">
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Uraian / Deskripsi Pekerjaan</label>
-                                <textarea class="form-control form-control-sm" rows="2" placeholder="Uraian singkat lingkup pekerjaan..."></textarea>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="badge bg-light text-dark border font-monospace fs-nano" title="Instansi / SKPD">
+                                    <i class="fal fa-building text-primary me-1"></i>
+                                    <?= esc(!empty($currentUser['agency_name']) ? ($currentUser['agency_abbr'] ? $currentUser['agency_abbr'] . ' - ' : '') . $currentUser['agency_name'] : 'Instansi Akun Login') ?>
+                                </span>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace fs-nano" title="Pejabat Pembuat Komitmen (PPK)">
+                                    <i class="fal fa-user-tie text-info me-1"></i>
+                                    <?= esc(!empty($currentUser['commitment_officer_name']) ? $currentUser['commitment_officer_name'] : (!empty($currentUser['full_name']) ? $currentUser['full_name'] : 'PPK Akun Login')) ?>
+                                </span>
                             </div>
                         </div>
 
-                        <div class="text-end mt-4 pt-2 border-top">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Tahun Anggaran <span class="text-danger">*</span></label>
+                                <input type="number" name="fiscal_year" class="form-control form-control-sm font-monospace" value="<?= date('Y') ?>" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Kode Paket / Kode SiRUP</label>
+                                <input type="text" name="package_code" class="form-control form-control-sm font-monospace" placeholder="Contoh: RUP-<?= date('Y') ?>-XXXXXX (Biarkan kosong untuk generate otomatis)">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Nama Kegiatan / Program <span class="text-danger">*</span></label>
+                                <input type="text" name="activity" class="form-control form-control-sm" placeholder="Contoh: Program Penyelenggaraan Jalan dan Jembatan" required>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Nama Paket Pengadaan <span class="text-danger">*</span></label>
+                                <input type="text" name="package_name" class="form-control form-control-sm" placeholder="Contoh: Pembangunan Jembatan Sei Siak Ruas Simpang Tiga" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Jenis Pengadaan <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" name="procurement_type_id" required>
+                                    <option value="">-- Pilih Jenis Pengadaan --</option>
+                                    <?php if (!empty($procurementTypes)): ?>
+                                        <?php foreach ($procurementTypes as $pt): ?>
+                                            <option value="<?= $pt['id'] ?>" <?= $pt['name'] === 'Pekerjaan Konstruksi' ? 'selected' : '' ?>><?= esc($pt['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="1">Barang</option>
+                                        <option value="2">Jasa Konsultansi</option>
+                                        <option value="3">Jasa Lainnya</option>
+                                        <option value="4" selected>Pekerjaan Konstruksi</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Metode Pemilihan <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" name="selection_method_id" required>
+                                    <option value="">-- Pilih Metode Pemilihan --</option>
+                                    <?php if (!empty($selectionMethods)): ?>
+                                        <?php foreach ($selectionMethods as $sm): ?>
+                                            <option value="<?= $sm['id'] ?>" <?= $sm['name'] === 'Tender' ? 'selected' : '' ?>><?= esc($sm['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="1">E-purchasing</option>
+                                        <option value="2">Pengadaan Langsung</option>
+                                        <option value="3">Penunjukan Langsung</option>
+                                        <option value="4" selected>Tender</option>
+                                        <option value="5">Seleksi</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Pagu Anggaran (Rp) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-light">Rp</span>
+                                    <input type="number" name="budget_ceiling" class="form-control font-monospace" placeholder="0" min="0" step="1000" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Mata Anggaran Kegiatan (MAK)</label>
+                                <input type="text" name="account_code" class="form-control form-control-sm font-monospace" placeholder="Contoh: 5.2.04.01.01.0001">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Sumber Dana <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-sm" name="funding_source_id" required>
+                                    <?php if (!empty($fundingSources)): ?>
+                                        <?php foreach ($fundingSources as $fs): ?>
+                                            <option value="<?= $fs['id'] ?>" <?= $fs['name'] === 'APBD' ? 'selected' : '' ?>><?= esc($fs['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="1" selected>APBD</option>
+                                        <option value="2">APBN</option>
+                                        <option value="3">DAK Fisik</option>
+                                        <option value="4">BLUD</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Status DAK</label>
+                                <select class="form-select form-select-sm" name="special_allocation_type_id">
+                                    <?php if (!empty($allocationTypes)): ?>
+                                        <?php foreach ($allocationTypes as $at): ?>
+                                            <option value="<?= $at['id'] ?>" <?= $at['name'] === 'NON DAK' ? 'selected' : '' ?>><?= esc($at['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="2" selected>NON DAK</option>
+                                        <option value="1">DAK</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Waktu Pekerjaan (Hari)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="work_duration" class="form-control font-monospace" placeholder="90" min="1">
+                                    <span class="input-group-text bg-light">Hari</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Volume Pekerjaan</label>
+                                <input type="text" name="volume" class="form-control form-control-sm" placeholder="Contoh: 1 Paket / 500 Meter" value="1 Paket">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Lokasi Pekerjaan</label>
+                                <input type="text" name="location" class="form-control form-control-sm" placeholder="Contoh: Kec. Pulau Laut Sigam">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Uraian / Deskripsi Pekerjaan</label>
+                                <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="Uraian singkat lingkup pekerjaan RUP..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer bg-light border-top py-2 px-0 mt-4 d-flex justify-content-between align-items-center">
                             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary btn-sm">Simpan Paket RUP</button>
+                            <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="addPlanSubmitBtn">
+                                <i class="fal fa-save me-1"></i> Simpan Paket RUP
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -1050,6 +1089,57 @@
 
             // Inisialisasi awal
             renderPage();
+
+            // AJAX Handler Form Tambah Paket RUP Baru
+            const addPlanForm = document.getElementById('addPlanForm');
+            if (addPlanForm) {
+                addPlanForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.getElementById('addPlanSubmitBtn');
+                    const originalBtnHtml = submitBtn.innerHTML;
+                    const alertBox = document.getElementById('addPlanAlertContainer');
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Menyimpan...';
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+
+                    const formData = new FormData(addPlanForm);
+
+                    fetch('/procurement-plans/store', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(({ ok, body }) => {
+                        if (ok && body.status === 'success') {
+                            alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5 flex-shrink-0"></i> <div>${body.message || 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!'}</div>`;
+
+                            // Tutup modal dan reload halaman
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 700);
+                        } else {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHtml;
+                            alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>${body.message || 'Terjadi kesalahan saat menyimpan paket RUP.'}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding plan:', error);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                        alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                        alertBox.innerHTML = '<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>Gagal menghubungi server. Silakan coba beberapa saat lagi.</div>';
+                    });
+                });
+            }
         });
     </script>
 

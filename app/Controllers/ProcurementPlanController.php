@@ -10,6 +10,7 @@ use App\Models\ProcurementPlanModel;
 use App\Models\ProcurementTypeModel;
 use App\Models\SelectionMethodModel;
 use App\Models\SpecialAllocationTypeModel;
+use App\Models\UserModel;
 
 class ProcurementPlanController extends BaseController
 {
@@ -21,6 +22,7 @@ class ProcurementPlanController extends BaseController
     protected FundingSourceModel $fundingSourceModel;
     protected SelectionMethodModel $selectionMethodModel;
     protected SpecialAllocationTypeModel $allocationTypeModel;
+    protected UserModel $userModel;
 
     public function __construct()
     {
@@ -32,6 +34,7 @@ class ProcurementPlanController extends BaseController
         $this->fundingSourceModel   = new FundingSourceModel();
         $this->selectionMethodModel = new SelectionMethodModel();
         $this->allocationTypeModel  = new SpecialAllocationTypeModel();
+        $this->userModel            = new UserModel();
     }
 
     /**
@@ -53,6 +56,47 @@ class ProcurementPlanController extends BaseController
             $selectionMethods = $this->selectionMethodModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $allocationTypes  = $this->allocationTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
+            // Ambil info lengkap pengguna yang sedang login beserta Instansi/SKPD dan PPK/Bidang
+            $currentUserId = session()->get('user_id');
+            $currentUser   = null;
+            if ($currentUserId) {
+                $userObj = $this->userModel
+                    ->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, commitment_officers.name as commitment_officer_name')
+                    ->join('roles', 'roles.id = users.role_id', 'left')
+                    ->join('agencies', 'agencies.id = users.agency_id', 'left')
+                    ->join('commitment_officers', 'commitment_officers.id = users.commitment_officer_id', 'left')
+                    ->where('users.id', $currentUserId)
+                    ->first();
+                if ($userObj) {
+                    // Fallback jika belum ter-assign commitment_officer_id tetapi ada agency_id
+                    if (empty($userObj['commitment_officer_name']) && !empty($userObj['agency_id'])) {
+                        $fallbackOfficer = $this->officerModel->where('agency_id', $userObj['agency_id'])->first();
+                        if ($fallbackOfficer) {
+                            $userObj['commitment_officer_id']   = $fallbackOfficer['id'];
+                            $userObj['commitment_officer_name'] = $fallbackOfficer['name'];
+                        }
+                    }
+                    $currentUser = $userObj;
+                }
+            }
+
+            // Fallback jika belum tersimpan di DB relasi atau Administrator
+            if (!$currentUser) {
+                $currentUser = [
+                    'id'                      => session()->get('user_id'),
+                    'full_name'               => session()->get('full_name') ?? 'Pengguna',
+                    'agency_id'               => session()->get('agency_id') ?? null,
+                    'agency_name'             => session()->get('agency_name') ?? 'Semua SKPD / Administrator',
+                    'agency_abbr'             => session()->get('agency_abbr') ?? 'SIMPPEL',
+                    'commitment_officer_id'   => session()->get('commitment_officer_id') ?? null,
+                    'commitment_officer_name' => session()->get('commitment_officer_name') ?? 'Admin Pengadaan',
+                ];
+            } elseif (empty($currentUser['agency_name'])) {
+                $currentUser['agency_name']             = 'Pusat / Administrator';
+                $currentUser['agency_abbr']             = 'SIMPPEL';
+                $currentUser['commitment_officer_name'] = $currentUser['commitment_officer_name'] ?? 'Admin Pengadaan';
+            }
+
         } catch (\Throwable $e) {
             log_message('error', 'Error in ProcurementPlanController::index: ' . $e->getMessage());
             $plans            = [];
@@ -63,6 +107,7 @@ class ProcurementPlanController extends BaseController
             $fundingSources   = [];
             $selectionMethods = [];
             $allocationTypes  = [];
+            $currentUser      = null;
         }
 
         // Kalkulasi Statistik dari data database
@@ -82,12 +127,146 @@ class ProcurementPlanController extends BaseController
             'fundingSources'   => $fundingSources,
             'selectionMethods' => $selectionMethods,
             'allocationTypes'  => $allocationTypes,
+            'currentUser'      => $currentUser,
             'totalPlans'       => $totalPlans,
             'totalBudget'      => $totalBudget,
             'announcedCount'   => $announcedCount,
             'syncedCount'      => $syncedCount,
             'dakCount'         => $dakCount,
         ]);
+    }
+
+    /**
+     * Simpan paket Rencana Pengadaan (RUP) baru
+     * Instansi/SKPD dan Pejabat Pembuat Komitmen (PPK) diambil otomatis dari user yang sedang login di backend.
+     */
+    public function store()
+    {
+        $currentUserId = session()->get('user_id');
+        if (! $currentUserId) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Sesi login telah kedaluwarsa. Silakan login kembali.'])->setStatusCode(401);
+            }
+            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
+        }
+
+        // Ambil data user yang sedang login dari database
+        $user = $this->userModel->find($currentUserId);
+        if (! $user) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Data user tidak ditemukan di sistem.'])->setStatusCode(404);
+            }
+            return redirect()->back()->with('error', 'Data user tidak ditemukan di sistem.');
+        }
+
+        // Instansi / SKPD & PPK otomatis dari user login
+        $agencyId            = !empty($user['agency_id']) ? (int) $user['agency_id'] : null;
+        $commitmentOfficerId = !empty($user['commitment_officer_id']) ? (int) $user['commitment_officer_id'] : null;
+
+        // Fallback jika user belum memiliki agency_id (misal Administrator / Superadmin)
+        if (! $agencyId) {
+            $defaultAgency = $this->agencyModel->where('id', 16)->first() ?? $this->agencyModel->first();
+            $agencyId      = $defaultAgency ? (int) $defaultAgency['id'] : 1;
+        }
+
+        // Fallback jika user belum memiliki commitment_officer_id
+        if (! $commitmentOfficerId) {
+            $existingOfficer = $this->officerModel->where('agency_id', $agencyId)->first();
+            if ($existingOfficer) {
+                $commitmentOfficerId = (int) $existingOfficer['id'];
+            } else {
+                $officerName = (!empty($user['full_name']) && (int) ($user['role_id'] ?? 0) === 3) ? $user['full_name'] : 'Pejabat Pembuat Komitmen (PPK)';
+                $commitmentOfficerId = (int) $this->officerModel->insert([
+                    'agency_id'  => $agencyId,
+                    'name'       => $officerName,
+                    'is_active'  => 1,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            // Jika user terafiliasi dengan agency_id ini, perbarui akun user agar tersinkronisasi
+            if (!empty($user['agency_id']) && (int) $user['agency_id'] === $agencyId) {
+                $this->userModel->update($currentUserId, ['commitment_officer_id' => $commitmentOfficerId]);
+            }
+        }
+
+        // Validasi input form
+        $rules = [
+            'fiscal_year'         => 'required|numeric',
+            'activity'            => 'required|min_length[3]',
+            'package_name'        => 'required|min_length[3]',
+            'procurement_type_id' => 'required|numeric',
+            'selection_method_id' => 'required|numeric',
+            'funding_source_id'   => 'required|numeric',
+            'budget_ceiling'      => 'required|numeric',
+        ];
+
+        if (! $this->validate($rules)) {
+            $errors = implode(', ', $this->validator->getErrors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => $errors,
+                    'errors'  => $this->validator->getErrors(),
+                ])->setStatusCode(422);
+            }
+            return redirect()->back()->withInput()->with('error', $errors);
+        }
+
+        $packageCode = trim((string) $this->request->getPost('package_code'));
+        if (empty($packageCode)) {
+            $packageCode = 'RUP-' . date('Y') . '-' . mt_rand(10000000, 99999999);
+        }
+
+        $budgetCeiling = (float) $this->request->getPost('budget_ceiling');
+
+        $data = [
+            'agency_id'                  => $agencyId,
+            'commitment_officer_id'      => $commitmentOfficerId,
+            'fiscal_year'                => (int) $this->request->getPost('fiscal_year'),
+            'package_code'               => $packageCode,
+            'activity'                   => trim((string) $this->request->getPost('activity')),
+            'package_name'               => trim((string) $this->request->getPost('package_name')),
+            'expense_type_id'            => $this->request->getPost('expense_type_id') ? (int) $this->request->getPost('expense_type_id') : 1,
+            'procurement_type_id'        => (int) $this->request->getPost('procurement_type_id'),
+            'selection_method_id'        => (int) $this->request->getPost('selection_method_id'),
+            'funding_source_id'          => (int) $this->request->getPost('funding_source_id'),
+            'special_allocation_type_id' => $this->request->getPost('special_allocation_type_id') ? (int) $this->request->getPost('special_allocation_type_id') : 2,
+            'budget_ceiling'             => $budgetCeiling,
+            'account_code'               => trim((string) $this->request->getPost('account_code')) ?: null,
+            'work_duration'              => $this->request->getPost('work_duration') ? (int) $this->request->getPost('work_duration') : null,
+            'location'                   => trim((string) $this->request->getPost('location')) ?: null,
+            'description'                => trim((string) $this->request->getPost('description')) ?: null,
+            'volume'                     => trim((string) $this->request->getPost('volume')) ?: '1 Paket',
+            'rup_status'                 => 1, // Terumumkan / Aktif
+            'package_status'             => 0, // Draft
+            'is_synced'                  => 0,
+            'submission_date'            => date('Y-m-d H:i:s'),
+        ];
+
+        try {
+            $insertId = $this->procurementPlanModel->insert($data);
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'success',
+                    'message' => 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!',
+                    'id'      => $insertId,
+                ]);
+            }
+
+            return redirect()->to('/procurement-plans')->with('success', 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in ProcurementPlanController::store: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Gagal menyimpan paket RUP: ' . $e->getMessage(),
+                ])->setStatusCode(500);
+            }
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan paket RUP: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -60,11 +60,15 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/', 'Home::index');
     $routes->get('/accounts', 'AccountController::index');
     $routes->get('/account', 'AccountController::index');
+    $routes->post('/accounts/store', 'AccountController::store');
     $routes->post('/accounts/update/(:num)', 'AccountController::update/$1');
     $routes->post('/accounts/update', 'AccountController::update');
     $routes->post('/accounts/reset-password/(:num)', 'AccountController::resetPassword/$1');
     $routes->post('/accounts/reset-password', 'AccountController::resetPassword');
+    $routes->get('/accounts/commitment-officers', 'AccountController::getCommitmentOfficers');
+    $routes->get('/accounts/commitment-officers/(:num)', 'AccountController::getCommitmentOfficers/$1');
     $routes->get('/procurement-plans', 'ProcurementPlanController::index');
+    $routes->post('/procurement-plans/store', 'ProcurementPlanController::store');
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

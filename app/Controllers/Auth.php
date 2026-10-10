@@ -58,13 +58,18 @@ class Auth extends BaseController
 
         // Simpan sesi login
         $sessionData = [
-            'is_logged_in' => true,
-            'user_id'      => $user['id'],
-            'username'     => $user['username'],
-            'full_name'    => $user['full_name'],
-            'email'        => $user['email'],
-            'role_id'      => $user['role_id'],
-            'role_name'    => $user['role_name'] ?? 'USER',
+            'is_logged_in'            => true,
+            'user_id'                 => $user['id'],
+            'username'                => $user['username'],
+            'full_name'               => $user['full_name'],
+            'email'                   => $user['email'],
+            'role_id'                 => $user['role_id'],
+            'role_name'               => $user['role_name'] ?? 'USER',
+            'agency_id'               => $user['agency_id'] ?? null,
+            'agency_name'             => $user['agency_name'] ?? null,
+            'agency_abbr'             => $user['agency_abbr'] ?? null,
+            'commitment_officer_id'   => $user['commitment_officer_id'] ?? null,
+            'commitment_officer_name' => $user['commitment_officer_name'] ?? null,
         ];
 
         session()->set($sessionData);
