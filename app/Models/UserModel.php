@@ -18,8 +18,8 @@ class UserModel extends Model
         'username',
         'password',
         'role_id',
-        'agency_id',
-        'commitment_officer_id',
+        'skpd_id',
+        'ppk_id',
         'nip',
         'whatsapp_number',
         'is_active',
@@ -35,10 +35,10 @@ class UserModel extends Model
      */
     public function getUserWithRole(string $identifier)
     {
-        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, commitment_officers.name as commitment_officer_name')
+        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, ppk.name as ppk_name')
             ->join('roles', 'roles.id = users.role_id', 'left')
-            ->join('agencies', 'agencies.id = users.agency_id', 'left')
-            ->join('commitment_officers', 'commitment_officers.id = users.commitment_officer_id', 'left')
+            ->join('agencies', 'agencies.id = users.skpd_id', 'left')
+            ->join('ppk', 'ppk.id = users.ppk_id', 'left')
             ->groupStart()
                 ->where('users.username', $identifier)
                 ->orWhere('users.email', $identifier)
@@ -51,10 +51,10 @@ class UserModel extends Model
      */
     public function getUsersWithDetails()
     {
-        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, agencies.code as agency_code, commitment_officers.name as commitment_officer_name')
+        return $this->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, agencies.code as agency_code, ppk.name as ppk_name')
             ->join('roles', 'roles.id = users.role_id', 'left')
-            ->join('agencies', 'agencies.id = users.agency_id', 'left')
-            ->join('commitment_officers', 'commitment_officers.id = users.commitment_officer_id', 'left')
+            ->join('agencies', 'agencies.id = users.skpd_id', 'left')
+            ->join('ppk', 'ppk.id = users.ppk_id', 'left')
             ->orderBy('users.id', 'ASC')
             ->findAll();
     }

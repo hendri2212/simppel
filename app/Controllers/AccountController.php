@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\AgencyModel;
-use App\Models\CommitmentOfficerModel;
+use App\Models\PpkModel;
 use App\Models\RoleModel;
 use App\Models\UserModel;
 
@@ -12,14 +12,14 @@ class AccountController extends BaseController
     protected UserModel $userModel;
     protected AgencyModel $agencyModel;
     protected RoleModel $roleModel;
-    protected CommitmentOfficerModel $commitmentOfficerModel;
+    protected PpkModel $ppkModel;
 
     public function __construct()
     {
         $this->userModel               = new UserModel();
         $this->agencyModel             = new AgencyModel();
         $this->roleModel               = new RoleModel();
-        $this->commitmentOfficerModel = new CommitmentOfficerModel();
+        $this->ppkModel = new PpkModel();
     }
 
     /**
@@ -31,7 +31,7 @@ class AccountController extends BaseController
             $dbUsers            = $this->userModel->getUsersWithDetails();
             $allAgencies        = $this->agencyModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $allRoles           = $this->roleModel->orderBy('id', 'ASC')->findAll();
-            $commitmentOfficers = $this->commitmentOfficerModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $ppkList = $this->ppkModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
             $usersList = array_map(function ($u) {
                 $roleName = $u['role_name'] ?? 'USER';
@@ -63,12 +63,12 @@ class AccountController extends BaseController
                     'role'                   => $roleName,
                     'role_id'                => $u['role_id'] ?? null,
                     'role_badge'             => $roleBadge,
-                    'agency_id'              => $u['agency_id'] ?? null,
+                    'skpd_id'              => $u['skpd_id'] ?? null,
                     'agency_name'            => $u['agency_name'] ?? null,
                     'agency_abbr'            => $u['agency_abbr'] ?? null,
                     'agency_code'            => $u['agency_code'] ?? null,
-                    'commitment_officer_id'   => $u['commitment_officer_id'] ?? null,
-                    'commitment_officer_name' => $u['commitment_officer_name'] ?? null,
+                    'ppk_id'   => $u['ppk_id'] ?? null,
+                    'ppk_name' => $u['ppk_name'] ?? null,
                     'status'                 => $isActive ? 'Active' : 'Inactive',
                     'is_active'              => $isActive ? 1 : 0,
                     'status_badge'           => $isActive ? 'bg-success' : 'bg-secondary',
@@ -81,7 +81,7 @@ class AccountController extends BaseController
             $usersList           = [];
             $allAgencies         = [];
             $allRoles            = [];
-            $commitmentOfficers  = [];
+            $ppkList  = [];
         }
 
         $totalCount      = count($usersList);
@@ -98,7 +98,7 @@ class AccountController extends BaseController
             'usersList'           => $usersList,
             'allAgencies'         => $allAgencies,
             'allRoles'            => $allRoles,
-            'commitmentOfficers'  => $commitmentOfficers,
+            'ppkList'  => $ppkList,
             'totalCount'          => $totalCount,
             'activeCount'         => $activeCount,
             'inactiveCount'       => $inactiveCount,
@@ -108,11 +108,11 @@ class AccountController extends BaseController
     }
 
     /**
-     * API: Ambil daftar PPK / Bidang (Commitment Officers) berdasarkan SKPD (agency_id)
+     * API: Ambil daftar PPK / Bidang (PPK) berdasarkan SKPD (skpd_id)
      */
-    public function getCommitmentOfficers($agencyId = null)
+    public function getPpk($agencyId = null)
     {
-        $agencyId = $agencyId ?? $this->request->getGet('agency_id');
+        $agencyId = $agencyId ?? $this->request->getGet('skpd_id');
 
         if (!$agencyId) {
             return $this->response->setJSON([
@@ -122,8 +122,8 @@ class AccountController extends BaseController
         }
 
         try {
-            $officers = $this->commitmentOfficerModel
-                ->where('agency_id', (int) $agencyId)
+            $officers = $this->ppkModel
+                ->where('skpd_id', (int) $agencyId)
                 ->where('is_active', 1)
                 ->orderBy('name', 'ASC')
                 ->findAll();
@@ -133,7 +133,7 @@ class AccountController extends BaseController
                 'data'   => $officers,
             ]);
         } catch (\Throwable $e) {
-            log_message('error', 'Error in getCommitmentOfficers: ' . $e->getMessage());
+            log_message('error', 'Error in getPpk: ' . $e->getMessage());
             return $this->response->setJSON([
                 'status'  => 'error',
                 'message' => 'Gagal mengambil data PPK/Bidang: ' . $e->getMessage(),
@@ -169,11 +169,11 @@ class AccountController extends BaseController
         $username = trim((string) $this->request->getPost('username'));
         $username = ltrim($username, '@');
 
-        $agencyId = $this->request->getPost('agency_id');
+        $agencyId = $this->request->getPost('skpd_id');
         $agencyId = !empty($agencyId) ? (int) $agencyId : null;
 
-        $commitmentOfficerId = $this->request->getPost('commitment_officer_id');
-        $commitmentOfficerId = !empty($commitmentOfficerId) ? (int) $commitmentOfficerId : null;
+        $ppkId = $this->request->getPost('ppk_id');
+        $ppkId = !empty($ppkId) ? (int) $ppkId : null;
 
         $email = trim((string) $this->request->getPost('email')) ?: null;
         if (empty($email)) {
@@ -187,8 +187,8 @@ class AccountController extends BaseController
             'email'                 => $email,
             'password'              => password_hash(trim((string) $this->request->getPost('password')), PASSWORD_BCRYPT),
             'role_id'               => (int) $this->request->getPost('role_id'),
-            'agency_id'             => $agencyId,
-            'commitment_officer_id' => $commitmentOfficerId,
+            'skpd_id'             => $agencyId,
+            'ppk_id' => $ppkId,
             'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
             'whatsapp_number'       => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
             'is_active'             => (int) ($this->request->getPost('is_active') ?? 1),
@@ -258,18 +258,18 @@ class AccountController extends BaseController
         $username = trim((string) $this->request->getPost('username'));
         $username = ltrim($username, '@');
 
-        $agencyId = $this->request->getPost('agency_id');
+        $agencyId = $this->request->getPost('skpd_id');
         $agencyId = !empty($agencyId) ? (int) $agencyId : null;
 
-        $commitmentOfficerId = $this->request->getPost('commitment_officer_id');
-        $commitmentOfficerId = !empty($commitmentOfficerId) ? (int) $commitmentOfficerId : null;
+        $ppkId = $this->request->getPost('ppk_id');
+        $ppkId = !empty($ppkId) ? (int) $ppkId : null;
 
         $updateData = [
             'full_name'             => trim((string) $this->request->getPost('full_name')),
             'username'              => $username,
             'role_id'               => (int) $this->request->getPost('role_id'),
-            'agency_id'             => $agencyId,
-            'commitment_officer_id' => $commitmentOfficerId,
+            'skpd_id'             => $agencyId,
+            'ppk_id' => $ppkId,
             'nip'                   => trim((string) $this->request->getPost('nip')) ?: null,
             'email'                 => trim((string) $this->request->getPost('email')) ?: null,
             'whatsapp_number'       => trim((string) $this->request->getPost('whatsapp_number')) ?: null,

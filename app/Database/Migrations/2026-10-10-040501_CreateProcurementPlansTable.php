@@ -15,13 +15,13 @@ class CreateProcurementPlansTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'agency_id' => [
+            'skpd_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'comment'    => 'ID Instansi / SKPD (id_skpd)',
             ],
-            'commitment_officer_id' => [
+            'ppk_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -154,8 +154,8 @@ class CreateProcurementPlansTable extends Migration
         $this->forge->addKey('package_code');
 
         // Foreign keys to referenced tables
-        $this->forge->addForeignKey('agency_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->addForeignKey('commitment_officer_id', 'commitment_officers', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->addForeignKey('ppk_id', 'ppk', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('expense_type_id', 'expense_types', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('procurement_type_id', 'procurement_types', 'id', 'CASCADE', 'RESTRICT');
         $this->forge->addForeignKey('funding_source_id', 'funding_sources', 'id', 'CASCADE', 'RESTRICT');

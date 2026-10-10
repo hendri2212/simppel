@@ -15,8 +15,8 @@ class ProcurementPlanSeeder extends Seeder
         $plans = [
             [
                 'id'                          => 1,
-                'agency_id'                   => 16, // DPUPR
-                'commitment_officer_id'       => 5,  // Bidang Bina Marga
+                'skpd_id'                   => 16, // DPUPR
+                'ppk_id'       => 5,  // Bidang Bina Marga
                 'fiscal_year'                 => '2026',
                 'activity'                    => 'PENYELENGGARAAN JALAN KABUPATEN/KOTA',
                 'package_name'                => 'Jasa Konsultansi Pengawasan Peningkatan Struktur Ruas Jalan  Siayuh - Tanjung Sari',
@@ -42,8 +42,8 @@ class ProcurementPlanSeeder extends Seeder
             ],
             [
                 'id'                          => 2,
-                'agency_id'                   => 16, // DPUPR
-                'commitment_officer_id'       => 5,  // Bidang Bina Marga
+                'skpd_id'                   => 16, // DPUPR
+                'ppk_id'       => 5,  // Bidang Bina Marga
                 'fiscal_year'                 => '2026',
                 'activity'                    => 'PENYELENGGARAAN JALAN KABUPATEN/KOTA',
                 'package_name'                => 'Jasa Konsultansi Pengawasan Peningkatan Struktur Ruas Jalan Tanjung Seloka - Berangas (Sejakah-Sungai Buah)',
@@ -69,8 +69,8 @@ class ProcurementPlanSeeder extends Seeder
             ],
             [
                 'id'                          => 4,
-                'agency_id'                   => 16, // DPUPR
-                'commitment_officer_id'       => 5,  // Bidang Bina Marga
+                'skpd_id'                   => 16, // DPUPR
+                'ppk_id'       => 5,  // Bidang Bina Marga
                 'fiscal_year'                 => '2026',
                 'activity'                    => 'PENYELENGGARAAN JALAN KABUPATEN/KOTA',
                 'package_name'                => 'Jasa Konsultansi Pengawasan Peningkatan Struktur Ruas Jalan Tanjung Seloka - Berangas (Tanjung Serudung-Labuan Mas)',

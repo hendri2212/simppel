@@ -33,11 +33,24 @@ class CreateUsersTable extends Migration
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
             ],
-            'agency_id' => [
+            'role_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
                 'null'       => true,
+            ],
+            'skpd_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
+            'ppk_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+                'comment'    => 'ID PPK / Bidang (tabel ppk)',
             ],
             'nip' => [
                 'type'       => 'VARCHAR',
@@ -66,7 +79,9 @@ class CreateUsersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('agency_id', 'agencies', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('role_id', 'roles', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'SET NULL');
+        $this->forge->addForeignKey('ppk_id', 'ppk', 'id', 'CASCADE', 'SET NULL');
         $this->forge->createTable('users', true);
     }
 

@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateCommitmentOfficersTable extends Migration
+class CreatePpkTable extends Migration
 {
     public function up()
     {
@@ -15,7 +15,7 @@ class CreateCommitmentOfficersTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'agency_id' => [
+            'skpd_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
                 'unsigned'   => true,
@@ -42,12 +42,12 @@ class CreateCommitmentOfficersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addForeignKey('agency_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
-        $this->forge->createTable('commitment_officers', true);
+        $this->forge->addForeignKey('skpd_id', 'agencies', 'id', 'CASCADE', 'RESTRICT');
+        $this->forge->createTable('ppk', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('commitment_officers', true);
+        $this->forge->dropTable('ppk', true);
     }
 }

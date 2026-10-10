@@ -244,10 +244,10 @@
                                                                 <div class="fs-xs text-dark text-break" style="max-width: 280px;" title="<?= esc($user['agency_name']) ?>">
                                                                     <?= esc($user['agency_name']) ?>
                                                                 </div>
-                                                                <?php if (!empty($user['commitment_officer_name'])): ?>
+                                                                <?php if (!empty($user['ppk_name'])): ?>
                                                                     <div class="mt-1">
                                                                         <span class="badge bg-info-subtle text-info border border-info-subtle fs-nano" title="Pejabat Pembuat Komitmen (PPK) / Bidang">
-                                                                            <i class="fal fa-user-tie me-1"></i><?= esc($user['commitment_officer_name']) ?>
+                                                                            <i class="fal fa-user-tie me-1"></i><?= esc($user['ppk_name']) ?>
                                                                         </span>
                                                                     </div>
                                                                 <?php endif; ?>
@@ -388,11 +388,11 @@
                                             <div class="fs-sm text-dark fw-medium text-break" id="detailModalAgencyName">-</div>
                                         </div>
                                     </div>
-                                    <div class="mb-3" id="detailModalCommitmentOfficerContainer" style="display: none;">
-                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">PPK / Bidang (Commitment Officer)</label>
+                                    <div class="mb-3" id="detailModalPpkContainer" style="display: none;">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">PPK / Bidang (PPK)</label>
                                         <div class="d-flex align-items-center gap-1">
                                             <span class="badge bg-info-subtle text-info border border-info-subtle fs-xs">
-                                                <i class="fal fa-user-tie me-1"></i><span id="detailModalCommitmentOfficerName">-</span>
+                                                <i class="fal fa-user-tie me-1"></i><span id="detailModalPpkName">-</span>
                                             </span>
                                         </div>
                                     </div>
@@ -521,7 +521,7 @@
                             <!-- SKPD / Agency Select2 -->
                             <div class="col-md-6">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserAgencySelect">Instansi / SKPD</label>
-                                <select class="form-select select2-edit-agency" name="agency_id" id="editUserAgencySelect" style="width: 100%;">
+                                <select class="form-select select2-edit-agency" name="skpd_id" id="editUserAgencySelect" style="width: 100%;">
                                     <option value="">-- Tanpa SKPD / Instansi --</option>
                                     <?php foreach ($allAgencies as $ag): ?>
                                         <option value="<?= $ag['id'] ?>">
@@ -531,10 +531,10 @@
                                 </select>
                             </div>
 
-                            <!-- PPK / Bidang (Commitment Officer) -->
+                            <!-- PPK / Bidang (PPK) -->
                             <div class="col-md-6">
-                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserCommitmentOfficerSelect">PPK / Bidang</label>
-                                <select class="form-select" name="commitment_officer_id" id="editUserCommitmentOfficerSelect">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserPpkSelect">PPK / Bidang</label>
+                                <select class="form-select" name="ppk_id" id="editUserPpkSelect">
                                     <option value="">-- Tanpa PPK / Bidang --</option>
                                 </select>
                                 <small class="text-muted fs-nano">Otomatis terfilter berdasarkan SKPD yang dipilih.</small>
@@ -726,7 +726,7 @@
                             <!-- SKPD / Agency Select2 -->
                             <div class="col-md-6">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserAgencySelect">Instansi / SKPD</label>
-                                <select class="form-select select2-agency" name="agency_id" id="addUserAgencySelect" style="width: 100%;">
+                                <select class="form-select select2-agency" name="skpd_id" id="addUserAgencySelect" style="width: 100%;">
                                     <option value="">-- Pilih SKPD --</option>
                                     <?php foreach ($allAgencies as $ag): ?>
                                         <option value="<?= $ag['id'] ?>">
@@ -736,13 +736,13 @@
                                 </select>
                             </div>
 
-                            <!-- PPK / Bidang (Commitment Officer) Terfilter Berdasarkan SKPD -->
+                            <!-- PPK / Bidang (PPK) Terfilter Berdasarkan SKPD -->
                             <div class="col-md-6">
-                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserCommitmentOfficerSelect">PPK / Bidang (Commitment Officer)</label>
-                                <select class="form-select" name="commitment_officer_id" id="addUserCommitmentOfficerSelect">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="addUserPpkSelect">PPK / Bidang (PPK)</label>
+                                <select class="form-select" name="ppk_id" id="addUserPpkSelect">
                                     <option value="">-- Pilih SKPD terlebih dahulu --</option>
                                 </select>
-                                <small class="text-muted fs-nano" id="addUserCommitmentOfficerHelp">Otomatis menampilkan bidang/PPK yang berelasi dengan SKPD.</small>
+                                <small class="text-muted fs-nano" id="addUserPpkHelp">Otomatis menampilkan bidang/PPK yang berelasi dengan SKPD.</small>
                             </div>
 
                             <!-- Email -->
@@ -808,13 +808,13 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Global master data commitment officers untuk pencarian instan
-        const allCommitmentOfficers = <?= json_encode($commitmentOfficers ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+        // Global master data PPK untuk pencarian instan
+        const allPpk = <?= json_encode($ppkList ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
         /**
          * Helper untuk mengisi dropdown PPK berdasarkan agencyId yang dipilih
          */
-        function populateCommitmentOfficers(selectElement, agencyId, selectedOfficerId = null, helpElement = null) {
+        function populatePpk(selectElement, agencyId, selectedOfficerId = null, helpElement = null) {
             if (!selectElement) return;
 
             selectElement.innerHTML = '';
@@ -832,7 +832,7 @@
             }
 
             // Filter dari data master lokal
-            const filtered = allCommitmentOfficers.filter(item => String(item.agency_id) === String(agencyId));
+            const filtered = allPpk.filter(item => String(item.skpd_id) === String(agencyId));
 
             if (filtered.length === 0) {
                 const opt = document.createElement('option');
@@ -840,7 +840,7 @@
                 opt.textContent = '-- Tidak ada PPK / Bidang terdaftar pada SKPD ini --';
                 selectElement.appendChild(opt);
                 if (helpElement) {
-                    helpElement.textContent = 'SKPD ini belum memiliki daftar bidang/PPK di database commitment_officers.';
+                    helpElement.textContent = 'SKPD ini belum memiliki daftar bidang/PPK di database ppk.';
                 }
                 return;
             }
@@ -887,27 +887,27 @@
             // Event saat SKPD berubah pada Modal Tambah Akun
             $('#addUserAgencySelect').on('change', function () {
                 const agencyId = $(this).val();
-                const ppkSelect = document.getElementById('addUserCommitmentOfficerSelect');
-                const helpEl = document.getElementById('addUserCommitmentOfficerHelp');
-                populateCommitmentOfficers(ppkSelect, agencyId, null, helpEl);
+                const ppkSelect = document.getElementById('addUserPpkSelect');
+                const helpEl = document.getElementById('addUserPpkHelp');
+                populatePpk(ppkSelect, agencyId, null, helpEl);
             });
 
             // Event saat SKPD berubah pada Modal Edit Akun
             $('#editUserAgencySelect').on('change', function () {
                 const agencyId = $(this).val();
-                const ppkSelect = document.getElementById('editUserCommitmentOfficerSelect');
+                const ppkSelect = document.getElementById('editUserPpkSelect');
                 // Pertahankan nilai jika ada data sebelumnya
                 const currentVal = $(ppkSelect).data('pending-officer-id') || $(ppkSelect).val();
-                populateCommitmentOfficers(ppkSelect, agencyId, currentVal);
+                populatePpk(ppkSelect, agencyId, currentVal);
                 $(ppkSelect).removeData('pending-officer-id');
             });
 
             // Reset Select2 dan form ketika modal ditutup
             $('#addUserModal').on('hidden.bs.modal', function () {
                 $('#addUserAgencySelect').val(null).trigger('change');
-                const ppkSelect = document.getElementById('addUserCommitmentOfficerSelect');
+                const ppkSelect = document.getElementById('addUserPpkSelect');
                 if (ppkSelect) {
-                    populateCommitmentOfficers(ppkSelect, null);
+                    populatePpk(ppkSelect, null);
                 }
                 $('#addAlertContainer').addClass('d-none').empty();
             });
@@ -1141,12 +1141,12 @@
                         agencyNameEl.innerHTML = '<span class="text-muted fst-italic">Belum dihubungkan ke SKPD</span>';
                     }
 
-                    // PPK / Bidang (Commitment Officer)
-                    const officerContainer = document.getElementById('detailModalCommitmentOfficerContainer');
-                    const officerNameEl = document.getElementById('detailModalCommitmentOfficerName');
-                    if (u.commitment_officer_name) {
+                    // PPK / Bidang (PPK)
+                    const officerContainer = document.getElementById('detailModalPpkContainer');
+                    const officerNameEl = document.getElementById('detailModalPpkName');
+                    if (u.ppk_name) {
                         officerContainer.style.display = 'block';
-                        officerNameEl.textContent = u.commitment_officer_name;
+                        officerNameEl.textContent = u.ppk_name;
                     } else {
                         officerContainer.style.display = 'none';
                         officerNameEl.textContent = '-';
@@ -1341,11 +1341,11 @@
                 document.getElementById('editUserIsActive').value = String(isActiveVal);
 
                 // Set SKPD Select2 & PPK/Bidang
-                const agencyVal = u.agency_id ? String(u.agency_id) : '';
-                const ppkVal = u.commitment_officer_id ? String(u.commitment_officer_id) : '';
+                const agencyVal = u.skpd_id ? String(u.skpd_id) : '';
+                const ppkVal = u.ppk_id ? String(u.ppk_id) : '';
 
                 // Simpan pending officer ID agar terpilih setelah trigger change
-                const ppkSelect = document.getElementById('editUserCommitmentOfficerSelect');
+                const ppkSelect = document.getElementById('editUserPpkSelect');
                 if (ppkSelect) {
                     $(ppkSelect).data('pending-officer-id', ppkVal);
                 }

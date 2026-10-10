@@ -13,8 +13,8 @@ class ProcurementPlanModel extends Model
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
     protected $allowedFields    = [
-        'agency_id',
-        'commitment_officer_id',
+        'skpd_id',
+        'ppk_id',
         'fiscal_year',
         'activity',
         'package_name',
@@ -51,15 +51,15 @@ class ProcurementPlanModel extends Model
                 procurement_plans.*,
                 agencies.name as agency_name,
                 agencies.abbreviation as agency_abbreviation,
-                commitment_officers.name as commitment_officer_name,
+                ppk.name as ppk_name,
                 expense_types.name as expense_type_name,
                 procurement_types.name as procurement_type_name,
                 funding_sources.name as funding_source_name,
                 selection_methods.name as selection_method_name,
                 special_allocation_types.name as special_allocation_type_name
             ')
-            ->join('agencies', 'agencies.id = procurement_plans.agency_id', 'left')
-            ->join('commitment_officers', 'commitment_officers.id = procurement_plans.commitment_officer_id', 'left')
+            ->join('agencies', 'agencies.id = procurement_plans.skpd_id', 'left')
+            ->join('ppk', 'ppk.id = procurement_plans.ppk_id', 'left')
             ->join('expense_types', 'expense_types.id = procurement_plans.expense_type_id', 'left')
             ->join('procurement_types', 'procurement_types.id = procurement_plans.procurement_type_id', 'left')
             ->join('funding_sources', 'funding_sources.id = procurement_plans.funding_source_id', 'left')

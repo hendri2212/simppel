@@ -391,7 +391,7 @@
                                                                 <svg class="sa-icon me-1 text-muted" style="width: 10px; height: 10px;">
                                                                     <use href="/icons/sprite.svg#user"></use>
                                                                 </svg>
-                                                                <?= esc($p['commitment_officer_name'] ?? 'Belum ditentukan') ?>
+                                                                <?= esc($p['ppk_name'] ?? 'Belum ditentukan') ?>
                                                             </div>
                                                         </td>
 
@@ -722,7 +722,7 @@
                                 </span>
                                 <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace fs-nano" title="Pejabat Pembuat Komitmen (PPK)">
                                     <i class="fal fa-user-tie text-info me-1"></i>
-                                    <?= esc(!empty($currentUser['commitment_officer_name']) ? $currentUser['commitment_officer_name'] : (!empty($currentUser['full_name']) ? $currentUser['full_name'] : 'PPK Akun Login')) ?>
+                                    <?= esc(!empty($currentUser['ppk_name']) ? $currentUser['ppk_name'] : (!empty($currentUser['full_name']) ? $currentUser['full_name'] : 'PPK Akun Login')) ?>
                                 </span>
                             </div>
                         </div>
@@ -917,7 +917,7 @@
                         document.getElementById('modalPlanActivity').textContent = p.activity || '-';
 
                         document.getElementById('modalPlanAgency').textContent = p.agency_name || '-';
-                        document.getElementById('modalPlanOfficer').textContent = p.commitment_officer_name || '-';
+                        document.getElementById('modalPlanOfficer').textContent = p.ppk_name || '-';
                         document.getElementById('modalPlanLocation').textContent = p.location || '-';
                         document.getElementById('modalPlanVolume').textContent = p.volume || '-';
 

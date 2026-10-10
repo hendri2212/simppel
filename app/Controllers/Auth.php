@@ -65,11 +65,11 @@ class Auth extends BaseController
             'email'                   => $user['email'],
             'role_id'                 => $user['role_id'],
             'role_name'               => $user['role_name'] ?? 'USER',
-            'agency_id'               => $user['agency_id'] ?? null,
+            'skpd_id'               => $user['skpd_id'] ?? null,
             'agency_name'             => $user['agency_name'] ?? null,
             'agency_abbr'             => $user['agency_abbr'] ?? null,
-            'commitment_officer_id'   => $user['commitment_officer_id'] ?? null,
-            'commitment_officer_name' => $user['commitment_officer_name'] ?? null,
+            'ppk_id'   => $user['ppk_id'] ?? null,
+            'ppk_name' => $user['ppk_name'] ?? null,
         ];
 
         session()->set($sessionData);

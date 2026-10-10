@@ -5,7 +5,7 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
 
-class CommitmentOfficerSeeder extends Seeder
+class PpkSeeder extends Seeder
 {
     public function run()
     {
@@ -14,7 +14,7 @@ class CommitmentOfficerSeeder extends Seeder
         $officers = [
             [
                 'id'         => 1,
-                'agency_id'  => 16,
+                'skpd_id'  => 16,
                 'name'       => 'Bidang Penataan Ruang',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -22,7 +22,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 2,
-                'agency_id'  => 16,
+                'skpd_id'  => 16,
                 'name'       => 'Bidang Bangunan Gedung dan Jasa Konstruksi',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -30,7 +30,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 3,
-                'agency_id'  => 16,
+                'skpd_id'  => 16,
                 'name'       => 'Bidang Sumber Daya Air dan Penyehatan Lingkungan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -38,7 +38,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 4,
-                'agency_id'  => 16,
+                'skpd_id'  => 16,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -46,7 +46,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 5,
-                'agency_id'  => 16,
+                'skpd_id'  => 16,
                 'name'       => 'Bidang Bina Marga',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -54,7 +54,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 6,
-                'agency_id'  => 54,
+                'skpd_id'  => 54,
                 'name'       => 'Bidang Sumber Daya Air dan Penyehatan Lingkungan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -62,7 +62,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 7,
-                'agency_id'  => 54,
+                'skpd_id'  => 54,
                 'name'       => 'Bidang Bina Marga',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -70,7 +70,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 8,
-                'agency_id'  => 56,
+                'skpd_id'  => 56,
                 'name'       => 'Bidang Latihan 1',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -78,7 +78,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 9,
-                'agency_id'  => 21,
+                'skpd_id'  => 21,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -86,7 +86,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 10,
-                'agency_id'  => 21,
+                'skpd_id'  => 21,
                 'name'       => 'Bidang Angkutan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -94,7 +94,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 11,
-                'agency_id'  => 21,
+                'skpd_id'  => 21,
                 'name'       => 'Bidang Lalu Lintas',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -102,7 +102,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 12,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -110,7 +110,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 13,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Bidang Destinasi Pariwisata',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -118,7 +118,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 14,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Bidang Kepemudaan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -126,7 +126,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 15,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Bidang Pertunjukan, Event Pariwisata dan Ekonomi Kreatif',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -134,7 +134,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 16,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Bidang Pemasaran Pariwisata',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -142,7 +142,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 17,
-                'agency_id'  => 15,
+                'skpd_id'  => 15,
                 'name'       => 'Bidang Olahraga',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -150,7 +150,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 18,
-                'agency_id'  => 24,
+                'skpd_id'  => 24,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -158,7 +158,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 19,
-                'agency_id'  => 24,
+                'skpd_id'  => 24,
                 'name'       => 'Bidang Kawasan Permukiman',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -166,7 +166,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 20,
-                'agency_id'  => 24,
+                'skpd_id'  => 24,
                 'name'       => 'Bidang Perumahan Rakyat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -174,7 +174,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 21,
-                'agency_id'  => 24,
+                'skpd_id'  => 24,
                 'name'       => 'Bidang Pertanahan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -182,7 +182,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 22,
-                'agency_id'  => 20,
+                'skpd_id'  => 20,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -190,7 +190,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 23,
-                'agency_id'  => 20,
+                'skpd_id'  => 20,
                 'name'       => 'Bidang Pembinaan Sekolah Dasar',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -198,7 +198,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 24,
-                'agency_id'  => 20,
+                'skpd_id'  => 20,
                 'name'       => 'Bidang Pembinaan Sekolah Menengah Pertama',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -206,7 +206,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 29,
-                'agency_id'  => 14,
+                'skpd_id'  => 14,
                 'name'       => 'BIDANG PENAATAN PENGENDALIAN PENCEMARAN & KERUSAKAN LINGKUNGAN HIDUP',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -214,7 +214,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 30,
-                'agency_id'  => 14,
+                'skpd_id'  => 14,
                 'name'       => 'BIDANG PENGELOLAAN SAMPAH  DAN LIMBAH B3 ',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -222,7 +222,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 31,
-                'agency_id'  => 14,
+                'skpd_id'  => 14,
                 'name'       => 'BIDANG TATA LINGKUNGAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -230,7 +230,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 32,
-                'agency_id'  => 14,
+                'skpd_id'  => 14,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -238,7 +238,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 33,
-                'agency_id'  => 22,
+                'skpd_id'  => 22,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -246,7 +246,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 34,
-                'agency_id'  => 22,
+                'skpd_id'  => 22,
                 'name'       => 'BIDANG PEMBERDAYAAN PEMBUDIYAAN IKAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -254,7 +254,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 35,
-                'agency_id'  => 22,
+                'skpd_id'  => 22,
                 'name'       => 'BIDANG PEMBERDAYAAN PENANGKAPAN IKAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -262,7 +262,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 36,
-                'agency_id'  => 22,
+                'skpd_id'  => 22,
                 'name'       => 'BIDANG PENGEMBANGAN SUMBERDAYA & DAYA SAING',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -270,7 +270,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 37,
-                'agency_id'  => 9,
+                'skpd_id'  => 9,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -278,7 +278,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 38,
-                'agency_id'  => 9,
+                'skpd_id'  => 9,
                 'name'       => 'BIDANG KESEHATAN MASYARAKAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -286,7 +286,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 39,
-                'agency_id'  => 9,
+                'skpd_id'  => 9,
                 'name'       => 'BIDANG PENCEGAHAN DAN PENGENDALIAN PENYAKIT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -294,7 +294,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 40,
-                'agency_id'  => 9,
+                'skpd_id'  => 9,
                 'name'       => 'BIDANG PELAYANAN KESEHATAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -302,7 +302,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 41,
-                'agency_id'  => 9,
+                'skpd_id'  => 9,
                 'name'       => 'BIDANG SUMBER DAYA KESEHATAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -310,7 +310,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 42,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -318,7 +318,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 43,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'BIDANG KOPERASI',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -326,7 +326,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 44,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'BIDANG USAHA  MIKRO',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -334,7 +334,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 45,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'BIDANG PERINDUSTRIAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -342,7 +342,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 46,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'BIDANG KEMETROLOGIAN DAN PENGAWASAN PERDAGANGAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -350,7 +350,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 47,
-                'agency_id'  => 13,
+                'skpd_id'  => 13,
                 'name'       => 'BIDANG STABILITASI DAN SARANA DISTRIBUSI PERDAGANGAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -358,7 +358,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 48,
-                'agency_id'  => 11,
+                'skpd_id'  => 11,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -366,7 +366,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 49,
-                'agency_id'  => 11,
+                'skpd_id'  => 11,
                 'name'       => 'BIDANG PELATIHAN, PERLUASAN KERJA DAN PENEMPATAN TENAGA KERJA',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -374,7 +374,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 50,
-                'agency_id'  => 11,
+                'skpd_id'  => 11,
                 'name'       => 'BIDANG HUBUNGAN INDUSTRIAL DAN  JAMINAN SOSIAL KETENAGAKERJAAN ',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -382,7 +382,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 51,
-                'agency_id'  => 11,
+                'skpd_id'  => 11,
                 'name'       => 'BIDANG TRANSMIGRASI',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -390,7 +390,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 54,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'SEKRETARIAT',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -398,7 +398,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 55,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG KETERSEDIAAN DAN DISTRIBUSI PANGAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -406,7 +406,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 56,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG KONSUMSI DAN KEAMANAN PANGAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -414,7 +414,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 57,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG PRASARANA, SARANA DAN PENYULUHAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -422,7 +422,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 58,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG TANAMAN PANGAN DAN HORTIKULTURA',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -430,7 +430,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 59,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG PERKEBUNAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -438,7 +438,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 60,
-                'agency_id'  => 55,
+                'skpd_id'  => 55,
                 'name'       => 'BIDANG PETERNAKAN DAN KESEHATAN HEWAN',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -446,7 +446,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 61,
-                'agency_id'  => 20,
+                'skpd_id'  => 20,
                 'name'       => 'Bidang Pembinaan PAUD Dan Non Formal',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -454,7 +454,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 62,
-                'agency_id'  => 20,
+                'skpd_id'  => 20,
                 'name'       => 'Bidang Pembinaan Kebudayaan',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -462,7 +462,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 63,
-                'agency_id'  => 25,
+                'skpd_id'  => 25,
                 'name'       => 'Sekretariat',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -470,7 +470,7 @@ class CommitmentOfficerSeeder extends Seeder
             ],
             [
                 'id'         => 65,
-                'agency_id'  => 4,
+                'skpd_id'  => 4,
                 'name'       => 'Sekretariat Bapenda',
                 'is_active'  => 1,
                 'created_at' => $now,
@@ -479,11 +479,11 @@ class CommitmentOfficerSeeder extends Seeder
         ];
 
         foreach ($officers as $officer) {
-            $existing = $this->db->table('commitment_officers')->where('id', $officer['id'])->get()->getRow();
+            $existing = $this->db->table('ppk')->where('id', $officer['id'])->get()->getRow();
             if ($existing) {
-                $this->db->table('commitment_officers')->where('id', $officer['id'])->update($officer);
+                $this->db->table('ppk')->where('id', $officer['id'])->update($officer);
             } else {
-                $this->db->table('commitment_officers')->insert($officer);
+                $this->db->table('ppk')->insert($officer);
             }
         }
     }

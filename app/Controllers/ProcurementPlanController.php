@@ -3,7 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\AgencyModel;
-use App\Models\CommitmentOfficerModel;
+use App\Models\PpkModel;
 use App\Models\ExpenseTypeModel;
 use App\Models\FundingSourceModel;
 use App\Models\ProcurementPlanModel;
@@ -16,7 +16,7 @@ class ProcurementPlanController extends BaseController
 {
     protected ProcurementPlanModel $procurementPlanModel;
     protected AgencyModel $agencyModel;
-    protected CommitmentOfficerModel $officerModel;
+    protected PpkModel $officerModel;
     protected ExpenseTypeModel $expenseTypeModel;
     protected ProcurementTypeModel $procurementTypeModel;
     protected FundingSourceModel $fundingSourceModel;
@@ -28,7 +28,7 @@ class ProcurementPlanController extends BaseController
     {
         $this->procurementPlanModel = new ProcurementPlanModel();
         $this->agencyModel          = new AgencyModel();
-        $this->officerModel         = new CommitmentOfficerModel();
+        $this->officerModel         = new PpkModel();
         $this->expenseTypeModel     = new ExpenseTypeModel();
         $this->procurementTypeModel = new ProcurementTypeModel();
         $this->fundingSourceModel   = new FundingSourceModel();
@@ -61,19 +61,19 @@ class ProcurementPlanController extends BaseController
             $currentUser   = null;
             if ($currentUserId) {
                 $userObj = $this->userModel
-                    ->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, commitment_officers.name as commitment_officer_name')
+                    ->select('users.*, roles.name as role_name, agencies.name as agency_name, agencies.abbreviation as agency_abbr, ppk.name as ppk_name')
                     ->join('roles', 'roles.id = users.role_id', 'left')
-                    ->join('agencies', 'agencies.id = users.agency_id', 'left')
-                    ->join('commitment_officers', 'commitment_officers.id = users.commitment_officer_id', 'left')
+                    ->join('agencies', 'agencies.id = users.skpd_id', 'left')
+                    ->join('ppk', 'ppk.id = users.ppk_id', 'left')
                     ->where('users.id', $currentUserId)
                     ->first();
                 if ($userObj) {
-                    // Fallback jika belum ter-assign commitment_officer_id tetapi ada agency_id
-                    if (empty($userObj['commitment_officer_name']) && !empty($userObj['agency_id'])) {
-                        $fallbackOfficer = $this->officerModel->where('agency_id', $userObj['agency_id'])->first();
+                    // Fallback jika belum ter-assign ppk_id tetapi ada skpd_id
+                    if (empty($userObj['ppk_name']) && !empty($userObj['skpd_id'])) {
+                        $fallbackOfficer = $this->officerModel->where('skpd_id', $userObj['skpd_id'])->first();
                         if ($fallbackOfficer) {
-                            $userObj['commitment_officer_id']   = $fallbackOfficer['id'];
-                            $userObj['commitment_officer_name'] = $fallbackOfficer['name'];
+                            $userObj['ppk_id']   = $fallbackOfficer['id'];
+                            $userObj['ppk_name'] = $fallbackOfficer['name'];
                         }
                     }
                     $currentUser = $userObj;
@@ -85,16 +85,16 @@ class ProcurementPlanController extends BaseController
                 $currentUser = [
                     'id'                      => session()->get('user_id'),
                     'full_name'               => session()->get('full_name') ?? 'Pengguna',
-                    'agency_id'               => session()->get('agency_id') ?? null,
+                    'skpd_id'               => session()->get('skpd_id') ?? null,
                     'agency_name'             => session()->get('agency_name') ?? 'Semua SKPD / Administrator',
                     'agency_abbr'             => session()->get('agency_abbr') ?? 'SIMPPEL',
-                    'commitment_officer_id'   => session()->get('commitment_officer_id') ?? null,
-                    'commitment_officer_name' => session()->get('commitment_officer_name') ?? 'Admin Pengadaan',
+                    'ppk_id'   => session()->get('ppk_id') ?? null,
+                    'ppk_name' => session()->get('ppk_name') ?? 'Admin Pengadaan',
                 ];
             } elseif (empty($currentUser['agency_name'])) {
                 $currentUser['agency_name']             = 'Pusat / Administrator';
                 $currentUser['agency_abbr']             = 'SIMPPEL';
-                $currentUser['commitment_officer_name'] = $currentUser['commitment_officer_name'] ?? 'Admin Pengadaan';
+                $currentUser['ppk_name'] = $currentUser['ppk_name'] ?? 'Admin Pengadaan';
             }
 
         } catch (\Throwable $e) {
@@ -160,24 +160,24 @@ class ProcurementPlanController extends BaseController
         }
 
         // Instansi / SKPD & PPK otomatis dari user login
-        $agencyId            = !empty($user['agency_id']) ? (int) $user['agency_id'] : null;
-        $commitmentOfficerId = !empty($user['commitment_officer_id']) ? (int) $user['commitment_officer_id'] : null;
+        $agencyId            = !empty($user['skpd_id']) ? (int) $user['skpd_id'] : null;
+        $ppkId = !empty($user['ppk_id']) ? (int) $user['ppk_id'] : null;
 
-        // Fallback jika user belum memiliki agency_id (misal Administrator / Superadmin)
+        // Fallback jika user belum memiliki skpd_id (misal Administrator / Superadmin)
         if (! $agencyId) {
             $defaultAgency = $this->agencyModel->where('id', 16)->first() ?? $this->agencyModel->first();
             $agencyId      = $defaultAgency ? (int) $defaultAgency['id'] : 1;
         }
 
-        // Fallback jika user belum memiliki commitment_officer_id
-        if (! $commitmentOfficerId) {
-            $existingOfficer = $this->officerModel->where('agency_id', $agencyId)->first();
+        // Fallback jika user belum memiliki ppk_id
+        if (! $ppkId) {
+            $existingOfficer = $this->officerModel->where('skpd_id', $agencyId)->first();
             if ($existingOfficer) {
-                $commitmentOfficerId = (int) $existingOfficer['id'];
+                $ppkId = (int) $existingOfficer['id'];
             } else {
                 $officerName = (!empty($user['full_name']) && (int) ($user['role_id'] ?? 0) === 3) ? $user['full_name'] : 'Pejabat Pembuat Komitmen (PPK)';
-                $commitmentOfficerId = (int) $this->officerModel->insert([
-                    'agency_id'  => $agencyId,
+                $ppkId = (int) $this->officerModel->insert([
+                    'skpd_id'  => $agencyId,
                     'name'       => $officerName,
                     'is_active'  => 1,
                     'created_at' => date('Y-m-d H:i:s'),
@@ -185,9 +185,9 @@ class ProcurementPlanController extends BaseController
                 ]);
             }
 
-            // Jika user terafiliasi dengan agency_id ini, perbarui akun user agar tersinkronisasi
-            if (!empty($user['agency_id']) && (int) $user['agency_id'] === $agencyId) {
-                $this->userModel->update($currentUserId, ['commitment_officer_id' => $commitmentOfficerId]);
+            // Jika user terafiliasi dengan skpd_id ini, perbarui akun user agar tersinkronisasi
+            if (!empty($user['skpd_id']) && (int) $user['skpd_id'] === $agencyId) {
+                $this->userModel->update($currentUserId, ['ppk_id' => $ppkId]);
             }
         }
 
@@ -222,8 +222,8 @@ class ProcurementPlanController extends BaseController
         $budgetCeiling = (float) $this->request->getPost('budget_ceiling');
 
         $data = [
-            'agency_id'                  => $agencyId,
-            'commitment_officer_id'      => $commitmentOfficerId,
+            'skpd_id'                  => $agencyId,
+            'ppk_id'      => $ppkId,
             'fiscal_year'                => (int) $this->request->getPost('fiscal_year'),
             'package_code'               => $packageCode,
             'activity'                   => trim((string) $this->request->getPost('activity')),
