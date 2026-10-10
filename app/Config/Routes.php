@@ -62,6 +62,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/account', 'AccountController::index');
     $routes->post('/accounts/update/(:num)', 'AccountController::update/$1');
     $routes->post('/accounts/update', 'AccountController::update');
+    $routes->post('/accounts/reset-password/(:num)', 'AccountController::resetPassword/$1');
+    $routes->post('/accounts/reset-password', 'AccountController::resetPassword');
     $routes->get('/procurement-plans', 'ProcurementPlanController::index');
     $routes->get('/(:any)', 'Home::root/$1');
 });

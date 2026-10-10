@@ -279,8 +279,8 @@
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Reset Password untuk: <?= esc(addslashes($user['name'])) ?>');">
-                                                                            <i class="fal fa-key me-2"></i> Reset Password
+                                                                        <a class="dropdown-item btn-reset-password" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                            <i class="fal fa-key me-2 text-danger"></i> Reset Password
                                                                         </a>
                                                                     </li>
                                                                 </ul>
@@ -445,6 +445,9 @@
                     <span class="fs-xs text-muted">SIMPPLE &bull; Manajemen Pengguna</span>
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="detailModalResetPwdBtn">
+                            <i class="fal fa-key me-1"></i> Reset Password
+                        </button>
                         <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="detailModalEditBtn">
                             <i class="fal fa-edit me-1"></i> Edit Akun
                         </button>
@@ -577,6 +580,63 @@
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="editUserSubmitBtn">
                             <i class="fal fa-save me-1"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Reset Password -->
+    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white py-3 px-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                            <i class="fal fa-key fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fs-base fw-bold text-white mb-0" id="resetPasswordModalLabel">Reset Password Pengguna</h5>
+                            <small class="text-white-50 fs-nano">Kembalikan password ke nilai bawaan sistem</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="resetPasswordForm" action="/accounts/reset-password" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" id="resetPasswordUserId" value="">
+
+                    <div class="modal-body p-4">
+                        <div id="resetAlertContainer" class="d-none mb-3"></div>
+
+                        <div class="text-center mb-3">
+                            <div class="avatar avatar-lg mx-auto mb-2 bg-danger-subtle text-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 56px; height: 56px;">
+                                <i class="fal fa-shield-alt fs-2 text-danger"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1" id="resetPasswordUserName">-</h6>
+                            <span class="badge bg-light text-muted border font-monospace" id="resetPasswordUserUsername">@-</span>
+                        </div>
+
+                        <div class="alert alert-warning border-warning-subtle d-flex align-items-start gap-2 mb-3">
+                            <i class="fal fa-exclamation-triangle text-warning fs-5 flex-shrink-0 mt-1"></i>
+                            <div class="fs-xs">
+                                Anda akan mereset password akun pengguna ini. Password akan diubah menjadi nilai default sistem:
+                                <div class="mt-2 p-2 bg-white rounded border text-center font-monospace fw-bold fs-sm text-dark select-all">
+                                    12345678
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="fs-xs text-muted mb-0 text-center">
+                            Pengguna dapat login kembali menggunakan password default di atas dan menggantinya setelah masuk.
+                        </p>
+                    </div>
+
+                    <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm d-flex align-items-center gap-1" id="resetPasswordSubmitBtn">
+                            <i class="fal fa-check-circle me-1"></i> Ya, Reset Password
                         </button>
                     </div>
                 </form>
@@ -945,6 +1005,19 @@
                         waBtn.classList.add('d-none');
                     }
 
+                    // Tombol Reset Password di Modal Detail
+                    const resetPwdBtn = document.getElementById('detailModalResetPwdBtn');
+                    if (resetPwdBtn) {
+                        resetPwdBtn.onclick = function() {
+                            const modalEl = document.getElementById('detailUserModal');
+                            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                            if (modalInstance) modalInstance.hide();
+                            setTimeout(() => {
+                                openResetPasswordModal(u);
+                            }, 300);
+                        };
+                    }
+
                     // Tombol Edit di Modal Detail
                     const editBtn = document.getElementById('detailModalEditBtn');
                     editBtn.onclick = function() {
@@ -962,6 +1035,98 @@
                     console.error('Error parsing user data:', err);
                 }
             });
+
+            // Helper function untuk membuka Modal Reset Password
+            function openResetPasswordModal(u) {
+                if (!u) return;
+
+                const alertBox = document.getElementById('resetAlertContainer');
+                if (alertBox) {
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+                }
+
+                document.getElementById('resetPasswordUserId').value = u.id || '';
+                document.getElementById('resetPasswordUserName').textContent = u.name || 'Pengguna';
+                document.getElementById('resetPasswordUserUsername').textContent = '@' + (u.raw_username || (u.username ? u.username.replace(/^@/, '') : ''));
+
+                const submitBtn = document.getElementById('resetPasswordSubmitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fal fa-check-circle me-1"></i> Ya, Reset Password';
+                }
+
+                const resetModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+                resetModal.show();
+            }
+
+            // Event Listener untuk Tombol Reset Password di Dropdown Tabel (.btn-reset-password)
+            document.addEventListener('click', function(e) {
+                const resetBtn = e.target.closest('.btn-reset-password');
+                if (!resetBtn) return;
+
+                e.preventDefault();
+                const rawData = resetBtn.getAttribute('data-user');
+                if (!rawData) return;
+
+                try {
+                    const u = JSON.parse(rawData);
+                    openResetPasswordModal(u);
+                } catch(err) {
+                    console.error('Error parsing user data for reset password:', err);
+                }
+            });
+
+            // AJAX Handler Form Reset Password
+            const resetForm = document.getElementById('resetPasswordForm');
+            if (resetForm) {
+                resetForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.getElementById('resetPasswordSubmitBtn');
+                    const originalBtnHtml = submitBtn.innerHTML;
+                    const alertBox = document.getElementById('resetAlertContainer');
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Memproses...';
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+
+                    const formData = new FormData(resetForm);
+
+                    fetch('/accounts/reset-password', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(({ ok, body }) => {
+                        if (ok && body.status === 'success') {
+                            alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5 flex-shrink-0"></i> <div>${body.message || 'Password berhasil direset ke default 12345678!'}</div>`;
+
+                            // Tutup modal dan reload halaman
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        } else {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHtml;
+                            alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>${body.message || 'Terjadi kesalahan saat mereset password.'}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error resetting password:', error);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                        alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                        alertBox.innerHTML = '<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>Gagal menghubungi server. Silakan coba beberapa saat lagi.</div>';
+                    });
+                });
+            }
 
             // Helper function untuk membuka Modal Edit Akun
             function openEditUserModal(u) {

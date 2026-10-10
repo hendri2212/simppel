@@ -188,4 +188,60 @@ class AccountController extends BaseController
             return redirect()->back()->withInput()->with('error', 'Gagal memperbarui akun: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Reset password user ke default: 12345678
+     */
+    public function resetPassword($id = null)
+    {
+        $id = $id ?? $this->request->getPost('id');
+
+        if (!$id) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'ID pengguna tidak valid.'])->setStatusCode(400);
+            }
+            return redirect()->back()->with('error', 'ID pengguna tidak valid.');
+        }
+
+        $user = $this->userModel->find($id);
+        if (!$user) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Pengguna tidak ditemukan.'])->setStatusCode(404);
+            }
+            return redirect()->back()->with('error', 'Pengguna tidak ditemukan.');
+        }
+
+        $defaultPassword = 'password' === '12345678' ? '12345678' : '12345678';
+        $hashedPassword = password_hash($defaultPassword, PASSWORD_BCRYPT);
+
+        try {
+            $this->userModel->update($id, [
+                'password' => $hashedPassword,
+            ]);
+
+            $userName = $user['full_name'] ?? $user['username'] ?? 'Pengguna';
+            $successMessage = "Password untuk {$userName} berhasil direset ke default: <strong>12345678</strong>";
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'           => 'success',
+                    'message'          => "Password untuk {$userName} berhasil direset ke default (12345678)!",
+                    'default_password' => $defaultPassword,
+                    'user_id'          => $id,
+                    'user_name'        => $userName,
+                ]);
+            }
+
+            return redirect()->to('/accounts')->with('success', $successMessage);
+        } catch (\Throwable $e) {
+            log_message('error', 'Error reset password user: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Gagal mereset password: ' . $e->getMessage(),
+                ])->setStatusCode(500);
+            }
+            return redirect()->back()->with('error', 'Gagal mereset password: ' . $e->getMessage());
+        }
+    }
 }
