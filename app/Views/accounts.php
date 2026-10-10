@@ -44,6 +44,25 @@
 
                     <div class="main-content">
 
+                        <?php if (session()->getFlashdata('success')): ?>
+                            <div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                                <svg class="sa-icon text-success" style="width: 20px; height: 20px;">
+                                    <use href="/icons/sprite.svg#check-circle"></use>
+                                </svg>
+                                <div><?= session()->getFlashdata('success') ?></div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (session()->getFlashdata('error')): ?>
+                            <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                                <svg class="sa-icon text-danger" style="width: 20px; height: 20px;">
+                                    <use href="/icons/sprite.svg#alert-triangle"></use>
+                                </svg>
+                                <div><?= session()->getFlashdata('error') ?></div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <!-- Stat Cards -->
                         <div class="row mb-4 g-3">
                             <div class="col-sm-6 col-xl-3">
@@ -255,8 +274,8 @@
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Edit akun: <?= esc(addslashes($user['name'])) ?>');">
-                                                                            <i class="fal fa-edit me-2"></i> Edit Akun
+                                                                        <a class="dropdown-item btn-edit-user" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                            <i class="fal fa-edit me-2 text-warning"></i> Edit Akun
                                                                         </a>
                                                                     </li>
                                                                     <li>
@@ -435,6 +454,136 @@
         </div>
     </div>
 
+    <!-- Modal Edit Akun Pengguna -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded p-2 bg-primary bg-opacity-10 text-primary">
+                            <i class="fal fa-user-edit fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0" id="editUserModalLabel">Edit Akun Pengguna</h5>
+                            <small class="text-muted fs-xs">Perbarui data profil, hak akses, dan status keaktifan user</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <form id="editUserForm" action="/accounts/update" method="POST">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" id="editUserId">
+
+                    <div class="modal-body p-4">
+                        <div id="editAlertContainer" class="d-none mb-3"></div>
+
+                        <div class="row g-3">
+                            <!-- Nama Lengkap -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="full_name" id="editUserFullName" placeholder="Nama Lengkap dengan Gelar" required>
+                            </div>
+
+                            <!-- Username -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Username <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">@</span>
+                                    <input type="text" class="form-control" name="username" id="editUserUsername" placeholder="username" required>
+                                </div>
+                            </div>
+
+                            <!-- NIP -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">NIP (Nomor Induk Pegawai)</label>
+                                <input type="text" class="form-control font-monospace" name="nip" id="editUserNip" placeholder="18 digit NIP (jika PNS)">
+                            </div>
+
+                            <!-- SKPD / Agency Select2 -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted" for="editUserAgencySelect">Instansi / SKPD</label>
+                                <select class="form-select select2-edit-agency" name="agency_id" id="editUserAgencySelect" style="width: 100%;">
+                                    <option value="">-- Tanpa SKPD / Instansi --</option>
+                                    <?php foreach ($allAgencies as $ag): ?>
+                                        <option value="<?= $ag['id'] ?>">
+                                            <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Alamat Email</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        <i class="fal fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" name="email" id="editUserEmail" placeholder="nama@domain.com">
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">WhatsApp / Nomor Telepon</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </span>
+                                    <input type="text" class="form-control" name="whatsapp_number" id="editUserWhatsapp" placeholder="08xxxxxxxxxx">
+                                </div>
+                            </div>
+
+                            <!-- Role & Status -->
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Role / Hak Akses <span class="text-danger">*</span></label>
+                                <select class="form-select" name="role_id" id="editUserRoleId" required>
+                                    <option value="">-- Pilih Role --</option>
+                                    <?php foreach ($allRoles as $role): ?>
+                                        <option value="<?= esc($role['id']) ?>"><?= esc($role['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Status Akun <span class="text-danger">*</span></label>
+                                <select class="form-select" name="is_active" id="editUserIsActive" required>
+                                    <option value="1">Active (Dapat Login)</option>
+                                    <option value="0">Inactive (Dinonaktifkan)</option>
+                                </select>
+                            </div>
+
+                            <!-- Password Baru (Opsional) -->
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-2 border">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label class="form-label fs-xs text-uppercase fw-semibold text-dark mb-0">Ubah Password Akun</label>
+                                        <span class="badge bg-warning-subtle text-dark border">Opsional</span>
+                                    </div>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white">
+                                            <i class="fal fa-lock"></i>
+                                        </span>
+                                        <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Biarkan kosong jika tidak ingin mengubah password">
+                                    </div>
+                                    <small class="text-muted fs-nano mt-1 d-block">Minimal 6 karakter jika ingin mengganti password baru untuk akun ini.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="editUserSubmitBtn">
+                            <i class="fal fa-save me-1"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Tambah Akun -->
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -526,9 +675,20 @@
                 width: '100%'
             });
 
+            $('#editUserAgencySelect').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#editUserModal'),
+                placeholder: '-- Tanpa SKPD / Instansi --',
+                allowClear: true,
+                width: '100%'
+            });
+
             // Reset Select2 ketika modal ditutup
             $('#addUserModal').on('hidden.bs.modal', function () {
                 $('#addUserAgencySelect').val(null).trigger('change');
+            });
+            $('#editUserModal').on('hidden.bs.modal', function () {
+                $('#editAlertContainer').addClass('d-none').empty();
             });
         });
     </script>
@@ -791,7 +951,9 @@
                         const modalEl = document.getElementById('detailUserModal');
                         const modalInstance = bootstrap.Modal.getInstance(modalEl);
                         if (modalInstance) modalInstance.hide();
-                        alert('Buka form edit untuk pengguna: ' + u.name);
+                        setTimeout(() => {
+                            openEditUserModal(u);
+                        }, 300);
                     };
 
                     const detailModal = new bootstrap.Modal(document.getElementById('detailUserModal'));
@@ -800,6 +962,119 @@
                     console.error('Error parsing user data:', err);
                 }
             });
+
+            // Helper function untuk membuka Modal Edit Akun
+            function openEditUserModal(u) {
+                if (!u) return;
+
+                const alertBox = document.getElementById('editAlertContainer');
+                if (alertBox) {
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+                }
+
+                // Isi data ke dalam form edit
+                document.getElementById('editUserId').value = u.id || '';
+                document.getElementById('editUserFullName').value = u.name || '';
+                document.getElementById('editUserUsername').value = u.raw_username || (u.username ? u.username.replace(/^@/, '') : '');
+                document.getElementById('editUserNip').value = u.raw_nip || (u.nip && u.nip !== '-' ? u.nip : '');
+                document.getElementById('editUserEmail').value = u.raw_email || (u.email && u.email !== '-' ? u.email : '');
+                document.getElementById('editUserWhatsapp').value = u.raw_whatsapp || (u.whatsapp && u.whatsapp !== '-' ? u.whatsapp : '');
+                document.getElementById('editUserPassword').value = '';
+
+                // Set Role ID
+                if (u.role_id) {
+                    document.getElementById('editUserRoleId').value = String(u.role_id);
+                } else {
+                    const roleSelect = document.getElementById('editUserRoleId');
+                    for (let i = 0; i < roleSelect.options.length; i++) {
+                        if (roleSelect.options[i].text.toLowerCase() === (u.role || '').toLowerCase()) {
+                            roleSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
+                // Set Status Keaktifan
+                const isActiveVal = (typeof u.is_active !== 'undefined') ? u.is_active : (u.status === 'Active' ? 1 : 0);
+                document.getElementById('editUserIsActive').value = String(isActiveVal);
+
+                // Set SKPD Select2
+                const agencyVal = u.agency_id ? String(u.agency_id) : '';
+                $('#editUserAgencySelect').val(agencyVal).trigger('change');
+
+                // Buka modal
+                const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+                editModal.show();
+            }
+
+            // Event Listener untuk Tombol Edit Akun di Dropdown Tabel (.btn-edit-user)
+            document.addEventListener('click', function(e) {
+                const editBtn = e.target.closest('.btn-edit-user');
+                if (!editBtn) return;
+
+                e.preventDefault();
+                const rawData = editBtn.getAttribute('data-user');
+                if (!rawData) return;
+
+                try {
+                    const u = JSON.parse(rawData);
+                    openEditUserModal(u);
+                } catch(err) {
+                    console.error('Error parsing user data for edit:', err);
+                }
+            });
+
+            // AJAX Handler Form Edit Akun Pengguna
+            const editForm = document.getElementById('editUserForm');
+            if (editForm) {
+                editForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    const submitBtn = document.getElementById('editUserSubmitBtn');
+                    const originalBtnHtml = submitBtn.innerHTML;
+                    const alertBox = document.getElementById('editAlertContainer');
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Menyimpan...';
+                    alertBox.className = 'd-none mb-3';
+                    alertBox.innerHTML = '';
+
+                    const formData = new FormData(editForm);
+
+                    fetch('/accounts/update', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(({ ok, body }) => {
+                        if (ok && body.status === 'success') {
+                            alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${body.message || 'Data pengguna berhasil diperbarui!'}</div>`;
+
+                            // Tutup modal dan reload agar data dan metrik tabel terupdate otomatis
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 600);
+                        } else {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnHtml;
+                            alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${body.message || 'Terjadi kesalahan saat menyimpan data.'}</div>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating user:', error);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnHtml;
+                        alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
+                        alertBox.innerHTML = '<i class="fal fa-exclamation-triangle fs-5"></i> <div>Gagal menghubungi server. Silakan coba beberapa saat lagi.</div>';
+                    });
+                });
+            }
 
             // Inisialisasi awal
             applyFilter();

@@ -267,11 +267,6 @@
                 </a>
             </li>
             <li>
-                <a href="/ui-modal">
-                    <span class="nav-link-text" data-i18n>Modal</span>
-                </a>
-            </li>
-            <li>
                 <a href="/ui-tabs-pills">
                     <span class="nav-link-text" data-i18n>Tabs & Pills</span>
                 </a>

@@ -49,16 +49,22 @@ class AccountController extends BaseController
                     'id'           => $u['id'],
                     'name'         => $u['full_name'],
                     'username'     => '@' . ltrim($u['username'], '@'),
+                    'raw_username' => ltrim($u['username'], '@'),
                     'nip'          => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '-',
+                    'raw_nip'      => !empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '',
                     'email'        => $u['email'] ?: '-',
+                    'raw_email'    => $u['email'] ?: '',
                     'whatsapp'     => $u['whatsapp_number'] ?: '-',
+                    'raw_whatsapp' => $u['whatsapp_number'] ?: '',
                     'role'         => $roleName,
+                    'role_id'      => $u['role_id'] ?? null,
                     'role_badge'   => $roleBadge,
                     'agency_id'    => $u['agency_id'] ?? null,
                     'agency_name'  => $u['agency_name'] ?? null,
                     'agency_abbr'  => $u['agency_abbr'] ?? null,
                     'agency_code'  => $u['agency_code'] ?? null,
                     'status'       => $isActive ? 'Active' : 'Inactive',
+                    'is_active'    => $isActive ? 1 : 0,
                     'status_badge' => $isActive ? 'bg-success' : 'bg-secondary',
                     'avatar'       => '/img/demo/avatars/avatar-admin.png',
                     'created_at'   => !empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
@@ -91,5 +97,95 @@ class AccountController extends BaseController
             'usersWithAgency' => $usersWithAgency,
             'uniqueRoles'     => $uniqueRoles,
         ]);
+    }
+
+    /**
+     * Update akun pengguna
+     */
+    public function update($id = null)
+    {
+        $id = $id ? (int) $id : (int) $this->request->getPost('id');
+
+        if (! $id) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'ID pengguna tidak valid.'])->setStatusCode(400);
+            }
+            return redirect()->back()->with('error', 'ID pengguna tidak valid.');
+        }
+
+        $user = $this->userModel->find($id);
+        if (! $user) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Akun pengguna tidak ditemukan.'])->setStatusCode(404);
+            }
+            return redirect()->back()->with('error', 'Akun pengguna tidak ditemukan.');
+        }
+
+        $rules = [
+            'full_name' => 'required|min_length[3]|max_length[255]',
+            'username'  => "required|min_length[3]|max_length[100]|is_unique[users.username,id,{$id}]",
+            'role_id'   => 'required|is_not_unique[roles.id]',
+        ];
+
+        if (! $this->validate($rules)) {
+            $errors = implode(', ', $this->validator->getErrors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => $errors,
+                    'errors'  => $this->validator->getErrors(),
+                ])->setStatusCode(422);
+            }
+            return redirect()->back()->withInput()->with('error', $errors);
+        }
+
+        $username = trim((string) $this->request->getPost('username'));
+        $username = ltrim($username, '@');
+
+        $agencyId = $this->request->getPost('agency_id');
+        $agencyId = !empty($agencyId) ? (int) $agencyId : null;
+
+        $updateData = [
+            'full_name'       => trim((string) $this->request->getPost('full_name')),
+            'username'        => $username,
+            'role_id'         => (int) $this->request->getPost('role_id'),
+            'agency_id'       => $agencyId,
+            'nip'             => trim((string) $this->request->getPost('nip')) ?: null,
+            'email'           => trim((string) $this->request->getPost('email')) ?: null,
+            'whatsapp_number' => trim((string) $this->request->getPost('whatsapp_number')) ?: null,
+            'is_active'       => (int) ($this->request->getPost('is_active') ?? 0),
+        ];
+
+        // Jika password diisi, update password
+        $password = (string) $this->request->getPost('password');
+        if (!empty(trim($password))) {
+            if (strlen(trim($password)) < 6) {
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON(['status' => 'error', 'message' => 'Password minimal 6 karakter.'])->setStatusCode(422);
+                }
+                return redirect()->back()->withInput()->with('error', 'Password minimal 6 karakter.');
+            }
+            $updateData['password'] = password_hash(trim($password), PASSWORD_BCRYPT);
+        }
+
+        try {
+            $this->userModel->update($id, $updateData);
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'success',
+                    'message' => 'Data akun pengguna berhasil diperbarui!',
+                    'data'    => $updateData,
+                ]);
+            }
+
+            return redirect()->to('/accounts')->with('success', 'Data akun pengguna berhasil diperbarui!');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error update user: ' . $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal memperbarui akun: ' . $e->getMessage()])->setStatusCode(500);
+            }
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui akun: ' . $e->getMessage());
+        }
     }
 }
