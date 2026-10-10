@@ -67,8 +67,8 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/accounts/reset-password', 'AccountController::resetPassword');
     $routes->get('/accounts/ppk', 'AccountController::getPpk');
     $routes->get('/accounts/ppk/(:num)', 'AccountController::getPpk/$1');
-    $routes->get('/procurement-plans', 'ProcurementPlanController::index');
-    $routes->post('/procurement-plans/store', 'ProcurementPlanController::store');
+    $routes->get('/rup', 'RupController::index');
+    $routes->post('/rup/store', 'RupController::store');
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

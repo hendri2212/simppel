@@ -200,7 +200,7 @@
                         <?php endif; ?>
 
                         <!-- Panel Tabel Utama Procurement Plans -->
-                        <div id="panel-procurement-plans" class="panel">
+                        <div id="panel-rup" class="panel">
                             <div class="panel-hdr">
                                 <h2>
                                     Daftar <span class="fw-300"><i>Paket RUP</i></span>
@@ -702,7 +702,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="addPlanForm" action="/procurement-plans/store" method="POST">
+                    <form id="addPlanForm" action="/rup/store" method="POST">
                         <?= csrf_field() ?>
                         <div id="addPlanAlertContainer" class="d-none mb-3"></div>
 
@@ -1107,7 +1107,7 @@
 
                     const formData = new FormData(addPlanForm);
 
-                    fetch('/procurement-plans/store', {
+                    fetch('/rup/store', {
                         method: 'POST',
                         body: formData,
                         headers: {

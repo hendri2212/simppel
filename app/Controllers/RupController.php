@@ -12,7 +12,7 @@ use App\Models\MetodePemilihanModel;
 use App\Models\JenisDakModel;
 use App\Models\UserModel;
 
-class ProcurementPlanController extends BaseController
+class RupController extends BaseController
 {
     protected RupModel $rupModel;
     protected SkpdModel $skpdModel;
@@ -98,7 +98,7 @@ class ProcurementPlanController extends BaseController
             }
 
         } catch (\Throwable $e) {
-            log_message('error', 'Error in ProcurementPlanController::index: ' . $e->getMessage());
+            log_message('error', 'Error in RupController::index: ' . $e->getMessage());
             $plans            = [];
             $skpd         = [];
             $officers         = [];
@@ -117,7 +117,7 @@ class ProcurementPlanController extends BaseController
         $syncedCount    = count(array_filter($plans, fn($p) => (int) ($p['is_synced'] ?? 0) === 1));
         $dakCount       = count(array_filter($plans, fn($p) => (int) ($p['jenis_dak_id'] ?? 2) === 1));
 
-        return view('procurement-plans', [
+        return view('rup', [
             'pageTitle'        => 'Daftar Paket RUP',
             'plans'            => $plans,
             'skpd'         => $skpd,
@@ -256,9 +256,9 @@ class ProcurementPlanController extends BaseController
                 ]);
             }
 
-            return redirect()->to('/procurement-plans')->with('success', 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!');
+            return redirect()->to('/rup')->with('success', 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!');
         } catch (\Throwable $e) {
-            log_message('error', 'Error in ProcurementPlanController::store: ' . $e->getMessage());
+            log_message('error', 'Error in RupController::store: ' . $e->getMessage());
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON([
                     'status'  => 'error',

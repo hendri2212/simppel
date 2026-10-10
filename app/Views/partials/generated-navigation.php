@@ -38,7 +38,7 @@
     <li class="nav-title"><span>Perencanaan Pengadaan</span></li>
 
     <li>
-        <a href="/procurement-plans" title="Daftar Paket RUP" data-filter-tags="perencanaan pengadaan rup paket daftar">
+        <a href="/rup" title="Daftar Paket RUP" data-filter-tags="perencanaan pengadaan rup paket daftar">
             <svg class="sa-icon">
                 <use href="/icons/sprite.svg#file-text"></use>
             </svg>
@@ -47,7 +47,7 @@
     </li>
 
     <li>
-        <a href="/procurement-plans/summary" title="Rekapitulasi Pagu" data-filter-tags="perencanaan pengadaan rup rekapitulasi pagu anggaran">
+        <a href="/rup/summary" title="Rekapitulasi Pagu" data-filter-tags="perencanaan pengadaan rup rekapitulasi pagu anggaran">
             <svg class="sa-icon">
                 <use href="/icons/sprite.svg#bar-chart-2"></use>
             </svg>
