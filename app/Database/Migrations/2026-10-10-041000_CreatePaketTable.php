@@ -157,8 +157,8 @@ class CreatePaketTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addKey('rup_id');
-        $this->forge->addKey('no_paket');
+        $this->forge->addUniqueKey('rup_id');
+        $this->forge->addUniqueKey('no_paket');
 
         // Foreign keys
         $this->forge->addForeignKey('rup_id', 'rup', 'id', 'CASCADE', 'RESTRICT');

@@ -11,9 +11,12 @@ use App\Models\JenisPengadaanModel;
 use App\Models\MetodePemilihanModel;
 use App\Models\JenisDakModel;
 use App\Models\UserModel;
+use App\Controllers\Traits\ProcurementScope;
 
 class RupController extends BaseController
 {
+    use ProcurementScope;
+
     protected RupModel $rupModel;
     protected SkpdModel $skpdModel;
     protected PpkModel $officerModel;
@@ -44,12 +47,14 @@ class RupController extends BaseController
     {
         try {
             // Ambil data langsung dari tabel rup beserta relasinya
+            // Hanya RUP dalam cakupan user (SKPD/PPK), atau seluruhnya untuk role pusat
+            $this->scopeToActor($this->rupModel, 'rup.skpd_id', 'rup.ppk_id');
             $plansFromDb = $this->rupModel->getWithRelations();
             $plans       = array_map([$this, 'formatPlanRow'], $plansFromDb);
 
             // Ambil referensi master data untuk modal/filter
-            $skpd         = $this->skpdModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
-            $officers         = $this->officerModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $skpd         = $this->skpdModel->select('id, name, abbreviation')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $officers         = $this->officerModel->select('id, name, skpd_id')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $jenisBelanja     = $this->jenisBelanjaModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $jenisPengadaan = $this->jenisPengadaanModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
             $sumberDana   = $this->sumberDanaModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
@@ -61,7 +66,7 @@ class RupController extends BaseController
             $currentUser   = null;
             if ($currentUserId) {
                 $userObj = $this->userModel
-                    ->select('users.*, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
+                    ->select('users.id, users.full_name, users.username, users.email, users.nip, users.whatsapp_number, users.role_id, users.skpd_id, users.ppk_id, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
                     ->join('roles', 'roles.id = users.role_id', 'left')
                     ->join('skpd', 'skpd.id = users.skpd_id', 'left')
                     ->join('ppk', 'ppk.id = users.ppk_id', 'left')
@@ -110,13 +115,18 @@ class RupController extends BaseController
             $currentUser      = null;
         }
 
-        // Kalkulasi Statistik dari data database
-        $totalPlans     = count($plans);
-        $totalBudget    = array_sum(array_column($plans, 'budget_ceiling'));
-        $editableCount  = count(array_filter($plans, fn($p) => (int) ($p['rup_status'] ?? 1) === 1));
-        $lockedCount    = count(array_filter($plans, fn($p) => (int) ($p['rup_status'] ?? 1) === 2));
-        $syncedCount    = count(array_filter($plans, fn($p) => (int) ($p['is_synced'] ?? 0) === 1));
-        $dakCount       = count(array_filter($plans, fn($p) => (int) ($p['jenis_dak_id'] ?? 2) === 1));
+        // Kalkulasi statistik dalam satu iterasi
+        $totalBudget = 0;
+        $editableCount = $lockedCount = $syncedCount = $dakCount = 0;
+        foreach ($plans as $p) {
+            $totalBudget   += (float) ($p['budget_ceiling'] ?? 0);
+            $status         = (int) ($p['rup_status'] ?? 1);
+            $editableCount += $status === 1 ? 1 : 0;
+            $lockedCount   += $status === 2 ? 1 : 0;
+            $syncedCount   += (int) ($p['is_synced'] ?? 0) === 1 ? 1 : 0;
+            $dakCount      += (int) ($p['jenis_dak_id'] ?? 2) === 1 ? 1 : 0;
+        }
+        $totalPlans = count($plans);
 
         return view('rup', [
             'pageTitle'        => 'Daftar Paket RUP',
@@ -144,128 +154,111 @@ class RupController extends BaseController
      */
     public function store()
     {
-        $currentUserId = session()->get('user_id');
-        if (! $currentUserId) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Sesi login telah kedaluwarsa. Silakan login kembali.'])->setStatusCode(401);
-            }
-            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
+        if (! $this->canWrite()) {
+            return $this->failWith('Anda tidak memiliki hak akses untuk membuat RUP.', 403, '/rup');
         }
 
-        // Ambil data user yang sedang login dari database
-        $user = $this->userModel->find($currentUserId);
+        // Data user dibaca dari database (bukan dari input klien)
+        $user = $this->userModel->select('id, full_name, role_id, skpd_id, ppk_id')->find((int) session()->get('user_id'));
         if (! $user) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Data user tidak ditemukan di sistem.'])->setStatusCode(404);
-            }
-            return redirect()->back()->with('error', 'Data user tidak ditemukan di sistem.');
+            return $this->failWith('Data user tidak ditemukan di sistem.', 404, '/rup');
         }
 
-        // Instansi / SKPD & PPK otomatis dari user login
-        $skpdId            = !empty($user['skpd_id']) ? (int) $user['skpd_id'] : null;
-        $ppkId = !empty($user['ppk_id']) ? (int) $user['ppk_id'] : null;
-
-        // Fallback jika user belum memiliki skpd_id (misal Administrator / Superadmin)
-        if (! $skpdId) {
-            $defaultSkpd = $this->skpdModel->where('id', 16)->first() ?? $this->skpdModel->first();
-            $skpdId      = $defaultSkpd ? (int) $defaultSkpd['id'] : 1;
-        }
-
-        // Fallback jika user belum memiliki ppk_id
-        if (! $ppkId) {
-            $existingOfficer = $this->officerModel->where('skpd_id', $skpdId)->first();
-            if ($existingOfficer) {
-                $ppkId = (int) $existingOfficer['id'];
-            } else {
-                $officerName = (!empty($user['full_name']) && (int) ($user['role_id'] ?? 0) === 3) ? $user['full_name'] : 'Pejabat Pembuat Komitmen (PPK)';
-                $ppkId = (int) $this->officerModel->insert([
-                    'skpd_id'  => $skpdId,
-                    'name'       => $officerName,
-                    'is_active'  => 1,
-                    'created_at' => date('Y-m-d H:i:s'),
-                    'updated_at' => date('Y-m-d H:i:s'),
-                ]);
-            }
-
-            // Jika user terafiliasi dengan skpd_id ini, perbarui akun user agar tersinkronisasi
-            if (!empty($user['skpd_id']) && (int) $user['skpd_id'] === $skpdId) {
-                $this->userModel->update($currentUserId, ['ppk_id' => $ppkId]);
-            }
-        }
-
-        // Validasi input form
+        // Validasi input form (termasuk keberadaan data master)
         $rules = [
-            'fiscal_year'         => 'required|numeric',
-            'activity'            => 'required|min_length[3]',
-            'package_name'        => 'required|min_length[3]',
-            'jenis_pengadaan_id' => 'required|numeric',
-            'metode_pemilihan_id' => 'required|numeric',
-            'sumber_dana_id'   => 'required|numeric',
-            'budget_ceiling'      => 'required|numeric',
+            'fiscal_year'         => 'required|is_natural_no_zero|greater_than_equal_to[2000]|less_than_equal_to[2100]',
+            'activity'            => 'required|min_length[3]|max_length[2000]',
+            'package_name'        => 'required|min_length[3]|max_length[2000]',
+            'package_code'        => 'permit_empty|max_length[50]|regex_match[/^[A-Za-z0-9._\/-]+$/]',
+            'jenis_belanja_id'    => 'permit_empty|is_natural_no_zero|is_not_unique[jenis_belanja.id]',
+            'jenis_pengadaan_id'  => 'required|is_natural_no_zero|is_not_unique[jenis_pengadaan.id]',
+            'metode_pemilihan_id' => 'required|is_natural_no_zero|is_not_unique[metode_pemilihan.id]',
+            'sumber_dana_id'      => 'required|is_natural_no_zero|is_not_unique[sumber_dana.id]',
+            'jenis_dak_id'        => 'permit_empty|is_natural_no_zero|is_not_unique[jenis_dak.id]',
+            'budget_ceiling'      => 'required|numeric|greater_than[0]|less_than[1000000000000000]',
+            'account_code'        => 'permit_empty|max_length[255]',
+            'work_duration'       => 'permit_empty|is_natural_no_zero|less_than_equal_to[3650]',
+            'location'            => 'permit_empty|max_length[2000]',
+            'description'         => 'permit_empty|max_length[5000]',
         ];
 
         if (! $this->validate($rules)) {
-            $errors = implode(', ', $this->validator->getErrors());
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => $errors,
-                    'errors'  => $this->validator->getErrors(),
-                ])->setStatusCode(422);
-            }
-            return redirect()->back()->withInput()->with('error', $errors);
+            return $this->failWith(implode(' ', $this->validator->getErrors()), 422, '/rup');
         }
 
-        $packageCode = trim((string) $this->request->getPost('package_code'));
-        if (empty($packageCode)) {
-            $packageCode = 'RUP-' . date('Y') . '-' . mt_rand(10000000, 99999999);
-        }
-
-        $budgetCeiling = (float) $this->request->getPost('budget_ceiling');
-
-        $data = [
-            'skpd_id'                  => $skpdId,
-            'ppk_id'      => $ppkId,
-            'fiscal_year'                => (int) $this->request->getPost('fiscal_year'),
-            'package_code'               => $packageCode,
-            'activity'                   => trim((string) $this->request->getPost('activity')),
-            'package_name'               => trim((string) $this->request->getPost('package_name')),
-            'jenis_belanja_id'            => $this->request->getPost('jenis_belanja_id') ? (int) $this->request->getPost('jenis_belanja_id') : 1,
-            'jenis_pengadaan_id'        => (int) $this->request->getPost('jenis_pengadaan_id'),
-            'metode_pemilihan_id'        => (int) $this->request->getPost('metode_pemilihan_id'),
-            'sumber_dana_id'          => (int) $this->request->getPost('sumber_dana_id'),
-            'jenis_dak_id' => $this->request->getPost('jenis_dak_id') ? (int) $this->request->getPost('jenis_dak_id') : 2,
-            'budget_ceiling'             => $budgetCeiling,
-            'account_code'               => trim((string) $this->request->getPost('account_code')) ?: null,
-            'work_duration'              => $this->request->getPost('work_duration') ? (int) $this->request->getPost('work_duration') : null,
-            'location'                   => trim((string) $this->request->getPost('location')) ?: null,
-            'description'                => trim((string) $this->request->getPost('description')) ?: null,
-            'rup_status'                 => 1, // Bisa Diedit / Aktif
-            'is_synced'                  => 0,
-            'submission_date'            => date('Y-m-d H:i:s'),
-        ];
+        $db = db_connect();
 
         try {
-            $insertId = $this->rupModel->insert($data);
+            $db->transBegin();
 
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'  => 'success',
-                    'message' => 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!',
-                    'id'      => $insertId,
-                ]);
+            // Instansi / SKPD & PPK otomatis dari user login
+            $skpdId = ! empty($user['skpd_id']) ? (int) $user['skpd_id'] : null;
+            $ppkId  = ! empty($user['ppk_id']) ? (int) $user['ppk_id'] : null;
+
+            // Fallback jika user belum memiliki skpd_id (misal Administrator / Superadmin)
+            if (! $skpdId) {
+                $defaultSkpd = $this->skpdModel->select('id')->where('id', 16)->first() ?? $this->skpdModel->select('id')->first();
+                $skpdId      = $defaultSkpd ? (int) $defaultSkpd['id'] : 1;
             }
 
-            return redirect()->to('/rup')->with('success', 'Paket Rencana Pengadaan (RUP) berhasil ditambahkan!');
+            // Fallback jika user belum memiliki ppk_id
+            if (! $ppkId) {
+                $existingOfficer = $this->officerModel->select('id')->where('skpd_id', $skpdId)->first();
+                if ($existingOfficer) {
+                    $ppkId = (int) $existingOfficer['id'];
+                } else {
+                    $officerName = (! empty($user['full_name']) && (int) ($user['role_id'] ?? 0) === 3) ? $user['full_name'] : 'Pejabat Pembuat Komitmen (PPK)';
+                    $ppkId = (int) $this->officerModel->insert([
+                        'skpd_id'    => $skpdId,
+                        'name'       => $officerName,
+                        'is_active'  => 1,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s'),
+                    ]);
+                }
+
+                // Jika user terafiliasi dengan skpd_id ini, perbarui akun user agar tersinkronisasi
+                if (! empty($user['skpd_id']) && (int) $user['skpd_id'] === $skpdId) {
+                    $this->userModel->update($user['id'], ['ppk_id' => $ppkId]);
+                }
+            }
+
+            $post        = $this->request;
+            $packageCode = trim((string) $post->getPost('package_code'));
+            if ($packageCode === '') {
+                $packageCode = 'RUP-' . date('Y') . '-' . random_int(10000000, 99999999);
+            }
+
+            $insertId = $this->rupModel->insert([
+                'skpd_id'             => $skpdId,
+                'ppk_id'              => $ppkId,
+                'fiscal_year'         => (int) $post->getPost('fiscal_year'),
+                'package_code'        => $packageCode,
+                'activity'            => trim((string) $post->getPost('activity')),
+                'package_name'        => trim((string) $post->getPost('package_name')),
+                'jenis_belanja_id'    => (int) $post->getPost('jenis_belanja_id') ?: 1,
+                'jenis_pengadaan_id'  => (int) $post->getPost('jenis_pengadaan_id'),
+                'metode_pemilihan_id' => (int) $post->getPost('metode_pemilihan_id'),
+                'sumber_dana_id'      => (int) $post->getPost('sumber_dana_id'),
+                'jenis_dak_id'        => (int) $post->getPost('jenis_dak_id') ?: 2,
+                'budget_ceiling'      => (float) $post->getPost('budget_ceiling'),
+                'account_code'        => trim((string) $post->getPost('account_code')) ?: null,
+                'work_duration'       => (int) $post->getPost('work_duration') ?: null,
+                'location'            => trim((string) $post->getPost('location')) ?: null,
+                'description'         => trim((string) $post->getPost('description')) ?: null,
+                'rup_status'          => 1, // Bisa Diedit / Aktif
+                'is_synced'           => 0,
+                'submission_date'     => date('Y-m-d H:i:s'),
+            ]);
+
+            $db->transCommit();
+
+            return $this->okWith('Paket Rencana Pengadaan (RUP) berhasil ditambahkan!', ['id' => $insertId], '/rup');
         } catch (\Throwable $e) {
+            $db->transRollback();
             log_message('error', 'Error in RupController::store: ' . $e->getMessage());
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => 'Gagal menyimpan paket RUP: ' . $e->getMessage(),
-                ])->setStatusCode(500);
-            }
-            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan paket RUP: ' . $e->getMessage());
+
+            return $this->failWith('Gagal menyimpan paket RUP. Silakan coba lagi.', 500, '/rup');
         }
     }
 

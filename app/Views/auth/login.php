@@ -30,14 +30,14 @@
 
                         <?php if (session()->getFlashdata('error')): ?>
                             <div class="alert alert-danger bg-danger bg-opacity-75 border-0 text-white alert-dismissible fade show fs-sm mb-3" role="alert">
-                                <?= session()->getFlashdata('error') ?>
+                                <?= esc(session()->getFlashdata('error')) ?>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
 
                         <?php if (session()->getFlashdata('success')): ?>
                             <div class="alert alert-success bg-success bg-opacity-75 border-0 text-white alert-dismissible fade show fs-sm mb-3" role="alert">
-                                <?= session()->getFlashdata('success') ?>
+                                <?= esc(session()->getFlashdata('success')) ?>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>

@@ -36,6 +36,8 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
         'guest'         => \App\Filters\GuestFilter::class,
+        'role'          => \App\Filters\RoleFilter::class,
+        'csrfheader'    => \App\Filters\CsrfHeader::class,
     ];
 
     /**
@@ -77,7 +79,8 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+            'secureheaders',
+            'csrfheader',
         ],
     ];
 

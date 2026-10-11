@@ -104,4 +104,14 @@ class Cookie extends BaseConfig
      * @see https://tools.ietf.org/html/rfc2616#section-2.2
      */
     public bool $raw = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Flag Secure hanya dipasang bila request memang lewat HTTPS; memaksanya di HTTP
+        // (mis. development lokal) membuat CodeIgniter melempar SecurityException.
+        $proto        = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+        $this->secure = (! empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') || $proto === 'https';
+    }
 }

@@ -49,7 +49,7 @@
                                 <svg class="sa-icon text-success" style="width: 20px; height: 20px;">
                                     <use href="/icons/sprite.svg#check-circle"></use>
                                 </svg>
-                                <div><?= session()->getFlashdata('success') ?></div>
+                                <div><?= esc(session()->getFlashdata('success')) ?></div>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
@@ -58,7 +58,7 @@
                                 <svg class="sa-icon text-danger" style="width: 20px; height: 20px;">
                                     <use href="/icons/sprite.svg#alert-triangle"></use>
                                 </svg>
-                                <div><?= session()->getFlashdata('error') ?></div>
+                                <div><?= esc(session()->getFlashdata('error')) ?></div>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         <?php endif; ?>
@@ -220,13 +220,14 @@
                                                         data-skpd="<?= esc(strtolower(($user['skpd_abbr'] ?? '') . ' ' . ($user['skpd_name'] ?? ''))) ?>"
                                                         data-skpd-name="<?= esc($user['skpd_name'] ?? '') ?>"
                                                         data-role="<?= esc($user['role']) ?>"
-                                                        data-status="<?= esc($user['status']) ?>">
-                                                        <td class="text-muted"><?= $user['id'] ?></td>
+                                                        data-status="<?= esc($user['status']) ?>"
+                                                        data-user='<?= htmlspecialchars(json_encode($user, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'>
+                                                        <td class="text-muted"><?= (int) $user['id'] ?></td>
                                                         <td>
                                                             <div class="d-flex align-items-center">
-                                                                <img src="<?= $user['avatar'] ?>" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2 flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
+                                                                <img src="<?= esc($user['avatar'], 'attr') ?>" loading="lazy" decoding="async" alt="<?= esc($user['name']) ?>" class="rounded-circle me-2 flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
                                                                 <div class="flex-grow-1" style="min-width: 0;">
-                                                                    <a href="javascript:void(0);" class="fw-semibold text-dark text-break lh-sm text-decoration-none btn-view-user" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>' title="Klik untuk lihat detail <?= esc($user['name']) ?>"><?= esc($user['name']) ?></a>
+                                                                    <a href="javascript:void(0);" class="fw-semibold text-dark text-break lh-sm text-decoration-none btn-view-user" title="Klik untuk lihat detail <?= esc($user['name']) ?>"><?= esc($user['name']) ?></a>
                                                                     <small class="text-muted d-block font-monospace fs-nano mt-1"><?= esc($user['username']) ?></small>
                                                                 </div>
                                                             </div>
@@ -262,10 +263,10 @@
                                                             <span class="text-muted fs-xs"><?= esc($user['whatsapp']) ?></span>
                                                         </td>
                                                         <td class="text-nowrap text-center">
-                                                            <span class="badge <?= $user['role_badge'] ?>"><?= esc($user['role']) ?></span>
+                                                            <span class="badge <?= esc($user['role_badge'], 'attr') ?>"><?= esc($user['role']) ?></span>
                                                         </td>
                                                         <td class="text-nowrap text-center">
-                                                            <span class="badge <?= $user['status_badge'] ?>"><?= esc($user['status']) ?></span>
+                                                            <span class="badge <?= esc($user['status_badge'], 'attr') ?>"><?= esc($user['status']) ?></span>
                                                         </td>
                                                         <td class="text-end">
                                                             <div class="dropdown">
@@ -276,17 +277,17 @@
                                                                 </button>
                                                                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                                                     <li>
-                                                                        <a class="dropdown-item btn-view-user" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                        <a class="dropdown-item btn-view-user" href="javascript:void(0);">
                                                                             <i class="fal fa-eye me-2 text-primary"></i> Lihat Detail
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item btn-edit-user" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                        <a class="dropdown-item btn-edit-user" href="javascript:void(0);">
                                                                             <i class="fal fa-edit me-2 text-warning"></i> Edit Akun
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item btn-reset-password" href="javascript:void(0);" data-user='<?= htmlspecialchars(json_encode($user), ENT_QUOTES, 'UTF-8') ?>'>
+                                                                        <a class="dropdown-item btn-reset-password" href="javascript:void(0);">
                                                                             <i class="fal fa-key me-2 text-danger"></i> Reset Password
                                                                         </a>
                                                                     </li>
@@ -524,7 +525,7 @@
                                 <select class="form-select select2-edit-skpd" name="skpd_id" id="editUserSkpdSelect" style="width: 100%;">
                                     <option value="">-- Tanpa SKPD / Instansi --</option>
                                     <?php foreach ($allSkpd as $ag): ?>
-                                        <option value="<?= $ag['id'] ?>">
+                                        <option value="<?= (int) $ag['id'] ?>">
                                             <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -592,9 +593,9 @@
                                         <span class="input-group-text bg-white">
                                             <i class="fal fa-lock"></i>
                                         </span>
-                                        <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Biarkan kosong jika tidak ingin mengubah password">
+                                        <input type="password" class="form-control" name="password" id="editUserPassword" placeholder="Biarkan kosong jika tidak ingin mengubah password" minlength="8" maxlength="72" autocomplete="new-password">
                                     </div>
-                                    <small class="text-muted fs-nano mt-1 d-block">Minimal 6 karakter jika ingin mengganti password baru untuk akun ini.</small>
+                                    <small class="text-muted fs-nano mt-1 d-block">Minimal 8 karakter jika ingin mengganti password baru untuk akun ini.</small>
                                 </div>
                             </div>
                         </div>
@@ -622,7 +623,7 @@
                         </div>
                         <div>
                             <h5 class="modal-title fs-base fw-bold text-white mb-0" id="resetPasswordModalLabel">Reset Password Pengguna</h5>
-                            <small class="text-white-50 fs-nano">Kembalikan password ke nilai bawaan sistem</small>
+                            <small class="text-white-50 fs-nano">Buat password sementara acak</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -645,15 +646,12 @@
                         <div class="alert alert-warning border-warning-subtle d-flex align-items-start gap-2 mb-3">
                             <i class="fal fa-exclamation-triangle text-warning fs-5 flex-shrink-0 mt-1"></i>
                             <div class="fs-xs">
-                                Anda akan mereset password akun pengguna ini. Password akan diubah menjadi nilai default sistem:
-                                <div class="mt-2 p-2 bg-white rounded border text-center font-monospace fw-bold fs-sm text-dark select-all">
-                                    12345678
-                                </div>
+                                Anda akan mereset password akun pengguna ini. Sistem akan membuat password sementara acak yang hanya ditampilkan satu kali setelah reset.
                             </div>
                         </div>
 
                         <p class="fs-xs text-muted mb-0 text-center">
-                            Pengguna dapat login kembali menggunakan password default di atas dan menggantinya setelah masuk.
+                            Sampaikan password sementara kepada pengguna melalui jalur yang aman dan minta pengguna menggantinya setelah masuk.
                         </p>
                     </div>
 
@@ -729,7 +727,7 @@
                                 <select class="form-select select2-skpd" name="skpd_id" id="addUserSkpdSelect" style="width: 100%;">
                                     <option value="">-- Pilih SKPD --</option>
                                     <?php foreach ($allSkpd as $ag): ?>
-                                        <option value="<?= $ag['id'] ?>">
+                                        <option value="<?= (int) $ag['id'] ?>">
                                             <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -774,9 +772,9 @@
                                     <span class="input-group-text bg-light text-muted">
                                         <i class="fal fa-lock"></i>
                                     </span>
-                                    <input type="password" class="form-control" name="password" id="addUserPassword" placeholder="Default: 12345678" value="12345678" required>
+                                    <input type="password" class="form-control" name="password" id="addUserPassword" placeholder="Minimal 8 karakter" minlength="8" maxlength="72" autocomplete="new-password" required>
                                 </div>
-                                <small class="text-muted fs-nano">Default diset 12345678 (dapat diubah jika diperlukan).</small>
+                                <small class="text-muted fs-nano">Minimal 8 karakter.</small>
                             </div>
 
                             <!-- Status Akun -->
@@ -1091,13 +1089,32 @@
                 });
             }
 
+            // Data user disimpan satu kali per baris (data-user pada <tr>)
+            function getRowUserData(el) {
+                const row = el.closest('tr.account-row');
+                return row ? row.getAttribute('data-user') : null;
+            }
+
+            // Escape HTML untuk teks dari server sebelum disisipkan lewat innerHTML
+            function escapeHtml(str) {
+                const d = document.createElement('div');
+                d.textContent = String(str ?? '');
+                return d.innerHTML;
+            }
+
+            // Token CSRF diregenerasi setiap request; sinkronkan semua field token di halaman
+            function syncCsrf(body) {
+                if (!body || !body.csrf) return;
+                document.querySelectorAll('input[name="csrf_test_name"]').forEach(i => { i.value = body.csrf; });
+            }
+
             // Event Listener untuk Tombol Detail Akun Pengguna (.btn-view-user)
             document.addEventListener('click', function(e) {
                 const btn = e.target.closest('.btn-view-user');
                 if (!btn) return;
 
                 e.preventDefault();
-                const rawData = btn.getAttribute('data-user');
+                const rawData = getRowUserData(btn);
                 if (!rawData) return;
 
                 try {
@@ -1228,6 +1245,7 @@
 
                 const submitBtn = document.getElementById('resetPasswordSubmitBtn');
                 if (submitBtn) {
+                    submitBtn.classList.remove('d-none');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fal fa-check-circle me-1"></i> Ya, Reset Password';
                 }
@@ -1242,7 +1260,7 @@
                 if (!resetBtn) return;
 
                 e.preventDefault();
-                const rawData = resetBtn.getAttribute('data-user');
+                const rawData = getRowUserData(resetBtn);
                 if (!rawData) return;
 
                 try {
@@ -1277,21 +1295,22 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, status: response.status, body: data })))
                     .then(({ ok, body }) => {
+                        syncCsrf(body);
                         if (ok && body.status === 'success') {
                             alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5 flex-shrink-0"></i> <div>${body.message || 'Password berhasil direset ke default 12345678!'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5 flex-shrink-0"></i> <div>${escapeHtml(body.message || 'Password berhasil direset!')}${body.temp_password ? '<div class="mt-2 p-2 bg-white rounded border text-center font-monospace fw-bold text-dark user-select-all">' + escapeHtml(body.temp_password) + '</div><div class="fs-nano mt-1">Catat password ini, tidak akan ditampilkan lagi.</div>' : ''}</div>`;
 
                             // Tutup modal dan reload halaman
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
+                            // Sembunyikan tombol submit; admin menutup modal secara manual (reload) setelah mencatat password
+                            submitBtn.classList.add('d-none');
+                            document.getElementById('resetPasswordModal').addEventListener('hidden.bs.modal', () => window.location.reload(), { once: true });
                         } else {
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalBtnHtml;
                             alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>${body.message || 'Terjadi kesalahan saat mereset password.'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5 flex-shrink-0"></i> <div>${escapeHtml(body.message || 'Terjadi kesalahan saat mereset password.')}</div>`;
                         }
                     })
                     .catch(error => {
@@ -1363,7 +1382,7 @@
                 if (!editBtn) return;
 
                 e.preventDefault();
-                const rawData = editBtn.getAttribute('data-user');
+                const rawData = getRowUserData(editBtn);
                 if (!rawData) return;
 
                 try {
@@ -1398,11 +1417,12 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, status: response.status, body: data })))
                     .then(({ ok, body }) => {
+                        syncCsrf(body);
                         if (ok && body.status === 'success') {
                             alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${body.message || 'Data pengguna berhasil diperbarui!'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${escapeHtml(body.message || 'Data pengguna berhasil diperbarui!')}</div>`;
 
                             // Tutup modal dan reload agar data dan metrik tabel terupdate otomatis
                             setTimeout(() => {
@@ -1412,7 +1432,7 @@
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalBtnHtml;
                             alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${body.message || 'Terjadi kesalahan saat menyimpan data.'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${escapeHtml(body.message || 'Terjadi kesalahan saat menyimpan data.')}</div>`;
                         }
                     })
                     .catch(error => {
@@ -1449,11 +1469,12 @@
                             'X-Requested-With': 'XMLHttpRequest'
                         }
                     })
-                    .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
+                    .then(response => response.json().catch(() => ({})).then(data => ({ ok: response.ok, status: response.status, body: data })))
                     .then(({ ok, body }) => {
+                        syncCsrf(body);
                         if (ok && body.status === 'success') {
                             alertBox.className = 'alert alert-success d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${body.message || 'Akun pengguna berhasil ditambahkan!'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-check-circle fs-5"></i> <div>${escapeHtml(body.message || 'Akun pengguna berhasil ditambahkan!')}</div>`;
 
                             // Tutup modal dan reload halaman
                             setTimeout(() => {
@@ -1463,7 +1484,7 @@
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalBtnHtml;
                             alertBox.className = 'alert alert-danger d-flex align-items-center gap-2 mb-3';
-                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${body.message || 'Terjadi kesalahan saat menyimpan akun baru.'}</div>`;
+                            alertBox.innerHTML = `<i class="fal fa-exclamation-triangle fs-5"></i> <div>${escapeHtml(body.message || 'Terjadi kesalahan saat menyimpan akun baru.')}</div>`;
                         }
                     })
                     .catch(error => {

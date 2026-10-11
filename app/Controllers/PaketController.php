@@ -2,15 +2,36 @@
 
 namespace App\Controllers;
 
+use App\Controllers\Traits\ProcurementScope;
 use App\Models\PaketModel;
 use App\Models\PaketPokjaModel;
 use App\Models\RupModel;
 use App\Models\SkpdModel;
 use App\Models\SyaratModel;
 use App\Models\UserModel;
+use CodeIgniter\HTTP\Files\UploadedFile;
 
 class PaketController extends BaseController
 {
+    use ProcurementScope;
+
+    /** Ukuran maksimum dokumen persyaratan (byte). */
+    private const MAX_FILE_BYTES = 20 * 1024 * 1024;
+
+    /** Whitelist ekstensi => MIME hasil deteksi isi file (bukan dari klien). */
+    private const ALLOWED_FILES = [
+        'pdf'  => ['application/pdf'],
+        'doc'  => ['application/msword', 'application/CDFV2', 'application/x-ole-storage'],
+        'xls'  => ['application/vnd.ms-excel', 'application/CDFV2', 'application/x-ole-storage'],
+        'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
+        'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
+        'xlsm' => ['application/vnd.ms-excel.sheet.macroEnabled.12', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
+        'jpg'  => ['image/jpeg'],
+        'jpeg' => ['image/jpeg'],
+        'png'  => ['image/png'],
+        'zip'  => ['application/zip', 'application/x-zip-compressed'],
+    ];
+
     protected PaketModel $paketModel;
     protected PaketPokjaModel $paketPokjaModel;
     protected RupModel $rupModel;
@@ -33,88 +54,81 @@ class PaketController extends BaseController
      */
     public function index()
     {
+        $pakets = $skpdList = $availableRups = [];
+        $currentUser = null;
+
         try {
+            // Hanya paket dalam cakupan user (SKPD/PPK) atau seluruhnya untuk role pusat
+            $this->scopeToActor($this->paketModel, 'rup.skpd_id', 'rup.ppk_id');
             $paketsFromDb = $this->paketModel->getWithRelations();
 
-            // Ambil anggota pokja untuk seluruh paket
-            $allPokja = $this->paketPokjaModel
-                ->select('paket_pokja.*, users.full_name, users.username')
-                ->join('users', 'users.id = paket_pokja.user_id', 'left')
-                ->findAll();
-
+            // Anggota pokja hanya untuk paket yang ditampilkan
             $pokjaByPaket = [];
-            foreach ($allPokja as $row) {
-                $pokjaByPaket[$row['paket_id']][] = $row;
+            $paketIds     = array_column($paketsFromDb, 'id');
+            if ($paketIds !== []) {
+                $allPokja = $this->paketPokjaModel
+                    ->select('paket_pokja.*, users.full_name, users.username')
+                    ->join('users', 'users.id = paket_pokja.user_id', 'left')
+                    ->whereIn('paket_pokja.paket_id', $paketIds)
+                    ->findAll();
+
+                foreach ($allPokja as $row) {
+                    $pokjaByPaket[$row['paket_id']][] = $row;
+                }
             }
 
-            // Format data paket
             $pakets = array_map(function ($item) use ($pokjaByPaket) {
                 $item['pokja_members'] = $pokjaByPaket[$item['id']] ?? [];
                 return $this->formatPaketRow($item);
             }, $paketsFromDb);
 
-            // Master SKPD untuk filter
-            $skpdList = $this->skpdModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $skpdList = $this->skpdModel->select('id, name, abbreviation')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
-            // Current user info
-            $currentUserId = session()->get('user_id');
-            $currentUser   = null;
-            if ($currentUserId) {
-                $currentUser = $this->userModel
-                    ->select('users.*, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
-                    ->join('roles', 'roles.id = users.role_id', 'left')
-                    ->join('skpd', 'skpd.id = users.skpd_id', 'left')
-                    ->join('ppk', 'ppk.id = users.ppk_id', 'left')
-                    ->where('users.id', $currentUserId)
-                    ->first();
-            }
+            // Info user (tanpa hash password)
+            $currentUser = $this->userModel
+                ->select('users.id, users.full_name, users.username, users.email, users.nip, users.whatsapp_number, users.role_id, users.skpd_id, users.ppk_id, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
+                ->join('roles', 'roles.id = users.role_id', 'left')
+                ->join('skpd', 'skpd.id = users.skpd_id', 'left')
+                ->join('ppk', 'ppk.id = users.ppk_id', 'left')
+                ->where('users.id', (int) session()->get('user_id'))
+                ->first();
 
-            // Ambil RUP yang siap dibuatkan paket:
-            // 1. RUP berstatus aktif (rup_status = 1)
-            // 2. Belum pernah terikat dengan paket aktif (status_paket != 0)
-            $usedRupIds = $this->paketModel
-                ->where('status_paket !=', 0)
-                ->findColumn('rup_id') ?? [];
+            // RUP siap dibuatkan paket: aktif (rup_status = 1) dan belum terikat paket aktif
+            if ($this->canWrite()) {
+                $usedRupIds = $this->paketModel->where('status_paket !=', 0)->findColumn('rup_id') ?? [];
 
-            $availableRupQuery = $this->rupModel
-                ->select('rup.*, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name, jenis_pengadaan.name as jenis_pengadaan_name')
-                ->join('skpd', 'skpd.id = rup.skpd_id', 'left')
-                ->join('ppk', 'ppk.id = rup.ppk_id', 'left')
-                ->join('jenis_pengadaan', 'jenis_pengadaan.id = rup.jenis_pengadaan_id', 'left')
-                ->where('rup.rup_status', 1);
+                $availableRupQuery = $this->rupModel
+                    ->select('rup.*, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name, jenis_pengadaan.name as jenis_pengadaan_name')
+                    ->join('skpd', 'skpd.id = rup.skpd_id', 'left')
+                    ->join('ppk', 'ppk.id = rup.ppk_id', 'left')
+                    ->join('jenis_pengadaan', 'jenis_pengadaan.id = rup.jenis_pengadaan_id', 'left')
+                    ->where('rup.rup_status', 1);
 
-            // Kecualikan RUP yang sudah digunakan di paket aktif
-            if (!empty($usedRupIds)) {
-                $availableRupQuery->whereNotIn('rup.id', $usedRupIds);
-            }
-
-            // Filter milik user yang sedang login (kecuali administrator pusat)
-            if ($currentUser && ($currentUser['role_id'] ?? 0) != 1) {
-                if (!empty($currentUser['ppk_id'])) {
-                    $availableRupQuery->where('rup.ppk_id', $currentUser['ppk_id']);
-                } elseif (!empty($currentUser['skpd_id'])) {
-                    $availableRupQuery->where('rup.skpd_id', $currentUser['skpd_id']);
+                if (! empty($usedRupIds)) {
+                    $availableRupQuery->whereNotIn('rup.id', $usedRupIds);
                 }
+
+                $this->scopeToActor($availableRupQuery, 'rup.skpd_id', 'rup.ppk_id');
+                $availableRups = $availableRupQuery->orderBy('rup.id', 'DESC')->findAll();
             }
-
-            $availableRups = $availableRupQuery->orderBy('rup.id', 'DESC')->findAll();
-
         } catch (\Throwable $e) {
             log_message('error', 'Error in PaketController::index: ' . $e->getMessage());
-            $pakets        = [];
-            $skpdList      = [];
-            $availableRups = [];
-            $currentUser   = null;
+            $pakets = $skpdList = $availableRups = [];
+            $currentUser = null;
         }
 
-        // Kalkulasi Statistik
-        $totalPaket   = count($pakets);
-        $totalHps     = array_sum(array_column($pakets, 'nilai_hps'));
-        $totalKontrak = array_sum(array_column($pakets, 'nilai_kontrak'));
-        $draftCount   = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 1));
-        $prosesCount  = count(array_filter($pakets, fn($p) => in_array((int)($p['status_paket'] ?? 0), range(2, 12))));
-        $selesaiCount = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 14));
-        $tayangCount  = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 9));
+        // Kalkulasi statistik dalam satu iterasi
+        $totalHps = $totalKontrak = 0;
+        $draftCount = $prosesCount = $selesaiCount = $tayangCount = 0;
+        foreach ($pakets as $p) {
+            $st = (int) ($p['status_paket'] ?? 0);
+            $totalHps     += (float) ($p['nilai_hps'] ?? 0);
+            $totalKontrak += (float) ($p['nilai_kontrak'] ?? 0);
+            $draftCount   += $st === 1 ? 1 : 0;
+            $prosesCount  += ($st >= 2 && $st <= 12) ? 1 : 0;
+            $selesaiCount += $st === 14 ? 1 : 0;
+            $tayangCount  += $st === 9 ? 1 : 0;
+        }
 
         return view('paket', [
             'pageTitle'       => 'Daftar Paket Pengadaan',
@@ -123,7 +137,7 @@ class PaketController extends BaseController
             'availableRups'   => $availableRups,
             'statusPaketList' => PaketModel::STATUS_PAKET,
             'currentUser'     => $currentUser,
-            'totalPaket'      => $totalPaket,
+            'totalPaket'      => count($pakets),
             'totalHps'        => $totalHps,
             'totalKontrak'    => $totalKontrak,
             'draftCount'      => $draftCount,
@@ -135,209 +149,172 @@ class PaketController extends BaseController
 
     /**
      * Simpan paket pengadaan baru sebagai DRAF
-     * - no_paket masih kosong
-     * - status_paket = 1 (Draft)
-     * - tgl_paket = tanggal saat ini
+     * - no_paket masih kosong, status_paket = 1 (Draft), tgl_paket = hari ini
      */
     public function store()
     {
-        $currentUserId = session()->get('user_id');
-        if (! $currentUserId) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Sesi login telah kedaluwarsa. Silakan login kembali.'])->setStatusCode(401);
-            }
-            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
-        }
-
         $rules = [
-            'rup_id'    => 'required|is_not_unique[rup.id]',
-            'no_rpp'    => 'required|min_length[3]',
-            'nilai_hps' => 'required',
+            'rup_id'    => 'required|is_natural_no_zero|is_not_unique[rup.id]',
+            'no_rpp'    => 'required|min_length[3]|max_length[1000]',
+            'nilai_hps' => 'required|max_length[30]',
         ];
 
         if (! $this->validate($rules)) {
-            $errors = implode('<br>', $this->validator->getErrors());
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => $errors,
-                    'errors'  => $this->validator->getErrors(),
-                ])->setStatusCode(400);
-            }
-            return redirect()->back()->withInput()->with('error', $errors);
+            return $this->failWith(implode(' ', $this->validator->getErrors()), 422, '/paket');
         }
 
+        $rupId = (int) $this->request->getPost('rup_id');
+
+        // Format nilai HPS (bersihkan karakter format Rupiah)
+        $cleanHps = str_replace(['Rp', ' ', '.'], '', (string) $this->request->getPost('nilai_hps'));
+        $cleanHps = str_replace(',', '.', $cleanHps);
+
+        if (! is_numeric($cleanHps) || (float) $cleanHps <= 0 || (float) $cleanHps >= 1e15) {
+            return $this->failWith('Nilai HPS tidak valid; harus lebih besar dari 0.', 422, '/paket');
+        }
+        $nilaiHps = (float) $cleanHps;
+
+        $db = db_connect();
+
         try {
-            $rupId = (int) $this->request->getPost('rup_id');
+            $db->transBegin();
 
-            // Validasi keberadaan RUP
-            $rup = $this->rupModel->find($rupId);
-            if (! $rup) {
-                throw new \RuntimeException('Data RUP yang dipilih tidak ditemukan.');
+            // Kunci baris RUP agar dua request bersamaan tidak membuat paket ganda
+            $rup = $db->query('SELECT id, skpd_id, ppk_id, rup_status FROM rup WHERE id = ? FOR UPDATE', [$rupId])->getRowArray();
+
+            if (! $rup || ! $this->inScope($rup)) {
+                $db->transRollback();
+                return $this->failWith('Data RUP yang dipilih tidak ditemukan.', 404, '/paket');
+            }
+            if ((int) $rup['rup_status'] !== 1) {
+                $db->transRollback();
+                return $this->failWith('RUP ini sudah terkunci dan tidak dapat dibuatkan paket baru.', 422, '/paket');
+            }
+            if ($this->paketModel->where('rup_id', $rupId)->countAllResults() > 0) {
+                $db->transRollback();
+                return $this->failWith('Paket untuk RUP ini sudah pernah dibuat sebelumnya.', 409, '/paket');
             }
 
-            // Validasi apakah RUP sudah pernah dibuatkan paket
-            $existing = $this->paketModel->where('rup_id', $rupId)->first();
-            if ($existing) {
-                throw new \RuntimeException('Paket untuk RUP ini sudah pernah dibuat sebelumnya.');
-            }
-
-            // Format nilai HPS (bersihkan karakter format Rupiah)
-            $rawHps   = (string) $this->request->getPost('nilai_hps');
-            $cleanHps = str_replace(['Rp', ' ', '.'], '', $rawHps);
-            $cleanHps = str_replace(',', '.', $cleanHps);
-            $nilaiHps = (float) $cleanHps;
-
-            if ($nilaiHps <= 0) {
-                throw new \RuntimeException('Nilai HPS harus lebih besar dari 0.');
-            }
-
-            // Data paket baru: no_paket masih kosong, status_paket = 1 (Draft)
-            $dataPaket = [
-                'no_paket'          => null,          // no_paket masih kosong
+            $insertId = $this->paketModel->insert([
+                'no_paket'          => null,
                 'rup_id'            => $rupId,
                 'no_rpp'            => trim((string) $this->request->getPost('no_rpp')),
                 'nilai_hps'         => $nilaiHps,
-                'tgl_paket'         => date('Y-m-d'), // otomatis tanggal saat create
-                'status_paket'      => 1,             // status_paket nilai 1 (Draft)
-                'status_verifikasi' => 0,             // menunggu verifikasi berkas
+                'tgl_paket'         => date('Y-m-d'),
+                'status_paket'      => 1,
+                'status_verifikasi' => 0,
                 'nilai_kontrak'     => 0,
                 'is_lpse'           => 0,
-            ];
+            ]);
 
-            $insertId = $this->paketModel->insert($dataPaket);
             if (! $insertId) {
-                throw new \RuntimeException('Gagal menyimpan data paket ke database.');
+                $db->transRollback();
+                return $this->failWith('Gagal menyimpan data paket.', 500, '/paket');
             }
 
-            $msg = "Draf paket pengadaan berhasil dibuat! Silakan tinjau dan klik tombol 'Ajukan' untuk memproses paket ke UKPBJ.";
+            $db->transCommit();
 
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'   => 'success',
-                    'message'  => $msg,
-                    'paket_id' => $insertId,
-                ]);
-            }
-
-            return redirect()->to('/paket')->with('success', $msg);
-
+            return $this->okWith(
+                "Draf paket pengadaan berhasil dibuat! Silakan tinjau dan klik tombol 'Ajukan' untuk memproses paket ke UKPBJ.",
+                ['paket_id' => $insertId],
+                '/paket'
+            );
         } catch (\Throwable $e) {
+            $db->transRollback();
             log_message('error', 'Error in PaketController::store: ' . $e->getMessage());
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => $e->getMessage(),
-                ])->setStatusCode(500);
-            }
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+
+            return $this->failWith('Gagal menyimpan data paket. Silakan coba lagi.', 500, '/paket');
         }
     }
 
     /**
      * Ajukan paket pengadaan:
-     * - no_paket bertambah +1
-     * - status_paket berubah menjadi 2 (Pengajuan)
-     * - tgl_pengajuan diisi tanggal saat ini
-     * - di tabel rup, field rup_status berubah menjadi 2 (Terkunci)
+     * - no_paket bertambah +1 (dengan penguncian agar tidak ada nomor ganda)
+     * - status_paket menjadi 2 (Pengajuan), tgl_pengajuan = hari ini
+     * - rup_status pada tabel rup menjadi 2 (Terkunci)
      */
     public function ajukan($id = null)
     {
-        $currentUserId = session()->get('user_id');
-        if (! $currentUserId) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Sesi login telah kedaluwarsa. Silakan login kembali.'])->setStatusCode(401);
-            }
-            return redirect()->to('/login')->with('error', 'Silakan login terlebih dahulu.');
-        }
-
-        $paket = $this->paketModel->find($id);
+        $paket = $this->findPaketForActor((int) $id, true, $error);
         if (! $paket) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Data paket tidak ditemukan.'])->setStatusCode(404);
-            }
-            return redirect()->back()->with('error', 'Data paket tidak ditemukan.');
+            return $error;
         }
 
         if ((int) $paket['status_paket'] !== 1) {
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Paket ini sudah diajukan sebelumnya.'])->setStatusCode(400);
-            }
-            return redirect()->back()->with('error', 'Paket ini sudah diajukan sebelumnya.');
+            return $this->failWith('Paket ini sudah diajukan sebelumnya.', 400, '/paket');
         }
 
-        // 1. Pastikan 8 syarat default sudah digenerate jika belum
-        $this->syaratModel->generateDefaultSyarat((int) $id);
+        $paketId = (int) $paket['id'];
 
-        // 2. Validasi kelengkapan dokumen persyaratan wajib (wajib = 1)
-        $unuploadedWajib = $this->syaratModel->where('paket_id', $id)
+        // Pastikan syarat default sudah digenerate, lalu cek kelengkapan dokumen wajib
+        $this->syaratModel->generateDefaultSyarat($paketId);
+
+        $missing = $this->syaratModel->select('nama_persyaratan')
+            ->where('paket_id', $paketId)
             ->where('wajib', 1)
-            ->groupStart()
-                ->where('nama_file IS NULL')
-                ->orWhere('nama_file', '')
-            ->groupEnd()
+            ->groupStart()->where('nama_file IS NULL')->orWhere('nama_file', '')->groupEnd()
             ->findAll();
 
-        if (!empty($unuploadedWajib)) {
-            $missingNames = array_column($unuploadedWajib, 'nama_persyaratan');
-            $errMsg = 'Pengajuan gagal! Terdapat ' . count($missingNames) . ' dokumen persyaratan wajib yang belum diunggah:<br>&bull; ' . implode('<br>&bull; ', $missingNames);
+        if (! empty($missing)) {
+            $names = array_column($missing, 'nama_persyaratan');
+            $msg   = 'Pengajuan gagal! Terdapat ' . count($names) . ' dokumen persyaratan wajib yang belum diunggah: ' . implode('; ', $names);
+
             if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'         => 'error',
-                    'message'        => $errMsg,
-                    'missing_syarat' => $missingNames,
-                ])->setStatusCode(422);
+                return $this->response->setStatusCode(422)->setJSON([
+                    'status' => 'error', 'message' => $msg, 'missing_syarat' => $names,
+                ]);
             }
-            return redirect()->back()->with('error', $errMsg);
+
+            return redirect()->back()->with('error', $msg);
         }
 
+        $db     = db_connect();
+        $locked = false;
+
         try {
-            // Ambil nomor paket terakhir yang terisi untuk increment +1
-            $latestPaket = $this->paketModel
-                ->where('no_paket IS NOT NULL')
-                ->where('no_paket !=', '')
-                ->orderBy('CAST(no_paket AS UNSIGNED)', 'DESC')
-                ->first();
-
-            $nextNum = 1;
-            if ($latestPaket && !empty($latestPaket['no_paket']) && is_numeric($latestPaket['no_paket'])) {
-                $nextNum = ((int) $latestPaket['no_paket']) + 1;
+            // Lock global nomor paket: mencegah dua pengajuan bersamaan memperoleh nomor yang sama
+            $locked = (int) ($db->query("SELECT GET_LOCK('simpple_no_paket', 10) AS l")->getRow()->l ?? 0) === 1;
+            if (! $locked) {
+                return $this->failWith('Sistem sedang sibuk, silakan coba lagi.', 503, '/paket');
             }
 
-            $newNoPaket = sprintf('%04d', $nextNum);
+            $db->transBegin();
 
-            // Update paket: no_paket terisi, status_paket = 2, tgl_pengajuan hari ini
-            $this->paketModel->update($id, [
-                'no_paket'      => $newNoPaket,
-                'status_paket'  => 2,
-                'tgl_pengajuan' => date('Y-m-d'),
-            ]);
+            $row     = $db->query("SELECT MAX(CAST(no_paket AS UNSIGNED)) AS m FROM paket WHERE no_paket IS NOT NULL AND no_paket <> ''")->getRowArray();
+            $newNo   = sprintf('%04d', ((int) ($row['m'] ?? 0)) + 1);
+            $now     = date('Y-m-d H:i:s');
 
-            // Update di tabel rup: rup_status berubah menjadi 2 (Terkunci)
-            if (!empty($paket['rup_id'])) {
-                $this->rupModel->update($paket['rup_id'], [
-                    'rup_status' => 2,
-                ]);
+            // Update bersyarat: hanya jika paket masih berstatus Draft
+            $db->table('paket')
+                ->where('id', $paketId)
+                ->where('status_paket', 1)
+                ->update(['no_paket' => $newNo, 'status_paket' => 2, 'tgl_pengajuan' => date('Y-m-d'), 'updated_at' => $now]);
+
+            if ($db->affectedRows() !== 1) {
+                $db->transRollback();
+                return $this->failWith('Paket ini sudah diajukan sebelumnya.', 409, '/paket');
             }
 
-            $msg = "Paket berhasil diajukan dengan Nomor Paket: {$newNoPaket}! Data RUP terkait kini telah terkunci.";
-
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON([
-                    'status'   => 'success',
-                    'message'  => $msg,
-                    'no_paket' => $newNoPaket,
-                ]);
+            if (! empty($paket['rup_id'])) {
+                $db->table('rup')->where('id', (int) $paket['rup_id'])->update(['rup_status' => 2, 'updated_at' => $now]);
             }
 
-            return redirect()->to('/paket')->with('success', $msg);
+            $db->transCommit();
 
+            return $this->okWith(
+                "Paket berhasil diajukan dengan Nomor Paket: {$newNo}! Data RUP terkait kini telah terkunci.",
+                ['no_paket' => $newNo],
+                '/paket'
+            );
         } catch (\Throwable $e) {
+            $db->transRollback();
             log_message('error', 'Error in PaketController::ajukan: ' . $e->getMessage());
-            if ($this->request->isAJAX()) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Gagal mengajukan paket: ' . $e->getMessage()])->setStatusCode(500);
+
+            return $this->failWith('Gagal mengajukan paket. Silakan coba lagi.', 500, '/paket');
+        } finally {
+            if ($locked) {
+                $db->query("SELECT RELEASE_LOCK('simpple_no_paket')");
             }
-            return redirect()->back()->with('error', 'Gagal mengajukan paket: ' . $e->getMessage());
         }
     }
 
@@ -346,25 +323,24 @@ class PaketController extends BaseController
      */
     public function getSyarat($paketId)
     {
+        $paket = $this->findPaketForActor((int) $paketId, false, $error);
+        if (! $paket) {
+            return $error;
+        }
+
         try {
-            $paket = $this->paketModel->find($paketId);
-            if (!$paket) {
-                return $this->response->setJSON(['status' => 'error', 'message' => 'Paket tidak ditemukan.'])->setStatusCode(404);
-            }
+            $paketId = (int) $paket['id'];
+            $this->syaratModel->generateDefaultSyarat($paketId);
+            $syaratList = $this->syaratModel->getByPaketId($paketId);
 
-            // Pastikan 8 syarat default sudah digenerate jika belum ada
-            $this->syaratModel->generateDefaultSyarat((int) $paketId);
-
-            $syaratList = $this->syaratModel->getByPaketId((int) $paketId);
-
-            $totalWajib    = 0;
-            $wajibUploaded = 0;
-            $missingWajib  = [];
+            $totalWajib = $wajibUploaded = 0;
+            $missingWajib = [];
 
             foreach ($syaratList as &$s) {
-                $isUploaded = !empty($s['nama_file']);
+                $isUploaded       = ! empty($s['nama_file']);
                 $s['is_uploaded'] = $isUploaded;
-                $s['file_url']    = $isUploaded ? base_url('uploads/syarat/' . $s['nama_file']) : null;
+                // Dokumen dilayani lewat route terotorisasi, bukan URL publik
+                $s['file_url']    = $isUploaded ? site_url('paket/syarat/download/' . $s['id']) : null;
 
                 if ((int) $s['wajib'] === 1) {
                     $totalWajib++;
@@ -386,12 +362,13 @@ class PaketController extends BaseController
                     'wajib_uploaded' => $wajibUploaded,
                     'missing_wajib'  => $missingWajib,
                     'is_lengkap'     => empty($missingWajib),
-                    'can_ajukan'     => empty($missingWajib) && ((int) $paket['status_paket'] === 1),
+                    'can_ajukan'     => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canWrite(),
                 ],
             ]);
         } catch (\Throwable $e) {
             log_message('error', 'Error in PaketController::getSyarat: ' . $e->getMessage());
-            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()])->setStatusCode(500);
+
+            return $this->failWith('Gagal memuat dokumen persyaratan.', 500);
         }
     }
 
@@ -400,60 +377,42 @@ class PaketController extends BaseController
      */
     public function uploadSyarat()
     {
-        $id = $this->request->getPost('id');
-        $syarat = $this->syaratModel->find($id);
-        if (!$syarat) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data persyaratan tidak ditemukan.'])->setStatusCode(404);
+        $syarat = $this->syaratModel->find((int) $this->request->getPost('id'));
+        if (! $syarat) {
+            return $this->failWith('Data persyaratan tidak ditemukan.', 404);
         }
 
-        $paket = $this->paketModel->find($syarat['paket_id']);
-        if (!$paket || (int) $paket['status_paket'] !== 1) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Paket telah diajukan atau terkunci. Tidak dapat mengubah dokumen.'])->setStatusCode(403);
+        $paket = $this->findPaketForActor((int) $syarat['paket_id'], true, $error);
+        if (! $paket) {
+            return $error;
+        }
+        if ((int) $paket['status_paket'] !== 1) {
+            return $this->failWith('Paket telah diajukan atau terkunci. Tidak dapat mengubah dokumen.', 403);
         }
 
-        $file = $this->request->getFile('file');
-        if (!$file || ! $file->isValid()) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'File dokumen tidak valid atau belum dipilih.'])->setStatusCode(400);
+        $stored = $this->storeUpload($this->request->getFile('file'), (string) $syarat['nama_persyaratan'], $syarat['format'] ?? null, $err);
+        if ($stored === null) {
+            return $this->failWith($err, 422);
         }
 
-        // Validasi ekstensi sesuai field format jika ditentukan
-        $ext = strtolower($file->getClientExtension());
-        if (!empty($syarat['format'])) {
-            $allowed = array_map('trim', explode(',', strtolower($syarat['format'])));
-            if (!in_array($ext, $allowed, true)) {
-                return $this->response->setJSON([
-                    'status'  => 'error',
-                    'message' => "Format file tidak sesuai! Ketentuan format untuk persyaratan ini: ." . implode(', .', $allowed),
-                ])->setStatusCode(400);
-            }
+        $oldFile = $syarat['nama_file'] ?? null;
+
+        try {
+            $this->syaratModel->update($syarat['id'], ['nama_file' => $stored, 'selesai' => 1]);
+        } catch (\Throwable $e) {
+            @unlink($this->uploadDir() . $stored);
+            log_message('error', 'Error in uploadSyarat: ' . $e->getMessage());
+
+            return $this->failWith('Gagal menyimpan dokumen.', 500);
         }
 
-        // Generate nama file: slug-timestamp.ext
-        $cleanName = url_title(strtolower($syarat['nama_persyaratan']), '-', true);
-        $fileName = $cleanName . '-' . time() . '.' . $ext;
-
-        $uploadPath = FCPATH . 'uploads/syarat/';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
-        }
-
-        // Hapus file lama jika ada
-        if (!empty($syarat['nama_file']) && file_exists($uploadPath . $syarat['nama_file'])) {
-            @unlink($uploadPath . $syarat['nama_file']);
-        }
-
-        $file->move($uploadPath, $fileName);
-
-        $this->syaratModel->update($id, [
-            'nama_file' => $fileName,
-            'selesai'   => 1,
-        ]);
+        $this->removeFile($oldFile);
 
         return $this->response->setJSON([
             'status'    => 'success',
             'message'   => "Dokumen '{$syarat['nama_persyaratan']}' berhasil diunggah!",
-            'nama_file' => $fileName,
-            'file_url'  => base_url('uploads/syarat/' . $fileName),
+            'nama_file' => $stored,
+            'file_url'  => site_url('paket/syarat/download/' . $syarat['id']),
         ]);
     }
 
@@ -462,45 +421,43 @@ class PaketController extends BaseController
      */
     public function uploadSyaratBaru()
     {
-        $paketId = $this->request->getPost('paket_id');
-        $nama    = trim((string) $this->request->getPost('nama_persyaratan'));
-        $hps     = (int) $this->request->getPost('hps') ? 1 : 0;
+        $nama = trim((string) $this->request->getPost('nama_persyaratan'));
+        $hps  = (int) $this->request->getPost('hps') ? 1 : 0;
 
-        if (!$paketId || empty($nama)) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Nama persyaratan wajib diisi.'])->setStatusCode(400);
+        if ($nama === '' || mb_strlen($nama) > 150) {
+            return $this->failWith('Nama persyaratan wajib diisi (maksimal 150 karakter).', 422);
         }
 
-        $paket = $this->paketModel->find($paketId);
-        if (!$paket || (int) $paket['status_paket'] !== 1) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Paket telah diajukan atau terkunci. Tidak dapat menambah syarat baru.'])->setStatusCode(403);
+        $paket = $this->findPaketForActor((int) $this->request->getPost('paket_id'), true, $error);
+        if (! $paket) {
+            return $error;
+        }
+        if ((int) $paket['status_paket'] !== 1) {
+            return $this->failWith('Paket telah diajukan atau terkunci. Tidak dapat menambah syarat baru.', 403);
         }
 
-        $file = $this->request->getFile('file');
-        if (!$file || ! $file->isValid()) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'File dokumen wajib dipilih untuk diunggah.'])->setStatusCode(400);
+        $stored = $this->storeUpload($this->request->getFile('file'), $nama, null, $err);
+        if ($stored === null) {
+            return $this->failWith($err, 422);
         }
 
-        $ext       = strtolower($file->getClientExtension());
-        $cleanName = url_title(strtolower($nama), '-', true);
-        $fileName  = $cleanName . '-' . time() . '.' . $ext;
+        try {
+            $insertId = $this->syaratModel->insert([
+                'paket_id'         => (int) $paket['id'],
+                'nama_persyaratan' => $nama,
+                'nama_file'        => $stored,
+                'hps'              => $hps,
+                'format'           => null,
+                'wajib'            => 0,
+                'auto'             => 0,
+                'selesai'          => 1,
+            ]);
+        } catch (\Throwable $e) {
+            @unlink($this->uploadDir() . $stored);
+            log_message('error', 'Error in uploadSyaratBaru: ' . $e->getMessage());
 
-        $uploadPath = FCPATH . 'uploads/syarat/';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
+            return $this->failWith('Gagal menyimpan persyaratan tambahan.', 500);
         }
-
-        $file->move($uploadPath, $fileName);
-
-        $insertId = $this->syaratModel->insert([
-            'paket_id'         => $paketId,
-            'nama_persyaratan' => $nama,
-            'nama_file'        => $fileName,
-            'hps'              => $hps,
-            'format'           => null, // Bebas
-            'wajib'            => 0,    // Tambahan manual
-            'auto'             => 0,    // Tambahan manual dari pengguna/PPK
-            'selesai'          => 1,
-        ]);
 
         return $this->response->setJSON([
             'status'    => 'success',
@@ -514,56 +471,155 @@ class PaketController extends BaseController
      */
     public function deleteSyarat($id)
     {
-        $syarat = $this->syaratModel->find($id);
-        if (!$syarat) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Data persyaratan tidak ditemukan.'])->setStatusCode(404);
+        $syarat = $this->syaratModel->find((int) $id);
+        if (! $syarat) {
+            return $this->failWith('Data persyaratan tidak ditemukan.', 404);
         }
 
-        $paket = $this->paketModel->find($syarat['paket_id']);
-        if (!$paket || (int) $paket['status_paket'] !== 1) {
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Paket telah diajukan. Dokumen tidak dapat dihapus.'])->setStatusCode(403);
+        $paket = $this->findPaketForActor((int) $syarat['paket_id'], true, $error);
+        if (! $paket) {
+            return $error;
         }
-
-        $uploadPath = FCPATH . 'uploads/syarat/';
-        if (!empty($syarat['nama_file']) && file_exists($uploadPath . $syarat['nama_file'])) {
-            @unlink($uploadPath . $syarat['nama_file']);
+        if ((int) $paket['status_paket'] !== 1) {
+            return $this->failWith('Paket telah diajukan. Dokumen tidak dapat dihapus.', 403);
         }
 
         if ((int) $syarat['auto'] === 0) {
-            // Syarat tambahan (auto = 0): hapus seluruh record dari database
-            $this->syaratModel->delete($id);
+            $this->syaratModel->delete($syarat['id']);
             $msg = "Persyaratan tambahan '{$syarat['nama_persyaratan']}' berhasil dihapus.";
         } else {
-            // Syarat default (auto = 1): reset nama_file menjadi null
-            $this->syaratModel->update($id, [
-                'nama_file' => null,
-                'selesai'   => 0,
-            ]);
+            $this->syaratModel->update($syarat['id'], ['nama_file' => null, 'selesai' => 0]);
             $msg = "File dokumen '{$syarat['nama_persyaratan']}' berhasil dihapus.";
         }
 
-        return $this->response->setJSON([
-            'status'  => 'success',
-            'message' => $msg,
-        ]);
+        $this->removeFile($syarat['nama_file'] ?? null);
+
+        return $this->response->setJSON(['status' => 'success', 'message' => $msg]);
     }
 
     /**
-     * Unduh file dokumen persyaratan
+     * Unduh file dokumen persyaratan (hanya untuk user yang berhak atas paket tersebut)
      */
     public function downloadSyarat($id)
     {
-        $syarat = $this->syaratModel->find($id);
-        if (!$syarat || empty($syarat['nama_file'])) {
-            return redirect()->back()->with('error', 'Dokumen belum diunggah.');
+        $syarat = $this->syaratModel->find((int) $id);
+        if (! $syarat || empty($syarat['nama_file'])) {
+            return redirect()->to('/paket')->with('error', 'Dokumen belum diunggah.');
         }
 
-        $filePath = FCPATH . 'uploads/syarat/' . $syarat['nama_file'];
-        if (!file_exists($filePath)) {
-            return redirect()->back()->with('error', 'File fisik tidak ditemukan pada server.');
+        $paket = $this->findPaketForActor((int) $syarat['paket_id'], false, $error);
+        if (! $paket) {
+            return redirect()->to('/paket')->with('error', 'Anda tidak memiliki akses ke dokumen ini.');
         }
 
-        return $this->response->download($filePath, null);
+        // basename() mencegah path traversal bila nilai di database pernah dimanipulasi
+        $filePath = $this->uploadDir() . basename($syarat['nama_file']);
+        if (! is_file($filePath)) {
+            return redirect()->to('/paket')->with('error', 'File fisik tidak ditemukan pada server.');
+        }
+
+        return $this->response->download($filePath, null)->setFileName(basename($syarat['nama_file']));
+    }
+
+    // ------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------
+
+    /**
+     * Muat paket beserta SKPD/PPK pemilik RUP-nya dan pastikan berada dalam cakupan user.
+     * Untuk operasi tulis, role juga harus termasuk WRITE_ROLES.
+     *
+     * @param mixed $error diisi response error bila mengembalikan null
+     */
+    private function findPaketForActor(int $id, bool $forWrite, &$error = null): ?array
+    {
+        $paket = $id > 0
+            ? $this->paketModel->select('paket.*, rup.skpd_id, rup.ppk_id')
+                ->join('rup', 'rup.id = paket.rup_id', 'left')
+                ->where('paket.id', $id)->first()
+            : null;
+
+        // Data di luar cakupan diperlakukan sama seperti tidak ada (tidak membocorkan keberadaan)
+        if (! $paket || ! $this->inScope($paket)) {
+            $error = $this->failWith('Data paket tidak ditemukan.', 404, '/paket');
+            return null;
+        }
+
+        if ($forWrite && ! $this->canWrite()) {
+            $error = $this->failWith('Anda tidak memiliki hak akses untuk mengubah data ini.', 403, '/paket');
+            return null;
+        }
+
+        return $paket;
+    }
+
+    private function uploadDir(): string
+    {
+        // Di luar webroot: file hanya bisa diakses melalui route terotorisasi
+        return WRITEPATH . 'uploads/syarat/';
+    }
+
+    private function removeFile(?string $name): void
+    {
+        if (! empty($name)) {
+            $path = $this->uploadDir() . basename($name);
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
+    /**
+     * Validasi & simpan file upload. Mengembalikan nama file tersimpan, atau null (+ $error).
+     */
+    private function storeUpload(?UploadedFile $file, string $label, ?string $formatRule, ?string &$error = null): ?string
+    {
+        if (! $file || ! $file->isValid() || $file->hasMoved()) {
+            $error = 'File dokumen tidak valid atau belum dipilih.';
+            return null;
+        }
+        if ($file->getSize() > self::MAX_FILE_BYTES) {
+            $error = 'Ukuran file melebihi batas ' . (self::MAX_FILE_BYTES / 1024 / 1024) . ' MB.';
+            return null;
+        }
+
+        $ext     = strtolower($file->getClientExtension());
+        $allowed = array_keys(self::ALLOWED_FILES);
+
+        if (! empty($formatRule)) {
+            $allowed = array_values(array_intersect($allowed, array_map('trim', explode(',', strtolower($formatRule)))));
+        }
+
+        if (! in_array($ext, $allowed, true)) {
+            $error = 'Format file tidak sesuai! Format yang diperbolehkan: .' . implode(', .', $allowed);
+            return null;
+        }
+
+        // Cocokkan isi file (finfo) dengan ekstensi, agar file berbahaya tidak bisa menyamar
+        if (! in_array($file->getMimeType(), self::ALLOWED_FILES[$ext], true)) {
+            $error = 'Isi file tidak sesuai dengan ekstensinya (.' . $ext . ').';
+            return null;
+        }
+
+        $dir = $this->uploadDir();
+        if (! is_dir($dir) && ! mkdir($dir, 0750, true) && ! is_dir($dir)) {
+            $error = 'Direktori penyimpanan tidak dapat dibuat.';
+            return null;
+        }
+
+        // Nama file acak (tidak dapat ditebak) dengan awalan slug agar tetap mudah dikenali
+        $slug     = substr(url_title(strtolower($label), '-', true), 0, 60) ?: 'dokumen';
+        $fileName = $slug . '-' . bin2hex(random_bytes(8)) . '.' . $ext;
+
+        try {
+            $file->move($dir, $fileName);
+        } catch (\Throwable $e) {
+            log_message('error', 'Gagal memindahkan upload: ' . $e->getMessage());
+            $error = 'Gagal menyimpan file ke server.';
+            return null;
+        }
+
+        return $fileName;
     }
 
     /**

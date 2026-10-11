@@ -21,7 +21,7 @@ $routes->setDefaultController('Home');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
-$routes->setAutoRoute(true);
+$routes->setAutoRoute(false);
 // The Auto Routing (Legacy) is very dangerous. It is easy to create vulnerable apps
 // where controller filters or CSRF protection are bypassed.
 // If you don't want to define all routes, please use the Auto Routing (Improved).
@@ -41,9 +41,9 @@ $routes->setAutoRoute(true);
 
 // Authentication Routes (Guest Only)
 $routes->get('/login', 'Auth::login', ['filter' => 'guest']);
-$routes->post('/login', 'Auth::loginProcess', ['filter' => 'guest']);
+$routes->post('/login', 'Auth::loginProcess', ['filter' => ['guest', 'csrf']]);
 $routes->get('/auth-login', 'Auth::login', ['filter' => 'guest']);
-$routes->get('/logout', 'Auth::logout');
+$routes->post('/logout', 'Auth::logout', ['filter' => 'csrf']);
 
 // Public Pages (Bypass Auth if needed, e.g. register, forgot password)
 $routes->get('/register', 'Auth::register', ['filter' => 'guest']);
@@ -55,30 +55,39 @@ $routes->get('/auth-lockscreen', 'Auth::lockscreen');
 $routes->get('/twofactor', 'Auth::twoFactor');
 $routes->get('/auth-twofactor', 'Auth::twoFactor');
 
-// Protected Routes (Requires Login / AuthFilter)
-$routes->group('', ['filter' => 'auth'], static function ($routes) {
-    $routes->get('/', 'Home::index');
+// Manajemen Akun (khusus ADMINISTRATOR, mutasi dilindungi CSRF)
+$routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function ($routes) {
+    // Filter per-route menimpa filter group, jadi seluruhnya disebut ulang di sini
+    $mutate = ['filter' => ['auth', 'role:ADMINISTRATOR', 'csrf']];
+
     $routes->get('/accounts', 'AccountController::index');
     $routes->get('/account', 'AccountController::index');
-    $routes->post('/accounts/store', 'AccountController::store');
-    $routes->post('/accounts/update/(:num)', 'AccountController::update/$1');
-    $routes->post('/accounts/update', 'AccountController::update');
-    $routes->post('/accounts/reset-password/(:num)', 'AccountController::resetPassword/$1');
-    $routes->post('/accounts/reset-password', 'AccountController::resetPassword');
     $routes->get('/accounts/ppk', 'AccountController::getPpk');
     $routes->get('/accounts/ppk/(:num)', 'AccountController::getPpk/$1');
+    $routes->post('/accounts/store', 'AccountController::store', $mutate);
+    $routes->post('/accounts/update/(:num)', 'AccountController::update/$1', $mutate);
+    $routes->post('/accounts/update', 'AccountController::update', $mutate);
+    $routes->post('/accounts/reset-password/(:num)', 'AccountController::resetPassword/$1', $mutate);
+    $routes->post('/accounts/reset-password', 'AccountController::resetPassword', $mutate);
+});
+
+// Protected Routes (Requires Login / AuthFilter)
+$routes->group('', ['filter' => 'auth'], static function ($routes) {
+    // Filter per-route menimpa filter group, jadi auth disebut ulang di sini
+    $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']];
+
+    $routes->get('/', 'Home::index');
     $routes->get('/rup', 'RupController::index');
-    $routes->post('/rup/store', 'RupController::store');
+    $routes->post('/rup/store', 'RupController::store', ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']]);
     $routes->get('/paket', 'PaketController::index');
-    $routes->post('/paket/store', 'PaketController::store');
-    $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1');
+    $routes->post('/paket/store', 'PaketController::store', $writeMutate);
+    $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1', $writeMutate);
 
     // Manajemen Dokumen Persyaratan Paket
     $routes->get('/paket/syarat/(:num)', 'PaketController::getSyarat/$1');
-    $routes->post('/paket/syarat/upload', 'PaketController::uploadSyarat');
-    $routes->post('/paket/syarat/upload2', 'PaketController::uploadSyaratBaru');
-    $routes->post('/syarat/upload2', 'PaketController::uploadSyaratBaru');
-    $routes->post('/paket/syarat/delete/(:num)', 'PaketController::deleteSyarat/$1');
+    $routes->post('/paket/syarat/upload', 'PaketController::uploadSyarat', $writeMutate);
+    $routes->post('/paket/syarat/upload2', 'PaketController::uploadSyaratBaru', $writeMutate);
+    $routes->post('/paket/syarat/delete/(:num)', 'PaketController::deleteSyarat/$1', $writeMutate);
     $routes->get('/paket/syarat/download/(:num)', 'PaketController::downloadSyarat/$1');
 
     $routes->get('/(:any)', 'Home::root/$1');

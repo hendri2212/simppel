@@ -132,9 +132,12 @@
 
         <div class="dropdown-divider m-0"></div>
 
-        <a class="dropdown-item py-3 fw-500 d-flex justify-content-between" href="/logout">
-            <span class="text-danger" data-i18n="drpdwn.page-logout">Logout</span>
-            <span class="d-block text-truncate text-truncate-sm">@<?= esc(session('username') ?? 'admin') ?></span>
-        </a>
+        <form action="/logout" method="POST" class="m-0">
+            <?= csrf_field() ?>
+            <button type="submit" class="dropdown-item py-3 fw-500 d-flex justify-content-between">
+                <span class="text-danger" data-i18n="drpdwn.page-logout">Logout</span>
+                <span class="d-block text-truncate text-truncate-sm">@<?= esc(session('username') ?? 'admin') ?></span>
+            </button>
+        </form>
     </div>
 </header>
