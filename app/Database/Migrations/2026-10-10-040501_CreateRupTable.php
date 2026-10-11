@@ -95,7 +95,7 @@ class CreateRupTable extends Migration
                 'type'       => 'TINYINT',
                 'constraint' => 1,
                 'default'    => 1,
-                'comment'    => 'Status RUP',
+                'comment'    => 'Status Akses Edit RUP (1: Boleh diedit, 2: Terkunci / Tidak boleh diedit)',
             ],
             'sumber_dana_id' => [
                 'type'       => 'INT',

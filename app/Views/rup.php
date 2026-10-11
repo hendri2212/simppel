@@ -10,16 +10,50 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 
     <style>
+        /* Badge Jenis Pengadaan - Light Mode */
+        .badge-proc-barang {
+            background-color: var(--bs-info-bg-subtle, #cff4fc);
+            color: var(--bs-info-text-emphasis, #055160) !important;
+            border: 1px solid var(--bs-info-border-subtle, #9eeaf9);
+        }
+        .badge-proc-konstruksi {
+            background-color: var(--bs-primary-bg-subtle, #cfe2ff);
+            color: var(--bs-primary-text-emphasis, #084298) !important;
+            border: 1px solid var(--bs-primary-border-subtle, #9ec5fe);
+        }
+        .badge-proc-konsultasi {
+            background-color: #f3e8ff;
+            color: #6b21a8 !important;
+            border: 1px solid #e9d5ff;
+        }
+        .badge-proc-lainnya {
+            background-color: var(--bs-warning-bg-subtle, #fff3cd);
+            color: var(--bs-warning-text-emphasis, #664d03) !important;
+            border: 1px solid var(--bs-warning-border-subtle, #ffe69c);
+        }
+        .badge-proc-terintegrasi {
+            background-color: var(--bs-success-bg-subtle, #d1e7dd);
+            color: var(--bs-success-text-emphasis, #0f5132) !important;
+            border: 1px solid var(--bs-success-border-subtle, #a3cfbb);
+        }
+        .badge-proc-default {
+            background-color: var(--bs-secondary-bg-subtle, #e2e3e5);
+            color: var(--bs-secondary-text-emphasis, #41464b) !important;
+            border: 1px solid var(--bs-secondary-border-subtle, #c4c8cb);
+        }
+
+        /* Badge DAK / Non DAK - Light Mode */
         .badge-dak {
             background-color: #e0f2fe;
-            color: #0369a1;
+            color: #0369a1 !important;
             border: 1px solid #bae6fd;
         }
         .badge-non-dak {
             background-color: #f1f5f9;
-            color: #475569;
+            color: #475569 !important;
             border: 1px solid #e2e8f0;
         }
+
         .table-rup th {
             font-size: 0.78rem;
             text-transform: uppercase;
@@ -35,20 +69,77 @@
             align-items: center;
             gap: 4px;
             font-size: 0.72rem;
-            color: #64748b;
+            color: var(--bs-secondary-color, #64748b);
         }
         .detail-label {
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #64748b;
+            color: var(--bs-secondary-color, #64748b);
             font-weight: 600;
             margin-bottom: 2px;
         }
         .detail-value {
             font-size: 0.9rem;
-            color: #1e293b;
+            color: var(--bs-body-color, #1e293b);
             font-weight: 500;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        /* ========================================================
+           DARK MODE ADAPTATIONS ([data-bs-theme="dark"])
+           ======================================================== */
+        [data-bs-theme="dark"] .badge-proc-barang {
+            background-color: rgba(6, 182, 212, 0.18);
+            color: #67e8f9 !important;
+            border-color: rgba(6, 182, 212, 0.35);
+        }
+        [data-bs-theme="dark"] .badge-proc-konstruksi {
+            background-color: rgba(59, 130, 246, 0.18);
+            color: #93c5fd !important;
+            border-color: rgba(59, 130, 246, 0.35);
+        }
+        [data-bs-theme="dark"] .badge-proc-konsultasi {
+            background-color: rgba(168, 85, 247, 0.22);
+            color: #d8b4fe !important;
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        [data-bs-theme="dark"] .badge-proc-lainnya {
+            background-color: rgba(245, 158, 11, 0.18);
+            color: #fcd34d !important;
+            border-color: rgba(245, 158, 11, 0.35);
+        }
+        [data-bs-theme="dark"] .badge-proc-terintegrasi {
+            background-color: rgba(34, 197, 94, 0.18);
+            color: #86efac !important;
+            border-color: rgba(34, 197, 94, 0.35);
+        }
+        [data-bs-theme="dark"] .badge-proc-default {
+            background-color: rgba(148, 163, 184, 0.15);
+            color: #cbd5e1 !important;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+        [data-bs-theme="dark"] .badge-dak {
+            background-color: rgba(14, 165, 233, 0.2);
+            color: #7dd3fc !important;
+            border-color: rgba(14, 165, 233, 0.35);
+        }
+        [data-bs-theme="dark"] .badge-non-dak {
+            background-color: rgba(148, 163, 184, 0.15);
+            color: #cbd5e1 !important;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+        [data-bs-theme="dark"] .detail-value {
+            color: var(--bs-body-color, #dee2e6);
+        }
+        [data-bs-theme="dark"] .detail-label {
+            color: var(--bs-secondary-color, #a7acb1);
+        }
+        [data-bs-theme="dark"] .table-light {
+            --bs-table-color: var(--bs-body-color);
+            --bs-table-bg: var(--bs-tertiary-bg);
+            --bs-table-border-color: var(--bs-border-color);
         }
     </style>
 </head>
@@ -86,7 +177,8 @@
 
                     $totalPlans       = $totalPlans ?? count($plans);
                     $totalBudget      = $totalBudget ?? array_sum(array_column($plans, 'budget_ceiling'));
-                    $announcedCount   = $announcedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 0) >= 1));
+                    $editableCount    = $editableCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 1) === 1));
+                    $lockedCount      = $lockedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 1) === 2));
                     $syncedCount      = $syncedCount ?? count(array_filter($plans, fn($p) => (int)($p['is_synced'] ?? 0) === 1));
                     $dakCount         = $dakCount ?? count(array_filter($plans, fn($p) => (int)($p['jenis_dak_id'] ?? 2) === 1));
 
@@ -116,7 +208,7 @@
                                         </div>
                                         <div>
                                             <div class="text-muted fs-xs text-uppercase fw-semibold">Total Paket RUP</div>
-                                            <div class="fs-2 fw-bold text-dark"><?= $totalPlans ?> <span class="fs-sm fw-normal text-muted">Paket</span></div>
+                                            <div class="fs-2 fw-bold text-body-emphasis"><?= $totalPlans ?> <span class="fs-sm fw-normal text-muted">Paket</span></div>
                                             <div class="fs-xs text-muted">Tahun Anggaran <?= date('Y') ?></div>
                                         </div>
                                     </div>
@@ -143,20 +235,20 @@
                                 </div>
                             </div>
 
-                            <!-- Card 3: Terumumkan di SiRUP -->
+                            <!-- Card 3: Status Akses Edit RUP -->
                             <div class="col-sm-6 col-xl-3">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body d-flex align-items-center">
                                         <div class="rounded-circle p-3 bg-info bg-opacity-10 text-info me-3 flex-shrink-0">
                                             <svg class="sa-icon" style="width: 24px; height: 24px;">
-                                                <use href="/icons/sprite.svg#check-circle"></use>
+                                                <use href="/icons/sprite.svg#edit"></use>
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Terumumkan SiRUP</div>
-                                            <div class="fs-2 fw-bold text-dark"><?= $announcedCount ?> <span class="fs-sm fw-normal text-muted">/ <?= $totalPlans ?></span></div>
-                                            <div class="fs-xs text-info">
-                                                <?= $totalPlans > 0 ? round(($announcedCount / $totalPlans) * 100, 1) : 0 ?>% paket terumumkan
+                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Akses Edit RUP</div>
+                                            <div class="fs-2 fw-bold text-body-emphasis"><?= $editableCount ?> <span class="fs-sm fw-normal text-muted">Bisa Diedit</span></div>
+                                            <div class="fs-xs text-muted">
+                                                <?= $lockedCount ?> paket terkunci
                                             </div>
                                         </div>
                                     </div>
@@ -174,7 +266,7 @@
                                         </div>
                                         <div>
                                             <div class="text-muted fs-xs text-uppercase fw-semibold">Tersinkron SiRUP</div>
-                                            <div class="fs-2 fw-bold text-dark"><?= $syncedCount ?> <span class="fs-sm fw-normal text-muted">Paket</span></div>
+                                            <div class="fs-2 fw-bold text-body-emphasis"><?= $syncedCount ?> <span class="fs-sm fw-normal text-muted">Paket</span></div>
                                             <div class="fs-xs text-muted"><?= $dakCount ?> paket sumber DAK</div>
                                         </div>
                                     </div>
@@ -229,7 +321,7 @@
                                         <!-- Search Box -->
                                         <div class="col-md-4 col-lg-3">
                                             <div class="input-group input-group-sm">
-                                                <span class="input-group-text bg-white">
+                                                <span class="input-group-text">
                                                     <svg class="sa-icon" style="width: 14px; height: 14px;">
                                                         <use href="/icons/sprite.svg#search"></use>
                                                     </svg>
@@ -244,8 +336,10 @@
                                                 <option value="">Semua Jenis Pengadaan</option>
                                                 <option value="Barang">Barang</option>
                                                 <option value="Pekerjaan Konstruksi">Pekerjaan Konstruksi</option>
+                                                <option value="Jasa Konsultasi">Jasa Konsultasi</option>
                                                 <option value="Jasa Konsultansi">Jasa Konsultansi</option>
                                                 <option value="Jasa Lainnya">Jasa Lainnya</option>
+                                                <option value="Pekerjaan Terintegrasi">Pekerjaan Terintegrasi</option>
                                             </select>
                                         </div>
 
@@ -261,12 +355,12 @@
                                             </select>
                                         </div>
 
-                                        <!-- Filter Status RUP -->
+                                        <!-- Filter Akses Edit RUP -->
                                         <div class="col-6 col-md-2 col-lg-2">
                                             <select id="rupStatusFilter" class="form-select form-select-sm">
-                                                <option value="">Semua Status RUP</option>
-                                                <option value="1">Terumumkan</option>
-                                                <option value="0">Draf</option>
+                                                <option value="">Semua Akses Edit</option>
+                                                <option value="1">Bisa Diedit</option>
+                                                <option value="2">Terkunci</option>
                                             </select>
                                         </div>
 
@@ -301,11 +395,10 @@
                                                     <th style="width: 40px;">#</th>
                                                     <th style="min-width: 140px;">Kode RUP & TA</th>
                                                     <th class="plan-title-cell">Paket & Kegiatan</th>
-                                                    <th style="min-width: 180px;">Instansi & PPK</th>
                                                     <th style="min-width: 150px;">Jenis & Metode</th>
                                                     <th class="text-end" style="min-width: 160px;">Pagu Anggaran</th>
                                                     <th class="text-center" style="min-width: 90px;">Waktu</th>
-                                                    <th class="text-center" style="min-width: 110px;">Status RUP</th>
+                                                    <th class="text-center" style="min-width: 110px;">Status</th>
                                                     <th class="text-end" style="width: 75px;">Aksi</th>
                                                 </tr>
                                             </thead>
@@ -313,7 +406,7 @@
                                                 <?php foreach ($plans as $p): ?>
                                                     <?php
                                                     $planJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
-                                                    $isAnnounced = (int) ($p['rup_status'] ?? 0) >= 1;
+                                                    $canEdit = (int) ($p['rup_status'] ?? 1) === 1;
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
                                                     $isDak = ($p['jenis_dak_name'] ?? '') === 'DAK';
                                                     ?>
@@ -326,7 +419,7 @@
                                                         data-mak="<?= esc(strtolower($p['account_code'] ?? '')) ?>"
                                                         data-proc-type="<?= esc($p['jenis_pengadaan_name'] ?? '') ?>"
                                                         data-method="<?= esc($p['metode_pemilihan_name'] ?? '') ?>"
-                                                        data-rup-status="<?= (int) ($p['rup_status'] ?? 0) ?>"
+                                                        data-rup-status="<?= (int) ($p['rup_status'] ?? 1) ?>"
                                                         data-dak="<?= esc($p['jenis_dak_name'] ?? 'NON DAK') ?>"
                                                         data-year="<?= esc($p['fiscal_year'] ?? '') ?>">
                                                         
@@ -347,7 +440,7 @@
                                                                 <?php endif; ?>
                                                             </div>
                                                             <div class="rup-meta-tag">
-                                                                <span class="badge bg-light text-secondary border">TA <?= esc($p['fiscal_year']) ?></span>
+                                                                <span class="badge bg-body-secondary text-secondary border">TA <?= esc($p['fiscal_year']) ?></span>
                                                                 <span class="badge <?= $isDak ? 'badge-dak' : 'badge-non-dak' ?>">
                                                                     <?= esc($p['jenis_dak_name'] ?? 'NON DAK') ?>
                                                                 </span>
@@ -356,7 +449,7 @@
 
                                                         <!-- Nama Paket & Program/Kegiatan -->
                                                         <td class="plan-title-cell">
-                                                            <div class="fw-semibold text-dark mb-1 text-break" style="line-height: 1.35;">
+                                                            <div class="fw-semibold text-body-emphasis mb-1 text-break" style="line-height: 1.35;">
                                                                 <?= esc($p['package_name']) ?>
                                                             </div>
                                                             <div class="text-muted fs-nano mb-1 text-truncate" title="<?= esc($p['activity']) ?>">
@@ -375,30 +468,11 @@
                                                             <?php endif; ?>
                                                         </td>
 
-                                                        <!-- Instansi / SKPD & PPK -->
-                                                        <td>
-                                                            <div>
-                                                                <?php if (!empty($p['skpd_abbreviation'])): ?>
-                                                                    <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle me-1 mb-1">
-                                                                        <?= esc($p['skpd_abbreviation']) ?>
-                                                                    </span>
-                                                                <?php endif; ?>
-                                                                <span class="fs-xs text-dark fw-medium d-block" title="<?= esc($p['skpd_name']) ?>">
-                                                                    <?= esc($p['skpd_name']) ?>
-                                                                </span>
-                                                            </div>
-                                                            <div class="fs-nano text-muted mt-1">
-                                                                <svg class="sa-icon me-1 text-muted" style="width: 10px; height: 10px;">
-                                                                    <use href="/icons/sprite.svg#user"></use>
-                                                                </svg>
-                                                                <?= esc($p['ppk_name'] ?? 'Belum ditentukan') ?>
-                                                            </div>
-                                                        </td>
 
                                                         <!-- Jenis & Metode Pemilihan -->
                                                         <td>
                                                             <div class="mb-1">
-                                                                <span class="badge <?= $p['proc_badge'] ?? 'bg-light text-dark border' ?>">
+                                                                <span class="badge <?= $p['proc_badge'] ?? 'badge-proc-default' ?>">
                                                                     <?= esc($p['jenis_pengadaan_name'] ?? 'Barang') ?>
                                                                 </span>
                                                             </div>
@@ -409,22 +483,17 @@
 
                                                         <!-- Pagu Anggaran & Sumber Dana -->
                                                         <td class="text-end">
-                                                            <div class="fw-bold text-dark font-monospace fs-sm">
+                                                            <div class="fw-bold text-body-emphasis font-monospace fs-sm">
                                                                 Rp <?= number_format((float) $p['budget_ceiling'], 0, ',', '.') ?>
                                                             </div>
                                                             <div class="fs-nano text-muted">
                                                                 <?= esc($p['sumber_dana_name'] ?? 'APBD') ?> &bull; <?= esc($p['jenis_belanja_name'] ?? 'Modal') ?>
                                                             </div>
-                                                            <?php if (!empty($p['account_code'])): ?>
-                                                                <div class="font-monospace fs-nano text-muted text-truncate" title="MAK: <?= esc($p['account_code']) ?>">
-                                                                    <?= esc($p['account_code']) ?>
-                                                                </div>
-                                                            <?php endif; ?>
                                                         </td>
 
                                                         <!-- Waktu / Durasi -->
                                                         <td class="text-center">
-                                                            <div class="badge bg-light text-dark border font-monospace">
+                                                            <div class="badge bg-body-secondary text-body border font-monospace">
                                                                 <?= (int) $p['work_duration'] ?> Hari
                                                             </div>
                                                             <?php if (!empty($p['volume'])): ?>
@@ -434,23 +503,29 @@
                                                             <?php endif; ?>
                                                         </td>
 
-                                                        <!-- Status RUP & Status Paket -->
+                                                        <!-- Status Paket & Akses Edit -->
                                                         <td class="text-center">
                                                             <div class="mb-1">
-                                                                <?php if ($isAnnounced): ?>
-                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                                                        Terumumkan
-                                                                    </span>
-                                                                <?php else: ?>
-                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
-                                                                        Draf
-                                                                    </span>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                            <div>
-                                                                <span class="badge <?= $p['status_badge'] ?? 'bg-secondary' ?>" style="font-size: 0.68rem;">
+                                                                <span class="badge <?= $p['status_badge'] ?? 'bg-secondary' ?>" style="font-size: 0.72rem;">
                                                                     <?= esc($p['status_label'] ?? 'Draft') ?>
                                                                 </span>
+                                                            </div>
+                                                            <div>
+                                                                <?php if ($canEdit): ?>
+                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;" title="Paket dapat diubah dan dihapus">
+                                                                        <svg class="sa-icon me-1" style="width: 9px; height: 9px;">
+                                                                            <use href="/icons/sprite.svg#edit"></use>
+                                                                        </svg>
+                                                                        Bisa Diedit
+                                                                    </span>
+                                                                <?php else: ?>
+                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.65rem;" title="Paket terkunci: Tidak dapat diubah">
+                                                                        <svg class="sa-icon me-1" style="width: 9px; height: 9px;">
+                                                                            <use href="/icons/sprite.svg#lock"></use>
+                                                                        </svg>
+                                                                        Terkunci
+                                                                    </span>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </td>
 
@@ -472,12 +547,22 @@
                                                                         </a>
                                                                     </li>
                                                                     <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Buka form ubah untuk: <?= esc(addslashes($p['package_code'])) ?>');">
-                                                                            <svg class="sa-icon me-2 text-secondary" style="width: 13px; height: 13px;">
-                                                                                <use href="/icons/sprite.svg#edit"></use>
-                                                                            </svg>
-                                                                            Ubah Paket
-                                                                        </a>
+                                                                        <?php if ($canEdit): ?>
+                                                                            <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Buka form ubah untuk: <?= esc(addslashes($p['package_code'])) ?>');">
+                                                                                <svg class="sa-icon me-2 text-secondary" style="width: 13px; height: 13px;">
+                                                                                    <use href="/icons/sprite.svg#edit"></use>
+                                                                                </svg>
+                                                                                Ubah Paket
+                                                                            </a>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item text-muted disabled" style="cursor: not-allowed;" title="Paket terkunci dan tidak dapat diubah">
+                                                                                <svg class="sa-icon me-2 text-muted" style="width: 13px; height: 13px;">
+                                                                                    <use href="/icons/sprite.svg#lock"></use>
+                                                                                </svg>
+                                                                                <span class="text-decoration-line-through text-muted">Ubah Paket</span>
+                                                                                <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">Terkunci</span>
+                                                                            </span>
+                                                                        <?php endif; ?>
                                                                     </li>
                                                                     <li>
                                                                         <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Cetak ringkasan paket: <?= esc(addslashes($p['package_code'])) ?>');">
@@ -489,12 +574,22 @@
                                                                     </li>
                                                                     <li><hr class="dropdown-divider"></li>
                                                                     <li>
-                                                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="if(confirm('Yakin ingin menghapus draf RUP ini?')) alert('Draf RUP berhasil dihapus.');">
-                                                                            <svg class="sa-icon me-2 text-danger" style="width: 13px; height: 13px;">
-                                                                                <use href="/icons/sprite.svg#trash-2"></use>
-                                                                            </svg>
-                                                                            Hapus Paket
-                                                                        </a>
+                                                                        <?php if ($canEdit): ?>
+                                                                            <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="if(confirm('Yakin ingin menghapus draf RUP ini?')) alert('Draf RUP berhasil dihapus.');">
+                                                                                <svg class="sa-icon me-2 text-danger" style="width: 13px; height: 13px;">
+                                                                                    <use href="/icons/sprite.svg#trash-2"></use>
+                                                                                </svg>
+                                                                                Hapus Paket
+                                                                            </a>
+                                                                        <?php else: ?>
+                                                                            <span class="dropdown-item text-muted disabled" style="cursor: not-allowed;" title="Paket terkunci dan tidak dapat dihapus">
+                                                                                <svg class="sa-icon me-2 text-muted" style="width: 13px; height: 13px;">
+                                                                                    <use href="/icons/sprite.svg#trash-2"></use>
+                                                                                </svg>
+                                                                                <span class="text-decoration-line-through text-muted">Hapus Paket</span>
+                                                                                <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">Terkunci</span>
+                                                                            </span>
+                                                                        <?php endif; ?>
                                                                     </li>
                                                                 </ul>
                                                             </div>
@@ -503,7 +598,7 @@
                                                 <?php endforeach; ?>
 
                                                 <tr id="noResultsRow" style="display: none;">
-                                                    <td colspan="9" class="text-center py-5 text-muted">
+                                                    <td colspan="8" class="text-center py-5 text-muted">
                                                         <div class="mb-2">
                                                             <svg class="sa-icon text-muted" style="width: 32px; height: 32px;">
                                                                 <use href="/icons/sprite.svg#search"></use>
@@ -552,17 +647,17 @@
     <div class="modal fade" id="detailPlanModal" tabindex="-1" aria-labelledby="detailPlanModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-light">
+                <div class="modal-header bg-body-tertiary">
                     <div>
                         <span class="badge bg-primary me-2 font-monospace" id="modalPlanCode">RUP-XXXX-XXXX</span>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle" id="modalPlanRupStatus">Terumumkan</span>
+                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" id="modalPlanRupStatus">Bisa Diedit</span>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Judul Paket & Program -->
                     <div class="border-bottom pb-3 mb-3">
-                        <h5 class="fw-bold text-dark mb-1" id="modalPlanName">-</h5>
+                        <h5 class="fw-bold text-body-emphasis mb-1" id="modalPlanName">-</h5>
                         <div class="text-muted fs-sm">
                             <svg class="sa-icon me-1 text-muted" style="width: 14px; height: 14px;">
                                 <use href="/icons/sprite.svg#layers"></use>
@@ -574,8 +669,8 @@
                     <!-- Grid Informasi Detail 100% Berdasarkan Migration -->
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-2 h-100">
-                                <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Informasi Satuan Kerja & PPK</h6>
+                            <div class="p-3 bg-body-tertiary rounded-2 h-100">
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Informasi Satuan Kerja & PPK</h6>
                                 <div class="mb-2">
                                     <div class="detail-label">Instansi / SKPD</div>
                                     <div class="detail-value" id="modalPlanSkpd">-</div>
@@ -596,15 +691,15 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-2 h-100">
-                                <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Pagu & Penganggaran</h6>
+                            <div class="p-3 bg-body-tertiary rounded-2 h-100">
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Pagu & Penganggaran</h6>
                                 <div class="mb-2">
                                     <div class="detail-label">Total Pagu Anggaran</div>
                                     <div class="detail-value text-success fs-5 fw-bold font-monospace" id="modalPlanBudget">Rp 0</div>
                                 </div>
                                 <div class="mb-2">
                                     <div class="detail-label">Mata Anggaran Kegiatan (MAK)</div>
-                                    <div class="detail-value font-monospace" id="modalPlanMak">-</div>
+                                    <div class="detail-value font-monospace text-break" id="modalPlanMak">-</div>
                                 </div>
                                 <div class="row g-2 mb-2">
                                     <div class="col-6">
@@ -624,8 +719,8 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-2 h-100">
-                                <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Metode & Waktu Pengadaan</h6>
+                            <div class="p-3 bg-body-tertiary rounded-2 h-100">
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Metode & Waktu Pengadaan</h6>
                                 <div class="mb-2">
                                     <div class="detail-label">Jenis Pengadaan</div>
                                     <div class="detail-value" id="modalPlanProcType">-</div>
@@ -648,15 +743,11 @@
                         </div>
 
                         <div class="col-md-6">
-                            <div class="p-3 bg-light rounded-2 h-100">
-                                <h6 class="fw-bold text-dark mb-3 fs-xs text-uppercase">Status SiRUP LKPP & Sinkronisasi</h6>
+                            <div class="p-3 bg-body-tertiary rounded-2 h-100">
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Status & Tahun Anggaran</h6>
                                 <div class="mb-2">
                                     <div class="detail-label">Status Paket</div>
                                     <div class="detail-value" id="modalPlanPackageStatus">-</div>
-                                </div>
-                                <div class="mb-2">
-                                    <div class="detail-label">Status Sinkronisasi SiRUP</div>
-                                    <div class="detail-value" id="modalPlanSyncStatus">-</div>
                                 </div>
                                 <div>
                                     <div class="detail-label">Tahun Anggaran</div>
@@ -670,7 +761,7 @@
                             <div class="p-3 border rounded-2">
                                 <div class="mb-2">
                                     <div class="detail-label">Uraian / Deskripsi Pekerjaan</div>
-                                    <p class="fs-sm text-dark mb-0" id="modalPlanDescription">-</p>
+                                    <p class="fs-sm text-body mb-0" id="modalPlanDescription">-</p>
                                 </div>
                                 <div class="mt-3 pt-2 border-top">
                                     <div class="detail-label">Catatan Tambahan</div>
@@ -680,13 +771,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="alert('Mencetak lembar RUP...');">
-                        <svg class="sa-icon me-1" style="width: 14px; height: 14px;">
+                <div class="modal-footer bg-body-tertiary">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 d-inline-flex align-items-center justify-content-center text-nowrap gap-2" style="min-width: 180px;" onclick="alert('Mencetak lembar RUP...');">
+                        <svg class="sa-icon" style="width: 15px; height: 15px;">
                             <use href="/icons/sprite.svg#printer"></use>
                         </svg>
-                        Cetak Lembar RUP
+                        <span>Cetak Lembar RUP</span>
                     </button>
                 </div>
             </div>
@@ -711,16 +802,16 @@
                             <div class="d-flex align-items-center gap-2">
                                 <i class="fal fa-shield-check text-info fs-4 flex-shrink-0"></i>
                                 <div>
-                                    <div class="fs-xs fw-bold text-dark text-uppercase">Instansi / SKPD & PPK Terisi Otomatis</div>
+                                    <div class="fs-xs fw-bold text-body-emphasis text-uppercase">Instansi / SKPD & PPK Terisi Otomatis</div>
                                     <small class="text-muted fs-nano">Paket ini secara otomatis dikaitkan dengan akun & instansi Anda di backend.</small>
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <span class="badge bg-light text-dark border font-monospace fs-nano" title="Instansi / SKPD">
+                                <span class="badge bg-body-secondary text-body border font-monospace fs-nano" title="Instansi / SKPD">
                                     <i class="fal fa-building text-primary me-1"></i>
                                     <?= esc(!empty($currentUser['skpd_name']) ? ($currentUser['skpd_abbr'] ? $currentUser['skpd_abbr'] . ' - ' : '') . $currentUser['skpd_name'] : 'Instansi Akun Login') ?>
                                 </span>
-                                <span class="badge bg-info-subtle text-info border border-info-subtle font-monospace fs-nano" title="Pejabat Pembuat Komitmen (PPK)">
+                                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle font-monospace fs-nano" title="Pejabat Pembuat Komitmen (PPK)">
                                     <i class="fal fa-user-tie text-info me-1"></i>
                                     <?= esc(!empty($currentUser['ppk_name']) ? $currentUser['ppk_name'] : (!empty($currentUser['full_name']) ? $currentUser['full_name'] : 'PPK Akun Login')) ?>
                                 </span>
@@ -783,11 +874,11 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Pagu Anggaran (Rp) <span class="text-danger">*</span></label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light">Rp</span>
-                                    <input type="number" name="budget_ceiling" class="form-control font-monospace" placeholder="0" min="0" step="1000" required>
-                                </div>
+                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Pagu Anggaran (Rp) <span class="text-danger">*</span></label>
+                                 <div class="input-group input-group-sm">
+                                     <span class="input-group-text">Rp</span>
+                                     <input type="number" name="budget_ceiling" class="form-control font-monospace" placeholder="0" min="0" step="1000" required>
+                                 </div>
                             </div>
 
                             <div class="col-md-6">
@@ -829,7 +920,7 @@
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Waktu Pekerjaan (Hari)</label>
                                 <div class="input-group input-group-sm">
                                     <input type="number" name="work_duration" class="form-control font-monospace" placeholder="90" min="1">
-                                    <span class="input-group-text bg-light">Hari</span>
+                                    <span class="input-group-text">Hari</span>
                                 </div>
                             </div>
 
@@ -849,7 +940,7 @@
                             </div>
                         </div>
 
-                        <div class="modal-footer bg-light border-top py-2 px-0 mt-4 d-flex justify-content-between align-items-center">
+                        <div class="modal-footer border-top py-2 px-0 mt-4 d-flex justify-content-between align-items-center">
                             <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
                             <button type="submit" class="btn btn-primary btn-sm d-flex align-items-center gap-1" id="addPlanSubmitBtn">
                                 <i class="fal fa-save me-1"></i> Simpan Paket RUP
@@ -908,10 +999,11 @@
                     try {
                         const p = JSON.parse(rawData);
                         document.getElementById('modalPlanCode').textContent = p.package_code || ('DRAFT-' + p.id);
-                        document.getElementById('modalPlanRupStatus').textContent = (parseInt(p.rup_status) >= 1) ? 'Terumumkan' : 'Draf';
-                        document.getElementById('modalPlanRupStatus').className = (parseInt(p.rup_status) >= 1) 
-                            ? 'badge bg-success-subtle text-success border border-success-subtle'
-                            : 'badge bg-warning-subtle text-warning border border-warning-subtle';
+                        const isEditable = parseInt(p.rup_status) === 1;
+                        document.getElementById('modalPlanRupStatus').textContent = isEditable ? 'Bisa Diedit' : 'Terkunci (Read-Only)';
+                        document.getElementById('modalPlanRupStatus').className = isEditable 
+                            ? 'badge bg-success-subtle text-success-emphasis border border-success-subtle'
+                            : 'badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle';
 
                         document.getElementById('modalPlanName').textContent = p.package_name || '-';
                         document.getElementById('modalPlanActivity').textContent = p.activity || '-';
@@ -933,7 +1025,6 @@
                         document.getElementById('modalPlanDate').textContent = p.submission_date || '-';
 
                         document.getElementById('modalPlanPackageStatus').textContent = p.status_label || 'Draft';
-                        document.getElementById('modalPlanSyncStatus').textContent = (parseInt(p.is_synced) === 1) ? 'Tersinkron SiRUP LKPP' : 'Belum Sinkron';
                         document.getElementById('modalPlanYear').textContent = p.fiscal_year || '2026';
 
                         document.getElementById('modalPlanDescription').textContent = p.description || 'Tidak ada keterangan uraian spesifik.';
@@ -975,7 +1066,7 @@
 
                     const matchesProcType = !procTypeVal || procType === procTypeVal;
                     const matchesMethod = !methodVal || method === methodVal;
-                    const matchesRupStatus = !rupStatusVal || (rupStatusVal === '1' ? (parseInt(rupStatus) >= 1) : (parseInt(rupStatus) === 0));
+                    const matchesRupStatus = !rupStatusVal || String(rupStatus) === String(rupStatusVal);
                     const matchesDak = !dakVal || dak === dakVal;
 
                     return matchesSearch && matchesProcType && matchesMethod && matchesRupStatus && matchesDak;

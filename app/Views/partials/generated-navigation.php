@@ -38,11 +38,20 @@
     <li class="nav-title"><span>Perencanaan Pengadaan</span></li>
 
     <li>
-        <a href="/rup" title="Daftar Paket RUP" data-filter-tags="perencanaan pengadaan rup paket daftar">
+        <a href="/rup" title="Daftar RUP" data-filter-tags="perencanaan pengadaan rup daftar">
             <svg class="sa-icon">
                 <use href="/icons/sprite.svg#file-text"></use>
             </svg>
-            <span class="nav-link-text" data-i18n>Daftar Paket RUP</span>
+            <span class="nav-link-text" data-i18n>Daftar RUP</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/paket" title="Daftar Paket" data-filter-tags="perencanaan pengadaan paket daftar">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#package"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Daftar Paket</span>
         </a>
     </li>
 

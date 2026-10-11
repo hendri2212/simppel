@@ -113,24 +113,26 @@ class RupController extends BaseController
         // Kalkulasi Statistik dari data database
         $totalPlans     = count($plans);
         $totalBudget    = array_sum(array_column($plans, 'budget_ceiling'));
-        $announcedCount = count(array_filter($plans, fn($p) => (int) ($p['rup_status'] ?? 0) >= 1));
+        $editableCount  = count(array_filter($plans, fn($p) => (int) ($p['rup_status'] ?? 1) === 1));
+        $lockedCount    = count(array_filter($plans, fn($p) => (int) ($p['rup_status'] ?? 1) === 2));
         $syncedCount    = count(array_filter($plans, fn($p) => (int) ($p['is_synced'] ?? 0) === 1));
         $dakCount       = count(array_filter($plans, fn($p) => (int) ($p['jenis_dak_id'] ?? 2) === 1));
 
         return view('rup', [
             'pageTitle'        => 'Daftar Paket RUP',
             'plans'            => $plans,
-            'skpd'         => $skpd,
+            'skpd'             => $skpd,
             'officers'         => $officers,
             'jenisBelanja'     => $jenisBelanja,
-            'jenisPengadaan' => $jenisPengadaan,
-            'sumberDana'   => $sumberDana,
-            'metodePemilihan' => $metodePemilihan,
-            'jenisDaks'  => $jenisDaks,
+            'jenisPengadaan'   => $jenisPengadaan,
+            'sumberDana'       => $sumberDana,
+            'metodePemilihan'  => $metodePemilihan,
+            'jenisDaks'        => $jenisDaks,
             'currentUser'      => $currentUser,
             'totalPlans'       => $totalPlans,
             'totalBudget'      => $totalBudget,
-            'announcedCount'   => $announcedCount,
+            'editableCount'    => $editableCount,
+            'lockedCount'      => $lockedCount,
             'syncedCount'      => $syncedCount,
             'dakCount'         => $dakCount,
         ]);
@@ -276,12 +278,12 @@ class RupController extends BaseController
     {
         $procType = $item['jenis_pengadaan_name'] ?? 'Barang';
         $item['proc_badge'] = match ($procType) {
-            'Barang'                => 'bg-info-subtle text-info border border-info-subtle',
-            'Pekerjaan Konstruksi'  => 'bg-primary-subtle text-primary border border-primary-subtle',
-            'Jasa Konsultansi'      => 'bg-purple-subtle text-purple border border-purple-subtle',
-            'Jasa Konsultasi'       => 'bg-purple-subtle text-purple border border-purple-subtle',
-            'Jasa Lainnya'          => 'bg-warning-subtle text-warning border border-warning-subtle',
-            default                 => 'bg-light text-dark border',
+            'Barang'                                => 'badge-proc-barang',
+            'Pekerjaan Konstruksi'                  => 'badge-proc-konstruksi',
+            'Jasa Konsultansi', 'Jasa Konsultasi'   => 'badge-proc-konsultasi',
+            'Jasa Lainnya'                          => 'badge-proc-lainnya',
+            'Pekerjaan Terintegrasi'                => 'badge-proc-terintegrasi',
+            default                                 => 'badge-proc-default',
         };
 
         $item['status_badge'] = match ((int) $item['package_status']) {
