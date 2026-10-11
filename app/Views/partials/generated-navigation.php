@@ -65,6 +65,7 @@
     </li>
 
 
+    <?php if ((int) session('role_id') === 1 || strtoupper((string) session('role_name')) === 'ADMINISTRATOR'): ?>
     <li class="nav-title"><span>User Management</span></li>
 
     <li>
@@ -75,6 +76,7 @@
             <span class="nav-link-text" data-i18n>Accounts</span>
         </a>
     </li>
+    <?php endif; ?>
 
     <li class="nav-title"><span>Layouts</span></li>
 

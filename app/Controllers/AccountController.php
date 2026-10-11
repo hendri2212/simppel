@@ -46,6 +46,10 @@ class AccountController extends BaseController
      */
     public function index()
     {
+        if ($deny = $this->ensureAdministrator()) {
+            return $deny;
+        }
+
         $usersList = $allSkpd = $allRoles = $ppkList = [];
 
         try {
@@ -122,6 +126,10 @@ class AccountController extends BaseController
      */
     public function getPpk($skpdId = null)
     {
+        if ($deny = $this->ensureAdministrator()) {
+            return $deny;
+        }
+
         $skpdId = (int) ($skpdId ?? $this->request->getGet('skpd_id'));
 
         if ($skpdId <= 0) {
@@ -149,6 +157,10 @@ class AccountController extends BaseController
      */
     public function store()
     {
+        if ($deny = $this->ensureAdministrator()) {
+            return $deny;
+        }
+
         $data  = $this->collectInput();
         $rules = $this->rules(null, true);
 
@@ -178,6 +190,10 @@ class AccountController extends BaseController
      */
     public function update($id = null)
     {
+        if ($deny = $this->ensureAdministrator()) {
+            return $deny;
+        }
+
         $id = $id ? (int) $id : (int) $this->request->getPost('id');
 
         if ($id <= 0) {
@@ -231,6 +247,10 @@ class AccountController extends BaseController
      */
     public function resetPassword($id = null)
     {
+        if ($deny = $this->ensureAdministrator()) {
+            return $deny;
+        }
+
         $id = (int) ($id ?? $this->request->getPost('id'));
 
         if ($id <= 0) {
@@ -345,6 +365,25 @@ class AccountController extends BaseController
         $errors = $this->validator->getErrors();
 
         return $this->fail(implode(' ', $errors), 422, ['errors' => $errors]);
+    }
+
+    /**
+     * Pertahanan ganda: pastikan hanya ADMINISTRATOR yang dapat mengakses fitur manajemen akun.
+     */
+    private function ensureAdministrator()
+    {
+        $roleId   = (int) session()->get('role_id');
+        $roleName = strtoupper((string) session()->get('role_name'));
+
+        if ($roleId !== 1 && $roleName !== 'ADMINISTRATOR') {
+            if ($this->request->isAJAX()) {
+                return $this->fail('Anda tidak memiliki hak akses ke fitur ini.', 403);
+            }
+
+            return redirect()->to('/')->with('error', 'Hanya Administrator yang memiliki akses ke halaman Manajemen Akun.');
+        }
+
+        return null;
     }
 
     private function done(string $message, array $extra = [])
