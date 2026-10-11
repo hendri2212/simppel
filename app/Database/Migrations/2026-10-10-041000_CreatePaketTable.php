@@ -60,7 +60,7 @@ class CreatePaketTable extends Migration
                 'type'       => 'INT',
                 'constraint' => 2,
                 'default'    => 1,
-                'comment'    => 'Status Tahapan Alur Paket (cth: 1: Pengajuan, 7: Distribusi, 9: Tayang, 12: Penetapan, 14: Selesai)',
+                'comment'    => 'Status Tahapan Paket (0: Batal, 1: Draft, 2: Diajukan, 3: Verifikasi, 4: Diterima, 5: Saran-Distribusi, 6: Distribusi, 7: Saran-Kaji, 8: Kaji, 9: Proses-Lelang, 10: Saran-Add, 11: Addendum, 12: Hasil, 13: Ulang, 14: Selesai, 15: Gagal)',
             ],
             'admin_ukpbj_id' => [
                 'type'       => 'INT',

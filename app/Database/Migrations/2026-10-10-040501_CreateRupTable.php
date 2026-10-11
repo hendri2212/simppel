@@ -128,12 +128,6 @@ class CreateRupTable extends Migration
                 'default'    => 2,
                 'comment'    => 'ID Status DAK / Non DAK (id_dak)',
             ],
-            'package_status' => [
-                'type'       => 'TINYINT',
-                'constraint' => 1,
-                'default'    => 0,
-                'comment'    => 'Status Paket (status_paket2)',
-            ],
             'is_synced' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,

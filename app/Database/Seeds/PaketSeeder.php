@@ -70,7 +70,7 @@ class PaketSeeder extends Seeder
             ],
             [
                 'id'                  => 3,
-                'rup_id'              => 4,
+                'rup_id'              => 3,
                 'no_paket'            => '0003',
                 'no_rpp'              => '000.3.1/007/BID.BM/DPUPR',
                 'nilai_hps'           => 299999000.00,

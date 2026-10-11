@@ -44,6 +44,104 @@ class PaketModel extends Model
     protected $updatedField  = 'updated_at';
 
     /**
+     * Definisi resmi 16 Tahapan Status Paket Pengadaan (0 - 15)
+     */
+    public const STATUS_PAKET = [
+        0  => [
+            'name'  => 'Batal',
+            'desc'  => 'Paket pengadaan dibatalkan',
+            'badge' => 'bg-danger text-white',
+        ],
+        1  => [
+            'name'  => 'Draft',
+            'desc'  => 'Draf paket dibuat oleh PPK (belum diajukan ke ULP)',
+            'badge' => 'bg-secondary text-white',
+        ],
+        2  => [
+            'name'  => 'Diajukan',
+            'desc'  => 'PPK telah mengajukan paket ke Admin ULP (menunggu verifikasi berkas)',
+            'badge' => 'bg-warning text-dark',
+        ],
+        3  => [
+            'name'  => 'Verifikasi',
+            'desc'  => 'Berkas dikembalikan oleh Admin ULP ke PPK untuk dilengkapi/diperbaiki',
+            'badge' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+        ],
+        4  => [
+            'name'  => 'Diterima',
+            'desc'  => 'Berkas lolos verifikasi dan diterima oleh Admin ULP',
+            'badge' => 'bg-info text-white',
+        ],
+        5  => [
+            'name'  => 'Saran-Distribusi',
+            'desc'  => 'Kepala ULP memproses telaah/saran pembentukan Pokja Pemilihan',
+            'badge' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
+        ],
+        6  => [
+            'name'  => 'Distribusi',
+            'desc'  => 'Admin Distribusi menetapkan dan mendistribusikan paket ke personil Pokja',
+            'badge' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+        ],
+        7  => [
+            'name'  => 'Saran-Kaji',
+            'desc'  => 'Pokja mengembalikan dokumen kaji ulang ke PPK dengan catatan saran',
+            'badge' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+        ],
+        8  => [
+            'name'  => 'Kaji',
+            'desc'  => 'Pokja dan PPK memproses kaji ulang dokumen persiapan pengadaan',
+            'badge' => 'bg-info text-white',
+        ],
+        9  => [
+            'name'  => 'Proses-Lelang',
+            'desc'  => 'Paket sedang ditayangkan/ditenderkan di portal LPSE',
+            'badge' => 'bg-primary text-white',
+        ],
+        10 => [
+            'name'  => 'Saran-Add',
+            'desc'  => 'Ada telaah/saran adendum',
+            'badge' => 'bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+        ],
+        11 => [
+            'name'  => 'Addendum',
+            'desc'  => 'Proses adendum berjalan',
+            'badge' => 'bg-warning text-dark',
+        ],
+        12 => [
+            'name'  => 'Hasil',
+            'desc'  => 'Proses lelang selesai, penetapan pemenang diinput ke sistem',
+            'badge' => 'bg-success-subtle text-success-emphasis border border-success-subtle',
+        ],
+        13 => [
+            'name'  => 'Ulang',
+            'desc'  => 'Tender dinyatakan gagal dan dilakukan lelang ulang',
+            'badge' => 'bg-danger-subtle text-danger border border-danger-subtle',
+        ],
+        14 => [
+            'name'  => 'Selesai',
+            'desc'  => 'Proses pengadaan selesai (kontrak/SPK dan penanggung jawab telah diinput)',
+            'badge' => 'bg-success text-white',
+        ],
+        15 => [
+            'name'  => 'Gagal',
+            'desc'  => 'Pengadaan dinyatakan gagal',
+            'badge' => 'bg-danger text-white',
+        ],
+    ];
+
+    /**
+     * Dapatkan detail info status paket berdasarkan kode integer
+     */
+    public static function getStatusInfo(int $status): array
+    {
+        return self::STATUS_PAKET[$status] ?? [
+            'name'  => 'Tahap ' . $status,
+            'desc'  => 'Tahapan proses paket status ' . $status,
+            'badge' => 'bg-secondary text-white',
+        ];
+    }
+
+    /**
      * Get paket with relation to rup, skpd, ppk, users, and masters
      */
     public function getWithRelations(?int $id = null)

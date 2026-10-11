@@ -69,13 +69,24 @@ class PaketController extends BaseController
                     ->first();
             }
 
-            // Ambil RUP dengan package_status = 0 milik user yang login untuk dropdown Tambah Paket
+            // Ambil RUP yang siap dibuatkan paket:
+            // 1. RUP berstatus aktif (rup_status = 1)
+            // 2. Belum pernah terikat dengan paket aktif (status_paket != 0)
+            $usedRupIds = $this->paketModel
+                ->where('status_paket !=', 0)
+                ->findColumn('rup_id') ?? [];
+
             $availableRupQuery = $this->rupModel
                 ->select('rup.*, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name, jenis_pengadaan.name as jenis_pengadaan_name')
                 ->join('skpd', 'skpd.id = rup.skpd_id', 'left')
                 ->join('ppk', 'ppk.id = rup.ppk_id', 'left')
                 ->join('jenis_pengadaan', 'jenis_pengadaan.id = rup.jenis_pengadaan_id', 'left')
-                ->where('rup.package_status', 0);
+                ->where('rup.rup_status', 1);
+
+            // Kecualikan RUP yang sudah digunakan di paket aktif
+            if (!empty($usedRupIds)) {
+                $availableRupQuery->whereNotIn('rup.id', $usedRupIds);
+            }
 
             // Filter milik user yang sedang login (kecuali administrator pusat)
             if ($currentUser && ($currentUser['role_id'] ?? 0) != 1) {
@@ -84,12 +95,6 @@ class PaketController extends BaseController
                 } elseif (!empty($currentUser['skpd_id'])) {
                     $availableRupQuery->where('rup.skpd_id', $currentUser['skpd_id']);
                 }
-            }
-
-            // Pastikan RUP yang sudah pernah terbuat paket tidak muncul lagi
-            $existingRupIds = $this->paketModel->findColumn('rup_id') ?? [];
-            if (!empty($existingRupIds)) {
-                $availableRupQuery->whereNotIn('rup.id', $existingRupIds);
             }
 
             $availableRups = $availableRupQuery->orderBy('rup.id', 'DESC')->findAll();
@@ -107,23 +112,24 @@ class PaketController extends BaseController
         $totalHps     = array_sum(array_column($pakets, 'nilai_hps'));
         $totalKontrak = array_sum(array_column($pakets, 'nilai_kontrak'));
         $draftCount   = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 1));
-        $prosesCount  = count(array_filter($pakets, fn($p) => in_array((int)($p['status_paket'] ?? 0), [2, 7, 9, 10, 12])));
+        $prosesCount  = count(array_filter($pakets, fn($p) => in_array((int)($p['status_paket'] ?? 0), range(2, 12))));
         $selesaiCount = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 14));
         $tayangCount  = count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 9));
 
         return view('paket', [
-            'pageTitle'     => 'Daftar Paket Pengadaan',
-            'pakets'        => $pakets,
-            'skpdList'      => $skpdList,
-            'availableRups' => $availableRups,
-            'currentUser'   => $currentUser,
-            'totalPaket'    => $totalPaket,
-            'totalHps'      => $totalHps,
-            'totalKontrak'  => $totalKontrak,
-            'draftCount'    => $draftCount,
-            'selesaiCount'  => $selesaiCount,
-            'prosesCount'   => $prosesCount,
-            'tayangCount'   => $tayangCount,
+            'pageTitle'       => 'Daftar Paket Pengadaan',
+            'pakets'          => $pakets,
+            'skpdList'        => $skpdList,
+            'availableRups'   => $availableRups,
+            'statusPaketList' => PaketModel::STATUS_PAKET,
+            'currentUser'     => $currentUser,
+            'totalPaket'      => $totalPaket,
+            'totalHps'        => $totalHps,
+            'totalKontrak'    => $totalKontrak,
+            'draftCount'      => $draftCount,
+            'selesaiCount'    => $selesaiCount,
+            'prosesCount'     => $prosesCount,
+            'tayangCount'     => $tayangCount,
         ]);
     }
 
@@ -307,11 +313,10 @@ class PaketController extends BaseController
                 'tgl_pengajuan' => date('Y-m-d'),
             ]);
 
-            // Update di tabel rup: rup_status berubah menjadi 2 (Terkunci) dan package_status = 1 (Pengajuan)
+            // Update di tabel rup: rup_status berubah menjadi 2 (Terkunci)
             if (!empty($paket['rup_id'])) {
                 $this->rupModel->update($paket['rup_id'], [
-                    'rup_status'     => 2,
-                    'package_status' => 1,
+                    'rup_status' => 2,
                 ]);
             }
 
@@ -566,31 +571,12 @@ class PaketController extends BaseController
      */
     protected function formatPaketRow(array $item): array
     {
-        // Status Tahapan Paket
+        // Status Tahapan Paket (16 Status Resmi: 0 - 15)
         $statusInt = (int) ($item['status_paket'] ?? 1);
-        $item['status_label'] = match ($statusInt) {
-            14      => 'Selesai Kontrak',
-            12      => 'Penetapan Pemenang',
-            10      => 'Evaluasi / Sanggah',
-            9       => 'Tayang Tender',
-            7       => 'Distribusi Pokja',
-            2       => 'Pengajuan',
-            1       => 'Draft',
-            0       => 'Draft',
-            default => 'Tahap ' . $statusInt,
-        };
-
-        $item['status_badge'] = match ($statusInt) {
-            14      => 'bg-success text-white',
-            12      => 'bg-primary text-white',
-            10      => 'bg-warning text-dark',
-            9       => 'bg-info text-white',
-            7       => 'bg-secondary text-white',
-            2       => 'bg-warning text-dark',
-            1       => 'bg-secondary text-white',
-            0       => 'bg-secondary text-white',
-            default => 'bg-secondary text-white',
-        };
+        $statusInfo = PaketModel::getStatusInfo($statusInt);
+        $item['status_label'] = $statusInfo['name'];
+        $item['status_badge'] = $statusInfo['badge'];
+        $item['status_desc']  = $statusInfo['desc'];
 
         // Status Verifikasi Berkas UKPBJ
         $verifInt = (int) ($item['status_verifikasi'] ?? 0);

@@ -131,7 +131,7 @@
                     $totalHps      = $totalHps ?? array_sum(array_column($pakets, 'nilai_hps'));
                     $totalKontrak  = $totalKontrak ?? array_sum(array_column($pakets, 'nilai_kontrak'));
                     $draftCount    = $draftCount ?? count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 1));
-                    $prosesCount   = $prosesCount ?? count(array_filter($pakets, fn($p) => in_array((int)($p['status_paket'] ?? 0), [2, 7, 9, 10, 12])));
+                    $prosesCount   = $prosesCount ?? count(array_filter($pakets, fn($p) => in_array((int)($p['status_paket'] ?? 0), range(2, 12))));
                     $selesaiCount  = $selesaiCount ?? count(array_filter($pakets, fn($p) => (int)($p['status_paket'] ?? 0) === 14));
 
                     $formatShortRupiah = function($amount) {
@@ -282,17 +282,18 @@
                                             </div>
                                         </div>
 
-                                        <!-- Filter Status Tahapan Paket -->
-                                        <div class="col-6 col-md-2 col-lg-2">
+                                        <!-- Filter Status Tahapan Paket (0 - 15) -->
+                                        <div class="col-6 col-md-3 col-lg-2">
                                             <select id="statusPaketFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Tahapan Paket</option>
-                                                <option value="1">Draf (Belum Diajukan)</option>
-                                                <option value="2">Pengajuan Berkas</option>
-                                                <option value="7">Distribusi Pokja</option>
-                                                <option value="9">Tayang Tender</option>
-                                                <option value="10">Evaluasi / Sanggah</option>
-                                                <option value="12">Penetapan Pemenang</option>
-                                                <option value="14">Selesai Kontrak</option>
+                                                <?php 
+                                                $stMap = $statusPaketList ?? \App\Models\PaketModel::STATUS_PAKET;
+                                                foreach ($stMap as $code => $st): 
+                                                ?>
+                                                    <option value="<?= $code ?>">
+                                                        <?= $code ?> - <?= esc($st['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
                                             </select>
                                         </div>
 
@@ -436,7 +437,7 @@
 
                                                         <!-- Status Tahapan Paket -->
                                                         <td class="text-center">
-                                                            <span class="badge <?= $p['status_badge'] ?? 'bg-secondary' ?>" style="font-size: 0.72rem;">
+                                                            <span class="badge <?= $p['status_badge'] ?? 'bg-secondary' ?>" style="font-size: 0.72rem;" title="<?= esc($p['status_desc'] ?? '') ?>">
                                                                 <?= esc($p['status_label'] ?? 'Draft') ?>
                                                             </span>
                                                             <?php if (!empty($p['is_lpse'])): ?>
@@ -474,33 +475,13 @@
                                                             <?php endif; ?>
                                                         </td>
 
-                                                        <!-- Aksi Dropdown -->
+                                                        <!-- Aksi -->
                                                         <td class="text-end">
-                                                            <div class="dropdown">
-                                                                <button class="btn btn-sm btn-icon btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                    <svg class="sa-icon" style="width: 14px; height: 14px;">
-                                                                        <use href="/icons/sprite.svg#more-vertical"></use>
-                                                                    </svg>
-                                                                </button>
-                                                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                                    <li>
-                                                                        <a class="dropdown-item btn-view-paket" href="javascript:void(0);" data-paket='<?= $paketJson ?>'>
-                                                                            <svg class="sa-icon me-2 text-primary" style="width: 13px; height: 13px;">
-                                                                                <use href="/icons/sprite.svg#eye"></use>
-                                                                            </svg>
-                                                                            Lihat Detail Paket
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a class="dropdown-item" href="javascript:void(0);" onclick="alert('Cetak ringkasan paket: <?= esc(addslashes($p['no_paket'] ?? 'Paket #' . $p['id'])) ?>');">
-                                                                            <svg class="sa-icon me-2 text-info" style="width: 13px; height: 13px;">
-                                                                                <use href="/icons/sprite.svg#printer"></use>
-                                                                            </svg>
-                                                                            Cetak Lembar Paket
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
-                                                            </div>
+                                                            <button type="button" class="btn btn-sm btn-icon btn-light btn-view-paket" data-paket='<?= $paketJson ?>' title="Lihat Detail Paket">
+                                                                <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
+                                                                    <use href="/icons/sprite.svg#eye"></use>
+                                                                </svg>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -828,14 +809,14 @@
                         <!-- Alert Error Form -->
                         <div class="alert alert-danger d-none" id="addPaketAlert" role="alert"></div>
 
-                        <!-- 1. Dropdown Paket RUP (package_status = 0 milik user) -->
+                        <!-- 1. Dropdown Paket RUP yang Tersedia -->
                         <div class="mb-3">
                             <label for="selectRupId" class="form-label fw-semibold">
                                 Paket Rencana Umum Pengadaan (RUP) <span class="text-danger">*</span>
                             </label>
                             <select class="form-select" id="selectRupId" name="rup_id" required>
                                 <?php if (empty($availableRups)): ?>
-                                    <option value="" disabled selected>-- Tidak ada paket RUP (package_status = 0) yang tersedia --</option>
+                                    <option value="" disabled selected>-- Tidak ada paket RUP yang tersedia untuk dibuatkan paket --</option>
                                 <?php else: ?>
                                     <option value="" disabled selected>-- Pilih Paket RUP --</option>
                                     <?php foreach ($availableRups as $rup): ?>
@@ -853,7 +834,7 @@
                                 <?php endif; ?>
                             </select>
                             <div class="form-text fs-xs text-muted">
-                                Menampilkan paket RUP berstatus draf (<code>package_status = 0</code>) milik instansi / PPK Anda yang belum dibuatkan paket.
+                                Menampilkan paket RUP aktif milik instansi / PPK Anda yang belum pernah dibuatkan paket pengadaan.
                             </div>
                         </div>
 
@@ -995,6 +976,7 @@
                             document.getElementById('modalPaketNo').className = 'badge bg-secondary me-2 font-monospace';
                         }
                         document.getElementById('modalPaketStatus').textContent = p.status_label || 'Draft';
+                        document.getElementById('modalPaketStatus').title = p.status_desc || '';
                         document.getElementById('modalPaketStatus').className = 'badge me-2 ' + (p.status_badge || 'bg-secondary text-white');
                         document.getElementById('modalPaketVerif').textContent = p.verifikasi_label || 'Menunggu';
                         document.getElementById('modalPaketVerif').className = 'badge ' + (p.verifikasi_badge || 'bg-warning-subtle text-warning');
@@ -1702,7 +1684,7 @@
                     return;
                 }
 
-                const confirmText = `Seluruh dokumen persyaratan wajib telah lengkap diunggah.\n\nApakah Anda yakin ingin mengajukan paket pengadaan ini ke UKPBJ?\n\n"${paketName || 'Paket Pengadaan'}"\n\nSetelah diajukan:\n1. Nomor paket baru akan digenerate otomatis (+1).\n2. Status paket berubah menjadi Pengajuan Berkas (2).\n3. Data RUP terkait akan dikunci (rup_status = 2).`;
+                const confirmText = `Seluruh dokumen persyaratan wajib telah lengkap diunggah.\n\nApakah Anda yakin ingin mengajukan paket pengadaan ini ke UKPBJ?\n\n"${paketName || 'Paket Pengadaan'}"\n\nSetelah diajukan:\n1. Nomor paket baru akan digenerate otomatis (+1).\n2. Status paket berubah menjadi Diajukan (2).\n3. Data RUP terkait akan dikunci (rup_status = 2).`;
 
                 if (!confirm(confirmText)) {
                     return;

@@ -88,6 +88,19 @@
         }
 
         /* ========================================================
+           Baris RUP yang Dapat Diedit (Soft Emerald/Mint Tint)
+           ======================================================== */
+        .table-rup tbody tr.rup-row-editable > td {
+            background-color: rgba(16, 185, 129, 0.055) !important;
+        }
+        .table-rup tbody tr.rup-row-editable:hover > td {
+            background-color: rgba(16, 185, 129, 0.11) !important;
+        }
+        .table-rup tbody tr.rup-row-editable > td:first-child {
+            border-left: 3px solid #10b981;
+        }
+
+        /* ========================================================
            DARK MODE ADAPTATIONS ([data-bs-theme="dark"])
            ======================================================== */
         [data-bs-theme="dark"] .badge-proc-barang {
@@ -140,6 +153,15 @@
             --bs-table-color: var(--bs-body-color);
             --bs-table-bg: var(--bs-tertiary-bg);
             --bs-table-border-color: var(--bs-border-color);
+        }
+        [data-bs-theme="dark"] .table-rup tbody tr.rup-row-editable > td {
+            background-color: rgba(16, 185, 129, 0.09) !important;
+        }
+        [data-bs-theme="dark"] .table-rup tbody tr.rup-row-editable:hover > td {
+            background-color: rgba(16, 185, 129, 0.16) !important;
+        }
+        [data-bs-theme="dark"] .table-rup tbody tr.rup-row-editable > td:first-child {
+            border-left: 3px solid #059669;
         }
     </style>
 </head>
@@ -398,7 +420,6 @@
                                                     <th style="min-width: 150px;">Jenis & Metode</th>
                                                     <th class="text-end" style="min-width: 160px;">Pagu Anggaran</th>
                                                     <th class="text-center" style="min-width: 90px;">Waktu</th>
-                                                    <th class="text-center" style="min-width: 110px;">Status</th>
                                                     <th class="text-end" style="width: 75px;">Aksi</th>
                                                 </tr>
                                             </thead>
@@ -410,7 +431,8 @@
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
                                                     $isDak = ($p['jenis_dak_name'] ?? '') === 'DAK';
                                                     ?>
-                                                    <tr class="plan-row"
+                                                    <tr class="plan-row <?= $canEdit ? 'rup-row-editable' : '' ?>"
+                                                        title="<?= $canEdit ? 'Paket RUP dapat diubah/diedit' : 'Paket RUP terkunci' ?>"
                                                         data-id="<?= $p['id'] ?>"
                                                         data-code="<?= esc(strtolower($p['package_code'] ?? '')) ?>"
                                                         data-name="<?= esc(strtolower($p['package_name'] ?? '')) ?>"
@@ -503,32 +525,6 @@
                                                             <?php endif; ?>
                                                         </td>
 
-                                                        <!-- Status Paket & Akses Edit -->
-                                                        <td class="text-center">
-                                                            <div class="mb-1">
-                                                                <span class="badge <?= $p['status_badge'] ?? 'bg-secondary' ?>" style="font-size: 0.72rem;">
-                                                                    <?= esc($p['status_label'] ?? 'Draft') ?>
-                                                                </span>
-                                                            </div>
-                                                            <div>
-                                                                <?php if ($canEdit): ?>
-                                                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;" title="Paket dapat diubah dan dihapus">
-                                                                        <svg class="sa-icon me-1" style="width: 9px; height: 9px;">
-                                                                            <use href="/icons/sprite.svg#edit"></use>
-                                                                        </svg>
-                                                                        Bisa Diedit
-                                                                    </span>
-                                                                <?php else: ?>
-                                                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.65rem;" title="Paket terkunci: Tidak dapat diubah">
-                                                                        <svg class="sa-icon me-1" style="width: 9px; height: 9px;">
-                                                                            <use href="/icons/sprite.svg#lock"></use>
-                                                                        </svg>
-                                                                        Terkunci
-                                                                    </span>
-                                                                <?php endif; ?>
-                                                            </div>
-                                                        </td>
-
                                                         <!-- Aksi Dropdown -->
                                                         <td class="text-end">
                                                             <div class="dropdown">
@@ -598,7 +594,7 @@
                                                 <?php endforeach; ?>
 
                                                 <tr id="noResultsRow" style="display: none;">
-                                                    <td colspan="8" class="text-center py-5 text-muted">
+                                                    <td colspan="7" class="text-center py-5 text-muted">
                                                         <div class="mb-2">
                                                             <svg class="sa-icon text-muted" style="width: 32px; height: 32px;">
                                                                 <use href="/icons/sprite.svg#search"></use>
@@ -744,10 +740,10 @@
 
                         <div class="col-md-6">
                             <div class="p-3 bg-body-tertiary rounded-2 h-100">
-                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Status & Tahun Anggaran</h6>
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Akses Edit & Tahun Anggaran</h6>
                                 <div class="mb-2">
-                                    <div class="detail-label">Status Paket</div>
-                                    <div class="detail-value" id="modalPlanPackageStatus">-</div>
+                                    <div class="detail-label">Status Akses Edit</div>
+                                    <div class="detail-value" id="modalPlanAksesStatus">-</div>
                                 </div>
                                 <div>
                                     <div class="detail-label">Tahun Anggaran</div>
@@ -1024,7 +1020,10 @@
                         document.getElementById('modalPlanDuration').textContent = (p.work_duration || 0) + ' Hari Kalender';
                         document.getElementById('modalPlanDate').textContent = p.submission_date || '-';
 
-                        document.getElementById('modalPlanPackageStatus').textContent = p.status_label || 'Draft';
+                        const isEditable = parseInt(p.rup_status) === 1;
+                        document.getElementById('modalPlanAksesStatus').innerHTML = isEditable
+                            ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Bisa Diedit</span>'
+                            : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Terkunci</span>';
                         document.getElementById('modalPlanYear').textContent = p.fiscal_year || '2026';
 
                         document.getElementById('modalPlanDescription').textContent = p.description || 'Tidak ada keterangan uraian spesifik.';

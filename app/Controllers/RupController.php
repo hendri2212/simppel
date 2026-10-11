@@ -240,9 +240,7 @@ class RupController extends BaseController
             'work_duration'              => $this->request->getPost('work_duration') ? (int) $this->request->getPost('work_duration') : null,
             'location'                   => trim((string) $this->request->getPost('location')) ?: null,
             'description'                => trim((string) $this->request->getPost('description')) ?: null,
-            'volume'                     => trim((string) $this->request->getPost('volume')) ?: '1 Paket',
-            'rup_status'                 => 1, // Terumumkan / Aktif
-            'package_status'             => 0, // Draft
+            'rup_status'                 => 1, // Bisa Diedit / Aktif
             'is_synced'                  => 0,
             'submission_date'            => date('Y-m-d H:i:s'),
         ];
@@ -286,19 +284,12 @@ class RupController extends BaseController
             default                                 => 'badge-proc-default',
         };
 
-        $item['status_badge'] = match ((int) $item['package_status']) {
-            3       => 'bg-success text-white',
-            2       => 'bg-info text-white',
-            1       => 'bg-warning text-dark',
-            default => 'bg-secondary text-white',
-        };
-
-        $item['status_label'] = match ((int) $item['package_status']) {
-            3       => 'Disetujui',
-            2       => 'Review',
-            1       => 'Pengajuan',
-            default => 'Draft',
-        };
+        // Status Akses Edit RUP (1 = Bisa Diedit, 2 = Terkunci)
+        $isEditable = ((int) ($item['rup_status'] ?? 1)) === 1;
+        $item['rup_status_label'] = $isEditable ? 'Bisa Diedit' : 'Terkunci';
+        $item['rup_status_badge'] = $isEditable
+            ? 'bg-success-subtle text-success border border-success-subtle'
+            : 'bg-secondary-subtle text-secondary border border-secondary-subtle';
 
         return $item;
     }

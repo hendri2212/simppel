@@ -33,7 +33,6 @@ class RupModel extends Model
         'budget_ceiling',
         'account_code',
         'jenis_dak_id',
-        'package_status',
         'is_synced',
     ];
 
