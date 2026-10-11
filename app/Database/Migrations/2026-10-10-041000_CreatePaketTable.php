@@ -24,7 +24,9 @@ class CreatePaketTable extends Migration
             'no_paket' => [
                 'type'       => 'VARCHAR',
                 'constraint' => 20,
-                'comment'    => 'Nomor Urut Paket Pengadaan (cth: 0001)',
+                'null'       => true,
+                'default'    => null,
+                'comment'    => 'Nomor Urut Paket Pengadaan (cth: 0001, kosong saat draft)',
             ],
             'no_rpp' => [
                 'type'    => 'TEXT',

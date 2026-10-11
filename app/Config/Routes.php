@@ -69,6 +69,18 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/accounts/ppk/(:num)', 'AccountController::getPpk/$1');
     $routes->get('/rup', 'RupController::index');
     $routes->post('/rup/store', 'RupController::store');
+    $routes->get('/paket', 'PaketController::index');
+    $routes->post('/paket/store', 'PaketController::store');
+    $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1');
+
+    // Manajemen Dokumen Persyaratan Paket
+    $routes->get('/paket/syarat/(:num)', 'PaketController::getSyarat/$1');
+    $routes->post('/paket/syarat/upload', 'PaketController::uploadSyarat');
+    $routes->post('/paket/syarat/upload2', 'PaketController::uploadSyaratBaru');
+    $routes->post('/syarat/upload2', 'PaketController::uploadSyaratBaru');
+    $routes->post('/paket/syarat/delete/(:num)', 'PaketController::deleteSyarat/$1');
+    $routes->get('/paket/syarat/download/(:num)', 'PaketController::downloadSyarat/$1');
+
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

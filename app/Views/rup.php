@@ -308,7 +308,7 @@
                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
                                             <use href="/icons/sprite.svg#plus"></use>
                                         </svg>
-                                        <span>Tambah Paket RUP</span>
+                                        <span>Tambah RUP</span>
                                     </button>
                                 </div>
                             </div>
