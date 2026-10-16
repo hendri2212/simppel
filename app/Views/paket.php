@@ -100,6 +100,39 @@
         [data-bs-theme="dark"] .detail-label {
             color: var(--bs-secondary-color, #a7acb1);
         }
+
+        /* Modal Peringatan Dokumen Persyaratan Belum Lengkap */
+        #modalSyaratBelumLengkap {
+            z-index: 1065;
+        }
+        .modal-syarat-icon-wrap {
+            width: 74px;
+            height: 74px;
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc3545;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.06);
+            animation: pulse-syarat-alert 2s ease-in-out infinite;
+        }
+        @keyframes pulse-syarat-alert {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .syarat-missing-item {
+            transition: background-color 0.15s ease-in-out;
+        }
+        .syarat-missing-item:hover {
+            background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.03));
+        }
+        [data-bs-theme="dark"] .modal-syarat-icon-wrap {
+            background: rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.1);
+        }
     </style>
 </head>
 
@@ -783,6 +816,72 @@
                             <use href="/icons/sprite.svg#printer"></use>
                         </svg>
                         <span>Cetak Lembar Paket</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Notifikasi Dokumen Persyaratan Belum Lengkap (Pengajuan Gagal) -->
+    <div class="modal fade" id="modalSyaratBelumLengkap" tabindex="-1" aria-labelledby="modalSyaratBelumLengkapLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <!-- Strip Aksen Warna Merah/Oranye Gradien -->
+                <div style="height: 5px; background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);"></div>
+
+                <div class="modal-body p-4 text-center">
+                    <!-- Icon Menarik dengan Efek Lembut -->
+                    <div class="modal-syarat-icon-wrap mb-3">
+                        <svg class="sa-icon text-danger" style="width: 36px; height: 36px;">
+                            <use href="/icons/sprite.svg#alert-triangle"></use>
+                        </svg>
+                    </div>
+
+                    <h5 class="modal-title fw-bold text-body-emphasis mb-1" id="modalSyaratBelumLengkapLabel">
+                        Pengajuan Paket Belum Lengkap!
+                    </h5>
+                    <p class="text-secondary fs-sm mb-3 px-1">
+                        Paket <strong class="text-body-emphasis font-monospace" id="modalSyaratPaketName">Paket Pengadaan</strong> belum dapat diajukan ke UKPBJ karena masih ada dokumen persyaratan wajib yang belum diunggah.
+                    </p>
+
+                    <!-- Summary Card Dokumen Belum Diunggah -->
+                    <div class="card border border-danger-subtle bg-danger-subtle bg-opacity-10 rounded-3 mb-3 text-start overflow-hidden">
+                        <div class="card-header bg-danger-subtle bg-opacity-25 border-danger-subtle py-2 px-3 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <svg class="sa-icon text-danger" style="width: 14px; height: 14px;">
+                                    <use href="/icons/sprite.svg#file-text"></use>
+                                </svg>
+                                <span class="fs-xs fw-bold text-danger text-uppercase">Dokumen Wajib yang Belum Diunggah</span>
+                            </div>
+                            <span class="badge bg-danger rounded-pill font-monospace fs-nano" id="modalSyaratCountBadge">0 Belum Diunggah</span>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 220px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="modalSyaratMissingList">
+                                <!-- Rendered dynamically via JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Petunjuk / Action Notice -->
+                    <div class="alert alert-info border-info-subtle bg-info-subtle bg-opacity-25 d-flex align-items-start gap-2 fs-xs text-start mb-0 rounded-2 py-2 px-3">
+                        <svg class="sa-icon text-info flex-shrink-0 mt-1" style="width: 16px; height: 16px;">
+                            <use href="/icons/sprite.svg#info"></use>
+                        </svg>
+                        <div>
+                            <strong>Langkah Selanjutnya:</strong> Silakan unggah dokumen bertanda <em>Wajib</em> pada tab <strong>"Dokumen Persyaratan"</strong>. Tombol <em>Ajukan Paket</em> akan aktif setelah seluruh berkas lengkap.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-body-tertiary border-top py-2 px-4 d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">
+                        Tutup
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-2 shadow-xs" id="btnGoToUploadSyarat">
+                        <svg class="sa-icon" style="width: 14px; height: 14px;">
+                            <use href="/icons/sprite.svg#upload"></use>
+                        </svg>
+                        <span>Lengkapi Dokumen Sekarang</span>
                     </button>
                 </div>
             </div>
@@ -1663,6 +1762,119 @@
                 });
             }
 
+            // Modal Warning Persyaratan Belum Lengkap
+            const modalSyaratEl = document.getElementById('modalSyaratBelumLengkap');
+            let bsModalSyaratIncomplete = null;
+
+            if (modalSyaratEl) {
+                // Konfigurasi z-index agar tampil mulus di atas detailPaketModal
+                modalSyaratEl.addEventListener('show.bs.modal', function () {
+                    modalSyaratEl.style.zIndex = '1065';
+                    setTimeout(() => {
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        if (backdrops.length > 1) {
+                            backdrops[backdrops.length - 1].style.zIndex = '1060';
+                        }
+                    }, 10);
+                });
+
+                modalSyaratEl.addEventListener('hidden.bs.modal', function () {
+                    // Pastikan detailPaketModal tetap interaktif dan body tetap modal-open
+                    const detailModal = document.getElementById('detailPaketModal');
+                    if (detailModal && detailModal.classList.contains('show')) {
+                        document.body.classList.add('modal-open');
+                    }
+                });
+
+                // Tombol "Lengkapi Dokumen Sekarang" di modal peringatan
+                const btnGoToUpload = document.getElementById('btnGoToUploadSyarat');
+                if (btnGoToUpload) {
+                    btnGoToUpload.addEventListener('click', function () {
+                        // Tutup modal peringatan
+                        const modalInstance = bootstrap.Modal.getInstance(modalSyaratEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+
+                        // Pindah ke Tab Dokumen Persyaratan pada detailPaketModal
+                        const tabSyaratLink = document.getElementById('tab-syarat-link');
+                        if (tabSyaratLink) {
+                            const bsTab = bootstrap.Tab.getOrCreateInstance(tabSyaratLink);
+                            bsTab.show();
+                        }
+
+                        // Berikan efek highlight visual pada dokumen yang belum diunggah
+                        highlightMissingSyaratRows();
+                    });
+                }
+            }
+
+            function openModalSyaratBelumLengkap(missingList, paketTitle) {
+                if (!modalSyaratEl) return;
+
+                const nameEl = document.getElementById('modalSyaratPaketName');
+                if (nameEl) {
+                    nameEl.textContent = paketTitle || 'Paket Pengadaan';
+                }
+
+                const countBadge = document.getElementById('modalSyaratCountBadge');
+                const listEl = document.getElementById('modalSyaratMissingList');
+
+                const totalMissing = missingList ? missingList.length : 0;
+                if (countBadge) {
+                    countBadge.textContent = `${totalMissing} Belum Diunggah`;
+                }
+
+                if (listEl) {
+                    listEl.innerHTML = '';
+                    if (totalMissing === 0) {
+                        listEl.innerHTML = `
+                            <div class="p-3 text-center text-muted fs-sm">
+                                Tidak ada dokumen wajib yang terdeteksi belum diunggah.
+                            </div>`;
+                    } else {
+                        missingList.forEach((item) => {
+                            const itemName = typeof item === 'string' ? item : (item.nama_persyaratan || 'Dokumen Persyaratan');
+                            const div = document.createElement('div');
+                            div.className = 'list-group-item syarat-missing-item d-flex align-items-center justify-content-between py-2 px-3 bg-transparent border-bottom';
+                            div.innerHTML = `
+                                <div class="d-flex align-items-center gap-2 overflow-hidden me-2">
+                                    <div class="text-danger flex-shrink-0">
+                                        <svg class="sa-icon text-danger" style="width: 15px; height: 15px;">
+                                            <use href="/icons/sprite.svg#x-circle"></use>
+                                        </svg>
+                                    </div>
+                                    <div class="text-truncate">
+                                        <div class="fw-semibold text-body-emphasis fs-sm text-truncate" title="${escapeHtml(itemName)}">
+                                            ${escapeHtml(itemName)}
+                                        </div>
+                                        <div class="fs-nano text-muted">Dokumen Persyaratan Wajib PPK</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-nano flex-shrink-0">
+                                    Belum Ada File
+                                </span>`;
+                            listEl.appendChild(div);
+                        });
+                    }
+                }
+
+                if (!bsModalSyaratIncomplete) {
+                    bsModalSyaratIncomplete = new bootstrap.Modal(modalSyaratEl);
+                }
+                bsModalSyaratIncomplete.show();
+            }
+
+            function highlightMissingSyaratRows() {
+                const warningRows = document.querySelectorAll('#tbodySyarat tr.table-warning');
+                warningRows.forEach(row => {
+                    row.classList.add('row-syarat-highlight');
+                    setTimeout(() => {
+                        row.classList.remove('row-syarat-highlight');
+                    }, 3000);
+                });
+            }
+
             // Handler Tombol Ajukan Paket (Hanya dari Modal Detail)
             function handleAjukanPaket(paketId, paketName) {
                 if (!paketId) return;
@@ -1670,16 +1882,11 @@
                 // VALIDASI SYARAT WAJIB LENGKAP
                 if (currentSyaratSummary && !currentSyaratSummary.is_lengkap) {
                     const missingList = currentSyaratSummary.missing_wajib || [];
-                    const missingText = missingList.map(m => `• ${m}`).join('\n');
                     
-                    alert(`Pengajuan Gagal!\n\nAnda belum dapat mengajukan paket ini karena terdapat ${missingList.length} dokumen persyaratan wajib yang belum diunggah:\n\n${missingText}\n\nSilakan unggah seluruh dokumen persyaratan wajib pada tab "Dokumen Persyaratan".`);
+                    // Tampilkan modal yang menarik (bukan alert native browser)
+                    openModalSyaratBelumLengkap(missingList, paketName);
 
-                    // Otomatis pindah ke Tab Dokumen Persyaratan
-                    const tabSyaratLink = document.getElementById('tab-syarat-link');
-                    if (tabSyaratLink) {
-                        const bsTab = bootstrap.Tab.getOrCreateInstance(tabSyaratLink);
-                        bsTab.show();
-                    }
+                    // Beri alert juga di dalam tab Dokumen Persyaratan
                     showSyaratAlert('error', `<strong>Pengajuan Gagal!</strong> Harap lengkapi ${missingList.length} dokumen wajib berikut sebelum mengajukan:<br>&bull; ` + missingList.join('<br>&bull; '));
                     return;
                 }
@@ -1708,19 +1915,23 @@
                         alert(res.body.message || 'Paket pengadaan berhasil diajukan ke UKPBJ!');
                         window.location.reload();
                     } else {
-                        alert(res.body.message || 'Gagal mengajukan paket pengadaan.');
                         if (modalBtnAjukan) {
                             modalBtnAjukan.disabled = false;
                             modalBtnAjukan.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ajukan Paket</span>';
                         }
-                        // Jika gagal karena syarat belum lengkap, pindah ke tab syarat
+                        // Jika gagal karena syarat belum lengkap (HTTP 422)
                         if (res.status === 422) {
+                            const missingList = res.body.missing_syarat || (currentSyaratSummary ? currentSyaratSummary.missing_wajib : []);
+                            openModalSyaratBelumLengkap(missingList, paketName);
+
                             const tabSyaratLink = document.getElementById('tab-syarat-link');
                             if (tabSyaratLink) {
                                 const bsTab = bootstrap.Tab.getOrCreateInstance(tabSyaratLink);
                                 bsTab.show();
                             }
                             showSyaratAlert('error', res.body.message);
+                        } else {
+                            alert(res.body.message || 'Gagal mengajukan paket pengadaan.');
                         }
                     }
                 })

@@ -67,44 +67,8 @@
                                 <a href="/auth-forgetpassword" class="text-decoration-none small text-white opacity-75">Lupa Password?</a>
                             </div>
 
-                            <div class="d-grid mb-3">
+                            <div class="d-grid mb-0">
                                 <button type="submit" class="btn btn-primary btn-lg bg-primary bg-opacity-75">Sign In</button>
-                            </div>
-
-                            <div class="divider small text-white opacity-25">atau</div>
-
-                            <div class="d-grid mb-2">
-                                <button type="button" id="switchToToken" class="btn btn-dark bg-opacity-50 border-dark btn-lg">
-                                    Login Menggunakan Token / SSO
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div id="token-login" class="login-card d-none p-4 p-md-5 bg-dark bg-opacity-50 translucent-dark rounded-4">
-                        <h2 class="text-center mb-4 text-white">Login SSO</h2>
-                        <p class="text-center text-white opacity-50 mb-4">Masuk menggunakan akun terintegrasi</p>
-                        <form>
-                            <div class="d-grid mb-3">
-                                <button type="button" class="btn btn-lg bg-opacity-75" style="--bs-btn-bg:#4285F4; --bs-btn-border-color:#4285F4; --bs-btn-color:#FFFFFF; 
-                            --bs-btn-hover-bg:#357ae8; --bs-btn-hover-border-color:#357ae8; --bs-btn-hover-color:#FFFFFF; 
-                            --bs-btn-active-bg:#3367d6; --bs-btn-active-border-color:#3367d6; --bs-btn-active-color:#FFFFFF;">
-                                    Sign In Using Google
-                                </button>
-                            </div>
-                            <div class="d-grid mb-3">
-                                <button type="button" class="btn btn-lg bg-opacity-75" style="--bs-btn-bg:#0078D4; --bs-btn-border-color:#0078D4; --bs-btn-color:#FFFFFF; 
-                            --bs-btn-hover-bg:#005A9E; --bs-btn-hover-border-color:#005A9E; --bs-btn-hover-color:#FFFFFF; 
-                            --bs-btn-active-bg:#004377; --bs-btn-active-border-color:#004377; --bs-btn-active-color:#FFFFFF;">
-                                    Sign In Using Microsoft
-                                </button>
-                            </div>
-                            <div class="divider small text-white opacity-25">atau</div>
-
-                            <div class="d-grid mb-3">
-                                <button type="button" id="switchToRegular" class="btn btn-dark bg-opacity-50 border-dark btn-lg">
-                                    Kembali ke Form Password
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -116,7 +80,6 @@
 
     <script src="/plugins/bootstrap/bootstrap.bundle.min.js"></script>
 
-    <script src="/scripts/pages/auth-login.js"></script>
 
     <!-- Animation Plugin -->
     <script src="/plugins/three/three.min.js"></script>
