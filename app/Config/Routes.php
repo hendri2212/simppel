@@ -77,10 +77,15 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']];
 
     $routes->get('/', 'Home::index');
-    $routes->get('/rup', 'RupController::index');
-    $routes->post('/rup/store', 'RupController::store', ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']]);
+    $routes->get('/rup', 'RupController::index', ['filter' => ['auth', 'role:!ADMIN ULP']]);
+    $routes->get('/rup/inaproc/(:segment)', 'RupController::fetchInaproc/$1', ['filter' => ['auth', 'role:!ADMIN ULP']]);
+    $routes->post('/rup/store', 'RupController::store', $writeMutate);
+    $routes->post('/rup/update/(:num)', 'RupController::update/$1', $writeMutate);
+    $routes->post('/rup/delete/(:num)', 'RupController::delete/$1', $writeMutate);
     $routes->get('/paket', 'PaketController::index');
     $routes->post('/paket/store', 'PaketController::store', $writeMutate);
+    $routes->post('/paket/update/(:num)', 'PaketController::update/$1', $writeMutate);
+    $routes->post('/paket/delete/(:num)', 'PaketController::delete/$1', $writeMutate);
     $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1', $writeMutate);
 
     // Manajemen Dokumen Persyaratan Paket

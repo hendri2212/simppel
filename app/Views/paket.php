@@ -129,9 +129,121 @@
         .syarat-missing-item:hover {
             background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.03));
         }
-        [data-bs-theme="dark"] .modal-syarat-icon-wrap {
-            background: rgba(239, 68, 68, 0.2);
-            box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.1);
+        /* Status Pipeline Filter Pills */
+        .status-pills-wrapper {
+            background-color: var(--bs-tertiary-bg, rgba(0, 0, 0, 0.02));
+            border-radius: 0.5rem;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--bs-border-color-translucent, #e2e8f0);
+        }
+        .status-pill-btn {
+            font-size: 0.8rem;
+            font-weight: 500;
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            border: 1px solid var(--bs-border-color, #cbd5e1);
+            background-color: var(--bs-body-bg, #ffffff);
+            color: var(--bs-body-color, #334155);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.18s ease-in-out;
+            cursor: pointer;
+            text-decoration: none;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .status-pill-btn:hover {
+            border-color: var(--bs-primary, #0d6efd);
+            color: var(--bs-primary, #0d6efd);
+            transform: translateY(-1px);
+        }
+        .status-pill-btn.active {
+            background-color: var(--bs-primary, #0d6efd);
+            border-color: var(--bs-primary, #0d6efd);
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(13, 110, 253, 0.25);
+        }
+        .status-pill-btn.active .badge-count {
+            background-color: rgba(255, 255, 255, 0.25) !important;
+            color: #ffffff !important;
+        }
+        .status-pill-btn .badge-count {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.15rem 0.45rem;
+            border-radius: 1rem;
+        }
+        .status-pill-btn.is-zero {
+            opacity: 0.55;
+        }
+        .status-pill-btn.is-zero:hover {
+            opacity: 1;
+        }
+        .status-pill-btn.pill-danger {
+            border-color: rgba(220, 53, 69, 0.35);
+        }
+        .status-pill-btn.pill-danger:hover {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        .status-pill-btn.pill-danger.active {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .status-pill-btn.pill-warning {
+            border-color: rgba(255, 193, 7, 0.45);
+        }
+        .status-pill-btn.pill-warning:hover {
+            border-color: #d97706;
+            color: #b45309;
+        }
+        .status-pill-btn.pill-warning.active {
+            background-color: #d97706;
+            border-color: #d97706;
+        }
+        .status-pill-btn.pill-success {
+            border-color: rgba(25, 135, 84, 0.35);
+        }
+        .status-pill-btn.pill-success:hover {
+            border-color: #198754;
+            color: #198754;
+        }
+        .status-pill-btn.pill-success.active {
+            background-color: #198754;
+            border-color: #198754;
+        }
+        .status-pill-btn.pill-info {
+            border-color: rgba(13, 202, 240, 0.35);
+        }
+        .status-pill-btn.pill-info:hover {
+            border-color: #0891b2;
+            color: #0891b2;
+        }
+        .status-pill-btn.pill-info.active {
+            background-color: #0891b2;
+            border-color: #0891b2;
+        }
+        .status-pill-btn.pill-purple {
+            border-color: rgba(147, 51, 234, 0.35);
+        }
+        .status-pill-btn.pill-purple:hover {
+            border-color: #7e22ce;
+            color: #7e22ce;
+        }
+        .status-pill-btn.pill-purple.active {
+            background-color: #7e22ce;
+            border-color: #7e22ce;
+        }
+
+        [data-bs-theme="dark"] .status-pills-wrapper {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        [data-bs-theme="dark"] .status-pill-btn {
+            background-color: var(--bs-body-bg, #1e293b);
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #e2e8f0;
         }
     </style>
 </head>
@@ -175,6 +287,14 @@
                         }
                         return 'Rp ' . number_format($amount, 0, ',', '.');
                     };
+
+                    // Deteksi Role Pengguna saat ini
+                    $currentUserId = (int) (session()->get('user_id') ?? ($currentUser['id'] ?? 0));
+                    $currentRoleName = strtoupper(trim((string) (session()->get('role_name') ?? ($currentUser['role_name'] ?? ''))));
+                    
+                    // Kategori Role: apakah Admin ULP / Pusat atau PPK
+                    $isAdminUlp = in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR', 'KEPALA ULP', 'DISTRIBUSI'], true);
+                    $isPpk = in_array($currentRoleName, ['PPK', 'ADMIN PPK'], true) || !$isAdminUlp;
                     ?>
 
                     <div class="main-content">
@@ -301,6 +421,119 @@
                             <div class="panel-container show">
                                 <div class="panel-content">
 
+                                    <!-- Status Pipeline Filter Pills (Role-Based Quick Status & Count) -->
+                                    <div class="status-pills-wrapper mb-3">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <svg class="sa-icon text-primary" style="width: 16px; height: 16px;">
+                                                    <use href="/icons/sprite.svg#filter"></use>
+                                                </svg>
+                                                <span class="fs-xs fw-bold text-uppercase text-secondary" style="letter-spacing: 0.5px;">
+                                                    Filter Cepat Status <?= $isAdminUlp ? '(Admin ULP / UKPBJ)' : '(Pejabat Pembuat Komitmen)' ?>
+                                                </span>
+                                            </div>
+                                            <div class="fs-nano text-muted">
+                                                Klik untuk memfilter instan &bull; Angka menunjukkan total paket
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex flex-wrap gap-2 align-items-center" id="statusPillsContainer">
+                                            <!-- Pill: Semua Paket -->
+                                            <button type="button" class="status-pill-btn active" data-filter-type="all">
+                                                <span>Semua Paket</span>
+                                                <span class="badge bg-secondary badge-count" id="countPillAll"><?= count($pakets) ?></span>
+                                            </button>
+
+                                            <?php if ($isAdminUlp): ?>
+                                                <!-- Pill: Semua Draf -->
+                                                <button type="button" class="status-pill-btn" data-filter-type="status" data-status-codes="1" title="Semua berkas draf yang sedang disusun PPK">
+                                                    <span>Semua Draf</span>
+                                                    <span class="badge bg-secondary badge-count" id="countPillDraft">0</span>
+                                                </button>
+
+                                                <!-- Pill: Paket Saya (admin_ukpbj_id = current user) -->
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="my_assigned" data-user-id="<?= $currentUserId ?>" title="Paket yang ditugaskan kepada Anda sebagai Admin UKPBJ">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#user-check"></use></svg>
+                                                    <span>Paket Saya (Dipilih)</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillMyAssigned" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                </button>
+
+                                                <!-- Pill: Dikembalikan (Status 3) -->
+                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="status" data-status-codes="3" title="Berkas yang dikembalikan ke PPK untuk diperbaiki">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#corner-up-left"></use></svg>
+                                                    <span>Dikembalikan</span>
+                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillDikembalikan">0</span>
+                                                </button>
+
+                                                <!-- Pill: Diterima (Status 4) -->
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="4" title="Berkas lolos verifikasi dan diterima ULP">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    <span>Diterima</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillDiterima">0</span>
+                                                </button>
+
+                                                <!-- Pill: Hasil Lelang (Status 12) -->
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="12" title="Proses lelang selesai dan ada penetapan pemenang">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                                    <span>Hasil Lelang</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillHasil">0</span>
+                                                </button>
+
+                                            <?php else: /* TAMPILAN ROLE PPK / DEFAULT */ ?>
+
+                                                <!-- Pill: Draft (Status 1) -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="1" title="Draf paket yang belum diajukan ke ULP">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#edit-3"></use></svg>
+                                                    <span>Draft</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillDraft">0</span>
+                                                </button>
+
+                                                <!-- Pill: Dikembalikan (Status 3) -->
+                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="status" data-status-codes="3" title="Berkas dikembalikan oleh Admin ULP untuk diperbaiki">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#corner-up-left"></use></svg>
+                                                    <span>Dikembalikan</span>
+                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillDikembalikan">0</span>
+                                                </button>
+
+                                                <!-- Pill: Saran Kaji Ulang (Status 7) -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="7" title="Catatan kaji ulang dari Pokja ke PPK">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#alert-circle"></use></svg>
+                                                    <span>Saran Kaji Ulang</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillSaranKaji">0</span>
+                                                </button>
+
+                                                <!-- Pill: Saran Addendum (Status 10) -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="10" title="Ada telaah / saran adendum">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#file-text"></use></svg>
+                                                    <span>Saran Addendum</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillSaranAdd">0</span>
+                                                </button>
+
+                                                <!-- Pill: Sedang Diproses (Status 2, 4, 5, 6, 8, 9, 11, 13) -->
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="2,4,5,6,8,9,11,13" title="Sedang berjalan di UKPBJ / Pokja / Tayang Lelang">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#activity"></use></svg>
+                                                    <span>Sedang Diproses</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillProses">0</span>
+                                                </button>
+
+                                                <!-- Pill: Hasil Lelang (Status 12) -->
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="status" data-status-codes="12" title="Lelang tuntas, siap proses kontrak">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                                    <span>Hasil Lelang</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillHasil" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                </button>
+
+                                                <!-- Pill: Paket Selesai (Status 14) -->
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="14" title="Kontrak / SPK telah diinput dan pengadaan tuntas">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    <span>Paket Selesai</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillSelesai">0</span>
+                                                </button>
+
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
                                     <!-- Filter Toolbar -->
                                     <div class="row g-2 mb-3 align-items-center">
                                         <!-- Search Box -->
@@ -378,7 +611,7 @@
                                                     <th class="text-center" style="min-width: 130px;">Status Tahapan</th>
                                                     <th class="text-center" style="min-width: 110px;">Verifikasi</th>
                                                     <th style="min-width: 200px;">Pemenang & Kontrak</th>
-                                                    <th class="text-end" style="width: 75px;">Aksi</th>
+                                                    <th class="text-end" style="width: 100px;">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -386,6 +619,7 @@
                                                     <?php
                                                     $paketJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
                                                     $hasWinner = !empty($p['nama_pemenang']);
+                                                    $canModifyPaket = (int) ($p['status_paket'] ?? 0) === 1;
                                                     ?>
                                                     <tr class="paket-row"
                                                         data-id="<?= $p['id'] ?>"
@@ -396,18 +630,17 @@
                                                         data-skpd="<?= esc(strtolower(($p['skpd_abbreviation'] ?? '') . ' ' . ($p['skpd_name'] ?? ''))) ?>"
                                                         data-winner="<?= esc(strtolower($p['nama_pemenang'] ?? '')) ?>"
                                                         data-status-paket="<?= (int) ($p['status_paket'] ?? 0) ?>"
-                                                        data-status-verifikasi="<?= (int) ($p['status_verifikasi'] ?? 0) ?>">
+                                                        data-status-verifikasi="<?= (int) ($p['status_verifikasi'] ?? 0) ?>"
+                                                        data-admin-ukpbj-id="<?= (int) ($p['admin_ukpbj_id'] ?? 0) ?>">
 
                                                         <!-- No. Paket -->
                                                         <td>
-                                                            <?php if (!empty($p['no_paket'])): ?>
+                                                            <?php if (!empty($p['no_paket']) && (int) ($p['status_paket'] ?? 0) !== 1): ?>
                                                                 <div class="font-monospace fw-bold text-primary fs-sm">
                                                                     <?= esc($p['no_paket']) ?>
                                                                 </div>
                                                             <?php else: ?>
-                                                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle font-monospace fs-nano">
-                                                                    DRAFT
-                                                                </span>
+                                                                <div class="text-muted font-monospace fs-sm">-</div>
                                                             <?php endif; ?>
                                                             <div class="fs-nano text-muted">
                                                                 ID: #<?= $p['id'] ?>
@@ -510,11 +743,59 @@
 
                                                         <!-- Aksi -->
                                                         <td class="text-end">
-                                                            <button type="button" class="btn btn-sm btn-icon btn-light btn-view-paket" data-paket='<?= $paketJson ?>' title="Lihat Detail Paket">
-                                                                <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
-                                                                    <use href="/icons/sprite.svg#eye"></use>
-                                                                </svg>
-                                                            </button>
+                                                            <div class="d-flex justify-content-end gap-1">
+                                                                <button type="button" class="btn btn-sm btn-icon btn-light btn-view-paket" data-paket='<?= $paketJson ?>' title="Lihat Detail Paket">
+                                                                    <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
+                                                                        <use href="/icons/sprite.svg#eye"></use>
+                                                                    </svg>
+                                                                </button>
+                                                                <div class="dropdown">
+                                                                    <button type="button" class="btn btn-sm btn-icon btn-light" data-bs-toggle="dropdown" aria-expanded="false" title="Pilihan Aksi">
+                                                                        <svg class="sa-icon" style="width: 14px; height: 14px;">
+                                                                            <use href="/icons/sprite.svg#more-horizontal"></use>
+                                                                        </svg>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu dropdown-menu-end fs-xs">
+                                                                        <?php if ($canModifyPaket): ?>
+                                                                            <li>
+                                                                                <a class="dropdown-item d-flex align-items-center gap-2 btn-edit-paket" href="javascript:void(0);" data-paket='<?= $paketJson ?>'>
+                                                                                    <svg class="sa-icon text-info" style="width: 14px; height: 14px;">
+                                                                                        <use href="/icons/sprite.svg#edit-3"></use>
+                                                                                    </svg>
+                                                                                    <span>Ubah Paket</span>
+                                                                                </a>
+                                                                            </li>
+                                                                            <li><hr class="dropdown-divider"></li>
+                                                                            <li>
+                                                                                <a class="dropdown-item text-danger d-flex align-items-center gap-2 btn-delete-paket" href="javascript:void(0);" data-paket='<?= $paketJson ?>'>
+                                                                                    <svg class="sa-icon text-danger" style="width: 14px; height: 14px;">
+                                                                                        <use href="/icons/sprite.svg#trash-2"></use>
+                                                                                    </svg>
+                                                                                    <span>Hapus Paket</span>
+                                                                                </a>
+                                                                            </li>
+                                                                        <?php else: ?>
+                                                                            <li>
+                                                                                <span class="dropdown-item text-muted d-flex align-items-center gap-2 disabled" title="Paket sudah diajukan dan tidak dapat diubah">
+                                                                                    <svg class="sa-icon text-muted" style="width: 14px; height: 14px;">
+                                                                                        <use href="/icons/sprite.svg#edit-3"></use>
+                                                                                    </svg>
+                                                                                    <span>Ubah Paket <small class="badge bg-secondary-subtle text-secondary ms-1">Terkunci</small></span>
+                                                                                </span>
+                                                                            </li>
+                                                                            <li><hr class="dropdown-divider"></li>
+                                                                            <li>
+                                                                                <span class="dropdown-item text-muted d-flex align-items-center gap-2 disabled" title="Paket sudah diajukan dan tidak dapat dihapus">
+                                                                                    <svg class="sa-icon text-muted" style="width: 14px; height: 14px;">
+                                                                                        <use href="/icons/sprite.svg#trash-2"></use>
+                                                                                    </svg>
+                                                                                    <span>Hapus Paket <small class="badge bg-secondary-subtle text-secondary ms-1">Terkunci</small></span>
+                                                                                </span>
+                                                                            </li>
+                                                                        <?php endif; ?>
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1015,6 +1296,138 @@
         </div>
     </div>
 
+    <!-- MODAL: Ubah Paket Pengadaan -->
+    <div class="modal fade" id="editPaketModal" tabindex="-1" aria-labelledby="editPaketModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-body-tertiary">
+                    <h5 class="modal-title fw-bold" id="editPaketModalLabel">
+                        <svg class="sa-icon me-2 text-info" style="width: 18px; height: 18px;">
+                            <use href="/icons/sprite.svg#edit-3"></use>
+                        </svg>
+                        Ubah Data Paket Pengadaan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editPaketForm">
+                    <?= csrf_field() ?>
+                    <input type="hidden" id="editPaketId" name="id">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-danger d-none py-2 px-3 mb-3 fs-xs" id="editPaketAlert" role="alert"></div>
+
+                        <!-- Info Paket RUP Terkait (Read-only) -->
+                        <div class="p-3 bg-body-tertiary rounded-2 border mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace fs-nano mb-1" id="editInfoRupCode">RUP: -</span>
+                                    <h6 class="fw-bold text-body-emphasis mb-0" id="editInfoPaketName">-</h6>
+                                </div>
+                                <span class="badge bg-secondary-subtle text-secondary font-monospace" id="editInfoPaketId">#0</span>
+                            </div>
+                            <div class="row g-2 fs-xs mt-1">
+                                <div class="col-sm-6">
+                                    <span class="text-muted d-block">Program / Kegiatan:</span>
+                                    <span class="fw-semibold text-body" id="editInfoRupKegiatan">-</span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <span class="text-muted d-block">Pagu Anggaran RUP:</span>
+                                    <span class="fw-bold text-success font-monospace fs-sm" id="editInfoRupPagu">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nomor RPP -->
+                        <div class="mb-3">
+                            <label for="editInputNoRpp" class="form-label fw-semibold">
+                                Nomor RPP (Rencana Pelaksanaan Pengadaan) <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="editInputNoRpp" name="no_rpp" placeholder="Contoh: 000.3.1/005/BID.BM/DPUPR" required>
+                        </div>
+
+                        <!-- Nilai HPS -->
+                        <div class="mb-3">
+                            <label for="editInputNilaiHps" class="form-label fw-semibold">
+                                Nilai HPS (Harga Perkiraan Sendiri) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text font-monospace fw-semibold">Rp</span>
+                                <input type="text" class="form-control font-monospace fw-bold" id="editInputNilaiHps" name="nilai_hps" placeholder="Contoh: 399.987.000" required>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div class="form-text fs-xs text-muted">
+                                    Nilai HPS idealnya tidak melebihi Pagu Anggaran RUP.
+                                </div>
+                                <button type="button" class="btn btn-link btn-xs p-0 text-decoration-none fs-nano" id="btnEditSalinPagu">
+                                    Samakan Nilai dengan Pagu
+                                </button>
+                            </div>
+                            <div class="text-danger fs-xs fw-semibold mt-1 d-none" id="editHpsExceedWarning">
+                                <svg class="sa-icon me-1 text-danger" style="width: 12px; height: 12px;"><use href="/icons/sprite.svg#alert-triangle"></use></svg>
+                                Perhatian: Nilai HPS melebihi Pagu Anggaran RUP!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-body-tertiary">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 d-inline-flex align-items-center gap-1" id="btnUpdatePaket">
+                            <svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#check"></use></svg>
+                            <span>Simpan Perubahan</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Konfirmasi Hapus Paket Pengadaan -->
+    <div class="modal fade" id="deletePaketModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <div style="height: 5px; background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);"></div>
+                <div class="modal-header bg-danger-subtle text-danger border-0">
+                    <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+                        <svg class="sa-icon text-danger" style="width: 20px; height: 20px;">
+                            <use href="/icons/sprite.svg#trash-2"></use>
+                        </svg>
+                        <span>Hapus Paket Pengadaan</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-danger d-none py-2 px-3 mb-3 fs-xs" id="deletePaketAlert"></div>
+                    <input type="hidden" id="deletePaketId">
+                    <p class="mb-2 text-body">Apakah Anda yakin ingin menghapus Paket Pengadaan berikut?</p>
+                    <div class="p-3 bg-body-tertiary rounded-2 border mb-3">
+                        <div class="fw-bold text-body-emphasis mb-1" id="deletePaketName">-</div>
+                        <div class="fs-xs text-muted font-monospace mb-1" id="deletePaketRpp">No. RPP: -</div>
+                        <div class="fs-xs fw-bold text-primary font-monospace" id="deletePaketHps">HPS: Rp 0</div>
+                    </div>
+                    <div class="alert alert-warning border-warning-subtle bg-warning-subtle bg-opacity-25 py-2 px-3 mb-0 fs-xs">
+                        <div class="fw-bold text-warning-emphasis mb-1 d-flex align-items-center gap-1">
+                            <svg class="sa-icon text-warning-emphasis" style="width: 14px; height: 14px;">
+                                <use href="/icons/sprite.svg#alert-triangle"></use>
+                            </svg>
+                            <span>Dampak Penghapusan (Cascade):</span>
+                        </div>
+                        <ul class="mb-0 ps-3 text-body">
+                            <li>Seluruh daftar <strong>Dokumen Persyaratan (Syarat)</strong> beserta file fisik yang sudah diunggah pada paket ini akan <strong>ikut terhapus permanen</strong>.</li>
+                            <li>Status paket RUP terkait akan dibuka kembali (<code>Draft / Belum Diajukan</code>) sehingga RUP dapat di-edit, dihapus, atau dibuatkan paket ulang.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer bg-body-tertiary">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-danger btn-sm px-4 d-inline-flex align-items-center gap-1" id="confirmDeletePaketBtn">
+                        <svg class="sa-icon" style="width: 14px; height: 14px;">
+                            <use href="/icons/sprite.svg#trash-2"></use>
+                        </svg>
+                        <span>Ya, Hapus Paket & Syarat</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?= $this->include('partials/app-scripts') ?>
 
     <script>
@@ -1067,12 +1480,12 @@
                     if (!rawData) return;
                     try {
                         const p = JSON.parse(rawData);
-                        if (p.no_paket && String(p.no_paket).trim() !== '') {
+                        if (p.no_paket && String(p.no_paket).trim() !== '' && parseInt(p.status_paket) !== 1) {
                             document.getElementById('modalPaketNo').textContent = p.no_paket;
                             document.getElementById('modalPaketNo').className = 'badge bg-primary me-2 font-monospace';
                         } else {
-                            document.getElementById('modalPaketNo').textContent = 'DRAFT (Belum Ada No)';
-                            document.getElementById('modalPaketNo').className = 'badge bg-secondary me-2 font-monospace';
+                            document.getElementById('modalPaketNo').textContent = 'Belum Ada No';
+                            document.getElementById('modalPaketNo').className = 'badge bg-secondary-subtle text-secondary border border-secondary-subtle me-2 font-monospace';
                         }
                         document.getElementById('modalPaketStatus').textContent = p.status_label || 'Draft';
                         document.getElementById('modalPaketStatus').title = p.status_desc || '';
@@ -1149,6 +1562,103 @@
                 });
             });
 
+            // State status pill filter
+            let activePillFilterType = 'all';
+            let activePillStatusCodes = [];
+            let activePillUserId = null;
+
+            // Update badge hitungan di masing-masing pill berdasarkan data
+            function updatePillCounters() {
+                const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
+                const verifVal = verifFilter ? verifFilter.value : '';
+                const skpdVal = skpdFilter ? skpdFilter.value : '';
+
+                // Baris yang lolos filter sekunder (pencarian, verifikasi, SKPD)
+                const baseRows = allRows.filter(function (row) {
+                    const noPaket = row.getAttribute('data-no-paket') || '';
+                    const pkgName = row.getAttribute('data-package-name') || '';
+                    const act = row.getAttribute('data-activity') || '';
+                    const rpp = row.getAttribute('data-no-rpp') || '';
+                    const skpd = row.getAttribute('data-skpd') || '';
+                    const winner = row.getAttribute('data-winner') || '';
+                    const stVerif = row.getAttribute('data-status-verifikasi') || '';
+
+                    const matchesSearch = !searchVal ||
+                        noPaket.includes(searchVal) ||
+                        pkgName.includes(searchVal) ||
+                        act.includes(searchVal) ||
+                        rpp.includes(searchVal) ||
+                        skpd.includes(searchVal) ||
+                        winner.includes(searchVal);
+
+                    const matchesVerif = !verifVal || String(stVerif) === String(verifVal);
+                    const matchesSkpd = !skpdVal || skpd.includes(skpdVal);
+
+                    return matchesSearch && matchesVerif && matchesSkpd;
+                });
+
+                // Hitung jumlah per kategori
+                const counts = {
+                    all: baseRows.length,
+                    draft: 0,
+                    dikembalikan: 0,
+                    saranKaji: 0,
+                    saranAdd: 0,
+                    proses: 0,
+                    hasil: 0,
+                    selesai: 0,
+                    diterima: 0,
+                    myAssigned: 0,
+                };
+
+                const currentUserIdNum = <?= json_encode($currentUserId) ?>;
+
+                baseRows.forEach(row => {
+                    const st = parseInt(row.getAttribute('data-status-paket') || '0', 10);
+                    const adminUkpbjId = parseInt(row.getAttribute('data-admin-ukpbj-id') || '0', 10);
+
+                    if (st === 1) counts.draft++;
+                    if (st === 3) counts.dikembalikan++;
+                    if (st === 4) counts.diterima++;
+                    if (st === 7) counts.saranKaji++;
+                    if (st === 10) counts.saranAdd++;
+                    if ([2, 4, 5, 6, 8, 9, 11, 13].includes(st)) counts.proses++;
+                    if (st === 12) counts.hasil++;
+                    if (st === 14) counts.selesai++;
+
+                    if (currentUserIdNum && adminUkpbjId === currentUserIdNum) {
+                        counts.myAssigned++;
+                    }
+                });
+
+                // Update teks badge di DOM
+                const setElCount = (id, count) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.textContent = count;
+                        const parentBtn = el.closest('.status-pill-btn');
+                        if (parentBtn) {
+                            if (count === 0 && !parentBtn.classList.contains('active')) {
+                                parentBtn.classList.add('is-zero');
+                            } else {
+                                parentBtn.classList.remove('is-zero');
+                            }
+                        }
+                    }
+                };
+
+                setElCount('countPillAll', counts.all);
+                setElCount('countPillDraft', counts.draft);
+                setElCount('countPillDikembalikan', counts.dikembalikan);
+                setElCount('countPillSaranKaji', counts.saranKaji);
+                setElCount('countPillSaranAdd', counts.saranAdd);
+                setElCount('countPillProses', counts.proses);
+                setElCount('countPillHasil', counts.hasil);
+                setElCount('countPillSelesai', counts.selesai);
+                setElCount('countPillDiterima', counts.diterima);
+                setElCount('countPillMyAssigned', counts.myAssigned);
+            }
+
             // Filter logic
             function applyFilter() {
                 const searchVal = (searchInput ? searchInput.value : '').toLowerCase().trim();
@@ -1163,8 +1673,9 @@
                     const rpp = row.getAttribute('data-no-rpp') || '';
                     const skpd = row.getAttribute('data-skpd') || '';
                     const winner = row.getAttribute('data-winner') || '';
-                    const stPaket = row.getAttribute('data-status-paket') || '';
+                    const stPaket = parseInt(row.getAttribute('data-status-paket') || '0', 10);
                     const stVerif = row.getAttribute('data-status-verifikasi') || '';
+                    const adminUkpbjId = parseInt(row.getAttribute('data-admin-ukpbj-id') || '0', 10);
 
                     const matchesSearch = !searchVal ||
                         noPaket.includes(searchVal) ||
@@ -1174,16 +1685,56 @@
                         skpd.includes(searchVal) ||
                         winner.includes(searchVal);
 
-                    const matchesStatus = !statusVal || String(stPaket) === String(statusVal);
+                    // Cocokkan dropdown status (jika dipilih)
+                    const matchesDropdownStatus = !statusVal || String(stPaket) === String(statusVal);
+
+                    // Cocokkan pill status aktif
+                    let matchesPill = true;
+                    if (activePillFilterType === 'status') {
+                        matchesPill = activePillStatusCodes.includes(stPaket);
+                    } else if (activePillFilterType === 'my_assigned') {
+                        matchesPill = activePillUserId ? (adminUkpbjId === parseInt(activePillUserId, 10)) : true;
+                    }
+
                     const matchesVerif = !verifVal || String(stVerif) === String(verifVal);
                     const matchesSkpd = !skpdVal || skpd.includes(skpdVal);
 
-                    return matchesSearch && matchesStatus && matchesVerif && matchesSkpd;
+                    return matchesSearch && matchesDropdownStatus && matchesPill && matchesVerif && matchesSkpd;
                 });
 
                 currentPage = 1;
                 renderPage();
+                updatePillCounters();
             }
+
+            // Inisialisasi Event Listener Status Pills
+            const statusPills = document.querySelectorAll('#statusPillsContainer .status-pill-btn');
+            statusPills.forEach(pill => {
+                pill.addEventListener('click', function () {
+                    statusPills.forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+
+                    const type = this.getAttribute('data-filter-type') || 'all';
+                    activePillFilterType = type;
+
+                    if (type === 'status') {
+                        const rawCodes = this.getAttribute('data-status-codes') || '';
+                        activePillStatusCodes = rawCodes.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+                    } else if (type === 'my_assigned') {
+                        activePillUserId = this.getAttribute('data-user-id');
+                    } else {
+                        activePillStatusCodes = [];
+                        activePillUserId = null;
+                    }
+
+                    // Reset dropdown status jika pill diklik agar tidak bertentangan
+                    if (statusFilter && type !== 'all') {
+                        statusFilter.value = '';
+                    }
+
+                    applyFilter();
+                });
+            });
 
             // Pagination renderer
             function renderPage() {
@@ -1263,7 +1814,26 @@
             }
 
             if (searchInput) searchInput.addEventListener('input', applyFilter);
-            if (statusFilter) statusFilter.addEventListener('change', applyFilter);
+            if (statusFilter) {
+                statusFilter.addEventListener('change', function () {
+                    // Jika dropdown manual diubah, non-aktifkan active state di pills kecuali bila kembali ke ""
+                    if (this.value !== '') {
+                        statusPills.forEach(p => p.classList.remove('active'));
+                        activePillFilterType = 'all';
+                        activePillStatusCodes = [];
+                        activePillUserId = null;
+                    } else {
+                        // Kembali ke pill 'all'
+                        const allPill = document.querySelector('#statusPillsContainer .status-pill-btn[data-filter-type="all"]');
+                        if (allPill) {
+                            statusPills.forEach(p => p.classList.remove('active'));
+                            allPill.classList.add('active');
+                            activePillFilterType = 'all';
+                        }
+                    }
+                    applyFilter();
+                });
+            }
             if (verifFilter) verifFilter.addEventListener('change', applyFilter);
             if (skpdFilter) skpdFilter.addEventListener('change', applyFilter);
             if (perPageSelect) {
@@ -1273,6 +1843,10 @@
                     renderPage();
                 });
             }
+
+            // Inisialisasi hitungan pill & render halaman pertama kali
+            updatePillCounters();
+            renderPage();
 
             // Logika Form Tambah Paket Baru
             const selectRup = document.getElementById('selectRupId');
@@ -1942,6 +2516,213 @@
                         modalBtnAjukan.disabled = false;
                         modalBtnAjukan.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ajukan Paket</span>';
                     }
+                });
+            }
+
+            // =========================================================================
+            // UBAH & HAPUS PAKET PENGADAAN
+            // =========================================================================
+            const editPaketModalEl = document.getElementById('editPaketModal');
+            const editPaketForm = document.getElementById('editPaketForm');
+            const editPaketAlert = document.getElementById('editPaketAlert');
+            const editInputNilaiHps = document.getElementById('editInputNilaiHps');
+            const btnEditSalinPagu = document.getElementById('btnEditSalinPagu');
+            const editHpsExceedWarning = document.getElementById('editHpsExceedWarning');
+            let currentEditPaketPagu = 0;
+
+            function checkEditHpsVsPagu() {
+                if (!editInputNilaiHps || !editHpsExceedWarning) return;
+                const rawHps = parseFloat(editInputNilaiHps.value.replace(/[^0-9]/g, '')) || 0;
+                if (currentEditPaketPagu > 0 && rawHps > currentEditPaketPagu) {
+                    editHpsExceedWarning.classList.remove('d-none');
+                } else {
+                    editHpsExceedWarning.classList.add('d-none');
+                }
+            }
+
+            if (editInputNilaiHps) {
+                editInputNilaiHps.addEventListener('input', function () {
+                    const raw = this.value.replace(/[^0-9]/g, '');
+                    if (raw === '') {
+                        this.value = '';
+                    } else {
+                        this.value = Number(raw).toLocaleString('id-ID');
+                    }
+                    checkEditHpsVsPagu();
+                });
+            }
+
+            if (btnEditSalinPagu && editInputNilaiHps) {
+                btnEditSalinPagu.addEventListener('click', function () {
+                    if (currentEditPaketPagu > 0) {
+                        editInputNilaiHps.value = Number(currentEditPaketPagu).toLocaleString('id-ID');
+                        checkEditHpsVsPagu();
+                    }
+                });
+            }
+
+            document.querySelectorAll('.btn-edit-paket').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const rawData = this.getAttribute('data-paket');
+                    if (!rawData) return;
+                    try {
+                        const p = JSON.parse(rawData);
+                        if (editPaketAlert) {
+                            editPaketAlert.classList.add('d-none');
+                            editPaketAlert.innerHTML = '';
+                        }
+                        document.getElementById('editPaketId').value = p.id;
+                        document.getElementById('editInfoPaketId').textContent = '#' + p.id;
+                        document.getElementById('editInfoRupCode').textContent = 'RUP: ' + (p.package_code || ('DRAFT-' + p.rup_id));
+                        document.getElementById('editInfoPaketName').textContent = p.package_name || '-';
+                        document.getElementById('editInfoRupKegiatan').textContent = p.activity || '-';
+                        currentEditPaketPagu = parseFloat(p.budget_ceiling || 0);
+                        document.getElementById('editInfoRupPagu').textContent = formatRupiah(currentEditPaketPagu);
+
+                        document.getElementById('editInputNoRpp').value = p.no_rpp || '';
+                        const hpsVal = Math.round(parseFloat(p.nilai_hps || 0));
+                        editInputNilaiHps.value = hpsVal > 0 ? hpsVal.toLocaleString('id-ID') : '';
+                        checkEditHpsVsPagu();
+
+                        const modal = bootstrap.Modal.getOrCreateInstance(editPaketModalEl);
+                        modal.show();
+                    } catch (err) {
+                        console.error('Error parsing paket data for edit:', err);
+                    }
+                });
+            });
+
+            if (editPaketForm) {
+                editPaketForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const id = document.getElementById('editPaketId').value;
+                    if (!id) return;
+
+                    if (editPaketAlert) {
+                        editPaketAlert.classList.add('d-none');
+                        editPaketAlert.innerHTML = '';
+                    }
+
+                    const btnUpdate = document.getElementById('btnUpdatePaket');
+                    const origHtml = btnUpdate.innerHTML;
+                    btnUpdate.disabled = true;
+                    btnUpdate.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
+
+                    const formData = new FormData(editPaketForm);
+
+                    fetch('/paket/update/' + id, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(r => r.json().then(body => ({ status: r.status, body })))
+                    .then(res => {
+                        if (res.status === 200 && res.body.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            let errMsg = res.body.message || 'Gagal memperbarui paket pengadaan.';
+                            if (res.body.errors) {
+                                const list = Object.values(res.body.errors).map(e => `<li>${e}</li>`).join('');
+                                errMsg += `<ul class="mb-0 mt-1 ps-3">${list}</ul>`;
+                            }
+                            if (editPaketAlert) {
+                                editPaketAlert.innerHTML = errMsg;
+                                editPaketAlert.classList.remove('d-none');
+                            }
+                            btnUpdate.disabled = false;
+                            btnUpdate.innerHTML = origHtml;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error updating paket:', err);
+                        if (editPaketAlert) {
+                            editPaketAlert.textContent = 'Terjadi kesalahan jaringan saat menyimpan perubahan.';
+                            editPaketAlert.classList.remove('d-none');
+                        }
+                        btnUpdate.disabled = false;
+                        btnUpdate.innerHTML = origHtml;
+                    });
+                });
+            }
+
+            const deletePaketModalEl = document.getElementById('deletePaketModal');
+            const deletePaketAlert = document.getElementById('deletePaketAlert');
+            const confirmDeletePaketBtn = document.getElementById('confirmDeletePaketBtn');
+
+            document.querySelectorAll('.btn-delete-paket').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const rawData = this.getAttribute('data-paket');
+                    if (!rawData) return;
+                    try {
+                        const p = JSON.parse(rawData);
+                        if (deletePaketAlert) {
+                            deletePaketAlert.classList.add('d-none');
+                            deletePaketAlert.textContent = '';
+                        }
+                        document.getElementById('deletePaketId').value = p.id;
+                        document.getElementById('deletePaketName').textContent = p.package_name || ('Paket #' + p.id);
+                        document.getElementById('deletePaketRpp').textContent = 'No. RPP: ' + (p.no_rpp || '-');
+                        document.getElementById('deletePaketHps').textContent = 'Nilai HPS: ' + formatRupiah(p.nilai_hps || 0);
+
+                        const modal = bootstrap.Modal.getOrCreateInstance(deletePaketModalEl);
+                        modal.show();
+                    } catch (err) {
+                        console.error('Error parsing paket data for delete:', err);
+                    }
+                });
+            });
+
+            if (confirmDeletePaketBtn) {
+                confirmDeletePaketBtn.addEventListener('click', function () {
+                    const id = document.getElementById('deletePaketId').value;
+                    if (!id) return;
+
+                    if (deletePaketAlert) {
+                        deletePaketAlert.classList.add('d-none');
+                        deletePaketAlert.textContent = '';
+                    }
+
+                    const origHtml = confirmDeletePaketBtn.innerHTML;
+                    confirmDeletePaketBtn.disabled = true;
+                    confirmDeletePaketBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menghapus...';
+
+                    const formData = new FormData();
+                    const csrfInput = editPaketForm ? editPaketForm.querySelector('input[type="hidden"][name^="csrf"]') : null;
+                    if (csrfInput) {
+                        formData.append(csrfInput.name, csrfInput.value);
+                    }
+
+                    fetch('/paket/delete/' + id, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(r => r.json().then(body => ({ status: r.status, body })))
+                    .then(res => {
+                        if (res.status === 200 && res.body.status === 'success') {
+                            window.location.reload();
+                        } else {
+                            if (deletePaketAlert) {
+                                deletePaketAlert.textContent = res.body.message || 'Gagal menghapus paket pengadaan.';
+                                deletePaketAlert.classList.remove('d-none');
+                            }
+                            confirmDeletePaketBtn.disabled = false;
+                            confirmDeletePaketBtn.innerHTML = origHtml;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error deleting paket:', err);
+                        if (deletePaketAlert) {
+                            deletePaketAlert.textContent = 'Terjadi kesalahan jaringan saat menghapus paket.';
+                            deletePaketAlert.classList.remove('d-none');
+                        }
+                        confirmDeletePaketBtn.disabled = false;
+                        confirmDeletePaketBtn.innerHTML = origHtml;
+                    });
                 });
             }
 

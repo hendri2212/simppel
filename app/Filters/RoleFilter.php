@@ -32,8 +32,29 @@ class RoleFilter implements FilterInterface
             return $this->deny($request, 401, 'Sesi tidak valid. Silakan login kembali.', '/login');
         }
 
-        $allowed = array_map('strtoupper', (array) $arguments);
-        if ($allowed !== [] && ! in_array(strtoupper((string) $row['role_name']), $allowed, true)) {
+        $userRole = strtoupper((string) ($row['role_name'] ?? ''));
+
+        // Cek larangan role (blacklist jika diawali tanda seru !)
+        foreach ((array) $arguments as $arg) {
+            $arg = strtoupper(trim((string) $arg));
+            if (str_starts_with($arg, '!')) {
+                $deniedRole = ltrim($arg, '!');
+                if ($userRole === $deniedRole) {
+                    return $this->deny($request, 403, 'Anda tidak memiliki hak akses ke halaman ini.', '/');
+                }
+            }
+        }
+
+        // Cek izin role (whitelist untuk argumen biasa tanpa !)
+        $allowed = [];
+        foreach ((array) $arguments as $arg) {
+            $arg = strtoupper(trim((string) $arg));
+            if ($arg !== '' && ! str_starts_with($arg, '!')) {
+                $allowed[] = $arg;
+            }
+        }
+
+        if ($allowed !== [] && ! in_array($userRole, $allowed, true)) {
             return $this->deny($request, 403, 'Anda tidak memiliki hak akses ke halaman ini.', '/');
         }
     }

@@ -12,6 +12,7 @@ use App\Models\MetodePemilihanModel;
 use App\Models\JenisDakModel;
 use App\Models\UserModel;
 use App\Controllers\Traits\ProcurementScope;
+use CodeIgniter\HTTP\ResponseInterface;
 
 class RupController extends BaseController
 {
@@ -41,10 +42,29 @@ class RupController extends BaseController
     }
 
     /**
+     * Pastikan role ADMIN ULP tidak memiliki akses ke fitur dan data RUP.
+     */
+    private function denyAdminUlp(): ?ResponseInterface
+    {
+        $actor    = $this->actor();
+        $roleName = strtoupper((string) ($actor['role_name'] ?? ''));
+        $roleId   = (int) ($actor['role_id'] ?? 0);
+
+        if ($roleId === 4 || $roleName === 'ADMIN ULP') {
+            return $this->failWith('Role ADMIN ULP tidak memiliki akses ke data dan fitur RUP.', 403, '/');
+        }
+
+        return null;
+    }
+
+    /**
      * Tampilkan halaman daftar rencana pengadaan (Procurement Plans / RUP)
      */
     public function index()
     {
+        if ($deny = $this->denyAdminUlp()) {
+            return $deny;
+        }
         try {
             // Ambil data langsung dari tabel rup beserta relasinya
             // Hanya RUP dalam cakupan user (SKPD/PPK), atau seluruhnya untuk role pusat
@@ -154,6 +174,10 @@ class RupController extends BaseController
      */
     public function store()
     {
+        if ($deny = $this->denyAdminUlp()) {
+            return $deny;
+        }
+
         if (! $this->canWrite()) {
             return $this->failWith('Anda tidak memiliki hak akses untuk membuat RUP.', 403, '/rup');
         }
@@ -178,6 +202,7 @@ class RupController extends BaseController
             'budget_ceiling'      => 'required|numeric|greater_than[0]|less_than[1000000000000000]',
             'account_code'        => 'permit_empty|max_length[255]',
             'work_duration'       => 'permit_empty|is_natural_no_zero|less_than_equal_to[3650]',
+            'volume'              => 'permit_empty|max_length[255]',
             'location'            => 'permit_empty|max_length[2000]',
             'description'         => 'permit_empty|max_length[5000]',
         ];
@@ -244,10 +269,11 @@ class RupController extends BaseController
                 'budget_ceiling'      => (float) $post->getPost('budget_ceiling'),
                 'account_code'        => trim((string) $post->getPost('account_code')) ?: null,
                 'work_duration'       => (int) $post->getPost('work_duration') ?: null,
+                'volume'              => trim((string) $post->getPost('volume')) ?: '1 Paket',
                 'location'            => trim((string) $post->getPost('location')) ?: null,
                 'description'         => trim((string) $post->getPost('description')) ?: null,
                 'rup_status'          => 1, // Bisa Diedit / Aktif
-                'is_synced'           => 0,
+                'is_synced'           => (int) $post->getPost('is_synced') === 1 ? 1 : 0,
                 'submission_date'     => date('Y-m-d H:i:s'),
             ]);
 
@@ -259,6 +285,183 @@ class RupController extends BaseController
             log_message('error', 'Error in RupController::store: ' . $e->getMessage());
 
             return $this->failWith('Gagal menyimpan paket RUP. Silakan coba lagi.', 500, '/rup');
+        }
+    }
+
+    /**
+     * Perbarui data paket RUP (hanya bisa jika belum dibuatkan Paket Pengadaan / rup_status == 1)
+     */
+    public function update($id = null)
+    {
+        if ($deny = $this->denyAdminUlp()) {
+            return $deny;
+        }
+
+        if (! $this->canWrite()) {
+            return $this->failWith('Anda tidak memiliki hak akses untuk mengubah RUP.', 403, '/rup');
+        }
+
+        $rupId = (int) $id;
+        $rup   = $rupId > 0 ? $this->rupModel->getWithRelations($rupId) : null;
+
+        if (! $rup || ! $this->inScope($rup)) {
+            return $this->failWith('Data RUP tidak ditemukan.', 404, '/rup');
+        }
+
+        if (! empty($rup['paket_id']) || (int) ($rup['rup_status'] ?? 1) !== 1) {
+            return $this->failWith('Paket RUP ini sudah terkunci karena sudah dibuatkan Paket Pengadaan dan tidak dapat diubah.', 422, '/rup');
+        }
+
+        $rules = [
+            'fiscal_year'         => 'required|is_natural_no_zero|greater_than_equal_to[2000]|less_than_equal_to[2100]',
+            'activity'            => 'required|min_length[3]|max_length[2000]',
+            'package_name'        => 'required|min_length[3]|max_length[2000]',
+            'package_code'        => 'permit_empty|max_length[50]|regex_match[/^[A-Za-z0-9._\/-]+$/]',
+            'jenis_belanja_id'    => 'permit_empty|is_natural_no_zero|is_not_unique[jenis_belanja.id]',
+            'jenis_pengadaan_id'  => 'required|is_natural_no_zero|is_not_unique[jenis_pengadaan.id]',
+            'metode_pemilihan_id' => 'required|is_natural_no_zero|is_not_unique[metode_pemilihan.id]',
+            'sumber_dana_id'      => 'required|is_natural_no_zero|is_not_unique[sumber_dana.id]',
+            'jenis_dak_id'        => 'permit_empty|is_natural_no_zero|is_not_unique[jenis_dak.id]',
+            'budget_ceiling'      => 'required|numeric|greater_than[0]|less_than[1000000000000000]',
+            'account_code'        => 'permit_empty|max_length[255]',
+            'work_duration'       => 'permit_empty|is_natural_no_zero|less_than_equal_to[3650]',
+            'volume'              => 'permit_empty|max_length[255]',
+            'location'            => 'permit_empty|max_length[2000]',
+            'description'         => 'permit_empty|max_length[5000]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->failWith(implode(' ', $this->validator->getErrors()), 422, '/rup');
+        }
+
+        $post        = $this->request;
+        $packageCode = trim((string) $post->getPost('package_code'));
+        if ($packageCode === '') {
+            $packageCode = $rup['package_code'] ?: ('RUP-' . date('Y') . '-' . random_int(10000000, 99999999));
+        }
+
+        try {
+            $this->rupModel->update($rupId, [
+                'fiscal_year'         => (int) $post->getPost('fiscal_year'),
+                'package_code'        => $packageCode,
+                'activity'            => trim((string) $post->getPost('activity')),
+                'package_name'        => trim((string) $post->getPost('package_name')),
+                'jenis_pengadaan_id'  => (int) $post->getPost('jenis_pengadaan_id'),
+                'metode_pemilihan_id' => (int) $post->getPost('metode_pemilihan_id'),
+                'sumber_dana_id'      => (int) $post->getPost('sumber_dana_id'),
+                'jenis_dak_id'        => (int) $post->getPost('jenis_dak_id') ?: 2,
+                'budget_ceiling'      => (float) $post->getPost('budget_ceiling'),
+                'account_code'        => trim((string) $post->getPost('account_code')) ?: null,
+                'work_duration'       => (int) $post->getPost('work_duration') ?: 0,
+                'volume'              => trim((string) $post->getPost('volume')) ?: '1 Paket',
+                'location'            => trim((string) $post->getPost('location')) ?: null,
+                'description'         => trim((string) $post->getPost('description')) ?: null,
+            ]);
+
+            return $this->okWith('Paket Rencana Pengadaan (RUP) berhasil diperbarui!', ['id' => $rupId], '/rup');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in RupController::update: ' . $e->getMessage());
+
+            return $this->failWith('Gagal memperbarui paket RUP. Silakan coba lagi.', 500, '/rup');
+        }
+    }
+
+    /**
+     * Hapus data paket RUP (hanya bisa jika belum dibuatkan Paket Pengadaan / rup_status == 1)
+     */
+    public function delete($id = null)
+    {
+        if ($deny = $this->denyAdminUlp()) {
+            return $deny;
+        }
+
+        if (! $this->canWrite()) {
+            return $this->failWith('Anda tidak memiliki hak akses untuk menghapus RUP.', 403, '/rup');
+        }
+
+        $rupId = (int) $id;
+        $rup   = $rupId > 0 ? $this->rupModel->getWithRelations($rupId) : null;
+
+        if (! $rup || ! $this->inScope($rup)) {
+            return $this->failWith('Data RUP tidak ditemukan.', 404, '/rup');
+        }
+
+        if (! empty($rup['paket_id']) || (int) ($rup['rup_status'] ?? 1) !== 1) {
+            return $this->failWith('Paket RUP ini sudah terkunci karena sudah dibuatkan Paket Pengadaan dan tidak dapat dihapus.', 422, '/rup');
+        }
+
+        try {
+            $this->rupModel->delete($rupId);
+
+            return $this->okWith('Paket Rencana Pengadaan (RUP) berhasil dihapus!', ['id' => $rupId], '/rup');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in RupController::delete: ' . $e->getMessage());
+
+            return $this->failWith('Gagal menghapus paket RUP. Silakan coba lagi.', 500, '/rup');
+        }
+    }
+
+    /**
+     * Ambil data RUP dari API INAPROC Kabupaten Kotabaru
+     * Endpoint: https://data-inaproc.kotabarukab.go.id/api/rup/[kode_rup]
+     */
+    public function fetchInaproc(?string $kodeRup = null)
+    {
+        if ($deny = $this->denyAdminUlp()) {
+            return $deny;
+        }
+
+        $cleanCode = preg_replace('/[^A-Za-z0-9_-]/', '', trim((string) $kodeRup));
+        if ($cleanCode === '') {
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'  => 'error',
+                'message' => 'Kode RUP wajib diisi dan harus berupa angka/karakter valid.',
+            ]);
+        }
+
+        $apiUrl = 'https://data-inaproc.kotabarukab.go.id/api/rup/' . rawurlencode($cleanCode);
+
+        try {
+            $ch = curl_init($apiUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_TIMEOUT        => 12,
+                CURLOPT_CONNECTTIMEOUT => 6,
+                CURLOPT_HTTPHEADER     => [
+                    'Accept: application/json',
+                    'User-Agent: SIMPPEL-Kotabaru/1.0',
+                ],
+            ]);
+
+            $rawBody  = curl_exec($ch);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlErr  = curl_error($ch);
+            curl_close($ch);
+
+            if ($rawBody === false || $rawBody === '') {
+                return $this->response->setStatusCode(502)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Gagal menghubungi server API INAPROC: ' . ($curlErr ?: 'Respon kosong'),
+                ]);
+            }
+
+            $decoded = json_decode($rawBody, true);
+            if (! is_array($decoded)) {
+                return $this->response->setStatusCode(502)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Format respon dari API INAPROC tidak valid.',
+                ]);
+            }
+
+            return $this->response->setStatusCode($httpCode >= 200 && $httpCode < 600 ? $httpCode : 200)->setJSON($decoded);
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in RupController::fetchInaproc: ' . $e->getMessage());
+
+            return $this->response->setStatusCode(500)->setJSON([
+                'status'  => 'error',
+                'message' => 'Terjadi kesalahan saat menarik data dari API INAPROC.',
+            ]);
         }
     }
 
@@ -276,6 +479,11 @@ class RupController extends BaseController
             'Pekerjaan Terintegrasi'                => 'badge-proc-terintegrasi',
             default                                 => 'badge-proc-default',
         };
+
+        // Jika sudah dibuatkan Paket Pengadaan (paket_id tidak kosong), paksa status RUP menjadi Terkunci (2)
+        if (! empty($item['paket_id'])) {
+            $item['rup_status'] = 2;
+        }
 
         // Status Akses Edit RUP (1 = Bisa Diedit, 2 = Terkunci)
         $isEditable = ((int) ($item['rup_status'] ?? 1)) === 1;

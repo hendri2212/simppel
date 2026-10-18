@@ -37,6 +37,7 @@
 
     <li class="nav-title"><span>Perencanaan Pengadaan</span></li>
 
+    <?php if ((int) session('role_id') !== 4 && strtoupper((string) session('role_name')) !== 'ADMIN ULP'): ?>
     <li>
         <a href="/rup" title="Daftar RUP" data-filter-tags="perencanaan pengadaan rup daftar">
             <svg class="sa-icon">
@@ -45,6 +46,7 @@
             <span class="nav-link-text" data-i18n>Daftar RUP</span>
         </a>
     </li>
+    <?php endif; ?>
 
     <li>
         <a href="/paket" title="Daftar Paket" data-filter-tags="perencanaan pengadaan paket daftar">

@@ -212,10 +212,16 @@ class PaketController extends BaseController
                 return $this->failWith('Gagal menyimpan data paket.', 500, '/paket');
             }
 
+            // Kunci RUP segera setelah paket dibuat agar RUP tidak dapat diedit/dihapus
+            $db->table('rup')->where('id', $rupId)->update([
+                'rup_status' => 2,
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
             $db->transCommit();
 
             return $this->okWith(
-                "Draf paket pengadaan berhasil dibuat! Silakan tinjau dan klik tombol 'Ajukan' untuk memproses paket ke UKPBJ.",
+                "Draf paket pengadaan berhasil dibuat! Data RUP terkait kini telah dikunci. Silakan lengkapi syarat dan klik 'Ajukan' untuk memproses paket ke UKPBJ.",
                 ['paket_id' => $insertId],
                 '/paket'
             );
@@ -225,6 +231,113 @@ class PaketController extends BaseController
 
             return $this->failWith('Gagal menyimpan data paket. Silakan coba lagi.', 500, '/paket');
         }
+    }
+
+    /**
+     * Perbarui data paket pengadaan (hanya selama masih berstatus Draft / status_paket == 1)
+     */
+    public function update($id = null)
+    {
+        $paket = $this->findPaketForActor((int) $id, true, $error);
+        if (! $paket) {
+            return $error;
+        }
+
+        if ((int) $paket['status_paket'] !== 1) {
+            return $this->failWith('Paket ini sudah diajukan atau diproses sehingga tidak dapat diubah.', 422, '/paket');
+        }
+
+        $rules = [
+            'no_rpp'    => 'required|min_length[3]|max_length[1000]',
+            'nilai_hps' => 'required|max_length[30]',
+        ];
+
+        if (! $this->validate($rules)) {
+            return $this->failWith(implode(' ', $this->validator->getErrors()), 422, '/paket');
+        }
+
+        $cleanHps = str_replace(['Rp', ' ', '.'], '', (string) $this->request->getPost('nilai_hps'));
+        $cleanHps = str_replace(',', '.', $cleanHps);
+
+        if (! is_numeric($cleanHps) || (float) $cleanHps <= 0 || (float) $cleanHps >= 1e15) {
+            return $this->failWith('Nilai HPS tidak valid; harus lebih besar dari 0.', 422, '/paket');
+        }
+        $nilaiHps = (float) $cleanHps;
+
+        try {
+            $this->paketModel->update((int) $paket['id'], [
+                'no_rpp'    => trim((string) $this->request->getPost('no_rpp')),
+                'nilai_hps' => $nilaiHps,
+            ]);
+
+            return $this->okWith('Data paket pengadaan berhasil diperbarui!', ['paket_id' => (int) $paket['id']], '/paket');
+        } catch (\Throwable $e) {
+            log_message('error', 'Error in PaketController::update: ' . $e->getMessage());
+
+            return $this->failWith('Gagal memperbarui data paket. Silakan coba lagi.', 500, '/paket');
+        }
+    }
+
+    /**
+     * Hapus paket pengadaan (hanya selama masih berstatus Draft / status_paket == 1):
+     * - Menghapus seluruh dokumen persyaratan terkait (tabel syarat juga ON DELETE CASCADE) beserta file fisiknya di storage
+     * - Membuka kembali kunci pada RUP terkait (rup_status = 1) agar RUP dapat diedit/dihapus atau dibuatkan paket ulang
+     */
+    public function delete($id = null)
+    {
+        $paket = $this->findPaketForActor((int) $id, true, $error);
+        if (! $paket) {
+            return $error;
+        }
+
+        if ((int) $paket['status_paket'] !== 1) {
+            return $this->failWith('Paket yang sudah diajukan atau sedang diproses tidak dapat dihapus.', 422, '/paket');
+        }
+
+        $paketId = (int) $paket['id'];
+        $rupId   = (int) ($paket['rup_id'] ?? 0);
+
+        // Ambil daftar file fisik syarat sebelum paket dihapus
+        $syaratRows    = $this->syaratModel->select('id, nama_file')->where('paket_id', $paketId)->findAll();
+        $filesToRemove = array_filter(array_column($syaratRows, 'nama_file'));
+
+        $db = db_connect();
+
+        try {
+            $db->transBegin();
+
+            // Hapus syarat terkait (database juga dilengkapi ON DELETE CASCADE pada syarat.paket_id & paket_pokja.paket_id)
+            $this->syaratModel->where('paket_id', $paketId)->delete();
+
+            // Hapus paket
+            $this->paketModel->delete($paketId);
+
+            // Buka kembali akses edit/delete pada RUP terkait (rup_status = 1)
+            if ($rupId > 0) {
+                $db->table('rup')->where('id', $rupId)->update([
+                    'rup_status' => 1,
+                    'updated_at' => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            $db->transCommit();
+        } catch (\Throwable $e) {
+            $db->transRollback();
+            log_message('error', 'Error in PaketController::delete: ' . $e->getMessage());
+
+            return $this->failWith('Gagal menghapus paket pengadaan. Silakan coba lagi.', 500, '/paket');
+        }
+
+        // Hapus seluruh file fisik persyaratan dari direktori writable/uploads/syarat/
+        foreach ($filesToRemove as $fileName) {
+            $this->removeFile($fileName);
+        }
+
+        return $this->okWith(
+            'Paket pengadaan beserta seluruh dokumen persyaratannya berhasil dihapus! Data RUP terkait kini kembali terbuka.',
+            ['paket_id' => $paketId],
+            '/paket'
+        );
     }
 
     /**
