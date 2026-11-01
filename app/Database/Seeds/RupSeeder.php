@@ -68,7 +68,7 @@ class RupSeeder extends Seeder
             [
                 'id'                          => 3,
                 'skpd_id'                     => 16, // DPUPR
-                'ppk_id'                      => 5,  // Bidang Bina Marga
+                'ppk_id'                      => 1,  // Bidang Bina Marga
                 'fiscal_year'                 => '2026',
                 'activity'                    => 'PENYELENGGARAAN JALAN KABUPATEN/KOTA',
                 'package_name'                => 'Jasa Konsultansi Pengawasan Peningkatan Struktur Ruas Jalan Tanjung Seloka - Berangas (Tanjung Serudung-Labuan Mas)',
@@ -94,7 +94,7 @@ class RupSeeder extends Seeder
             [
                 'id'                          => 4,
                 'skpd_id'                     => 16, // DPUPR
-                'ppk_id'                      => 5,  // Bidang Bina Marga
+                'ppk_id'                      => 1,  // Bidang Bina Marga
                 'fiscal_year'                 => '2026',
                 'activity'                    => 'REHABILITASI JALAN DAN JEMBATAN KABUPATEN',
                 'package_name'                => 'Peningkatan Struktur Ruas Jalan Cantung - Batulicin Km. 10',

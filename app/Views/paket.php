@@ -101,9 +101,10 @@
             color: var(--bs-secondary-color, #a7acb1);
         }
 
-        /* Modal Peringatan Dokumen Persyaratan Belum Lengkap & Konfirmasi Pengajuan */
+        /* Modal Peringatan Dokumen Persyaratan Belum Lengkap & Konfirmasi Pengajuan / Aksi */
         #modalSyaratBelumLengkap,
-        #modalKonfirmasiAjukanPaket {
+        #modalKonfirmasiAjukanPaket,
+        #wfConfirmActionModal {
             z-index: 1065;
         }
         .modal-syarat-icon-wrap {
@@ -415,12 +416,14 @@
 
                     // Deteksi Role Pengguna saat ini
                     $currentUserId = (int) (session()->get('user_id') ?? ($currentUser['id'] ?? 0));
+                    $currentRoleId = (int) (session()->get('role_id') ?? ($currentUser['role_id'] ?? 0));
                     $currentRoleName = strtoupper(trim((string) (session()->get('role_name') ?? ($currentUser['role_name'] ?? ''))));
                     
                     // Kategori Role: apakah Admin ULP / Pusat atau PPK
+                    $isStrictAdminUlp = ($currentRoleId === 4 || $currentRoleName === 'ADMIN ULP');
                     $isAdminUlp = in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR', 'KEPALA ULP', 'DISTRIBUSI'], true);
                     $isPpk = in_array($currentRoleName, ['PPK', 'ADMIN PPK'], true) || !$isAdminUlp;
-                    $canWritePaket = in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
+                    $canWritePaket = ! $isStrictAdminUlp && in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
                     $canAjukanPaket = $canAjukanPaket ?? in_array($currentRoleName, ['ADMINISTRATOR', 'PPK'], true);
                         ?>
 
@@ -529,13 +532,16 @@
                                     <span class="fw-bold">Daftar Paket Tender & Seleksi</span>
                                     <span class="fw-300 ms-1 text-muted fs-xs">(Tabel Paket)</span>
                                 </h2>
+                                <?php if (! $isStrictAdminUlp): ?>
                                 <div class="panel-toolbar d-flex align-items-center gap-2">
+                                    <?php if ($canWritePaket): ?>
                                     <button type="button" class="btn btn-primary btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addPaketModal">
                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
                                             <use href="/icons/sprite.svg#plus"></use>
                                         </svg>
                                         <span>Tambah Paket</span>
                                     </button>
+                                    <?php endif; ?>
                                     <a href="/rup" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
                                             <use href="/icons/sprite.svg#arrow-left"></use>
@@ -543,6 +549,7 @@
                                         <span>Lihat RUP</span>
                                     </a>
                                 </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="panel-container show">
@@ -980,6 +987,7 @@
                                                                                 <a class="dropdown-item d-flex align-items-center gap-2 btn-wf text-<?= esc($wa['variant']) ?><?= !empty($wa['blocked']) ? ' disabled' : '' ?>" href="javascript:void(0);"
                                                                                     data-id="<?= (int) $p['id'] ?>" data-action="<?= esc($wa['key']) ?>" data-label="<?= esc($wa['label']) ?>"
                                                                                     data-note="<?= esc((string) ($wa['note'] ?? '')) ?>" data-confirm="<?= esc($wa['confirm']) ?>"
+                                                                                    data-paket='<?= $paketJson ?>'
                                                                                     <?php if (!empty($wa['blocked'])): ?>title="<?= esc($wa['blocked']) ?>"<?php endif; ?>>
                                                                                     <span><?= esc($wa['label']) ?></span>
                                                                                 </a>
@@ -1589,6 +1597,7 @@
         </div>
     </div>
 
+    <?php if (! $isStrictAdminUlp && $canWritePaket): ?>
     <!-- MODAL: Tambah Paket Pengadaan Baru -->
     <div class="modal fade" id="addPaketModal" tabindex="-1" aria-labelledby="addPaketModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1715,6 +1724,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- MODAL: Ubah Paket Pengadaan -->
     <div class="modal fade" id="editPaketModal" tabindex="-1" aria-labelledby="editPaketModalLabel" aria-hidden="true">

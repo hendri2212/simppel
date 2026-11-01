@@ -117,8 +117,13 @@ class PaketController extends BaseController
                 ->where('users.id', (int) session()->get('user_id'))
                 ->first();
 
-            // RUP siap dibuatkan paket: aktif (rup_status = 1) dan belum terikat paket aktif
-            if ($this->canWrite()) {
+            // RUP siap dibuatkan paket: aktif (rup_status = 1) dan belum terikat paket aktif (khusus role penyusun, bukan ADMIN ULP)
+            $actor    = $this->actor();
+            $roleName = strtoupper((string) ($actor['role_name'] ?? ''));
+            $roleId   = (int) ($actor['role_id'] ?? 0);
+            $isAdminUlp = ($roleId === 4 || $roleName === 'ADMIN ULP');
+
+            if (! $isAdminUlp && $this->canWrite()) {
                 $usedRupIds = $this->paketModel->where('status_paket !=', 0)->findColumn('rup_id') ?? [];
 
                 $availableRupQuery = $this->rupModel
@@ -178,6 +183,14 @@ class PaketController extends BaseController
      */
     public function store()
     {
+        $actor    = $this->actor();
+        $roleName = strtoupper((string) ($actor['role_name'] ?? ''));
+        $roleId   = (int) ($actor['role_id'] ?? 0);
+
+        if ($roleId === 4 || $roleName === 'ADMIN ULP' || ! $this->canWrite()) {
+            return $this->failWith('Role ADMIN ULP tidak memiliki izin untuk menambah paket pengadaan.', 403, '/paket');
+        }
+
         $rules = [
             'rup_id'    => 'required|is_natural_no_zero|is_not_unique[rup.id]',
             'no_rpp'    => 'required|min_length[3]|max_length[1000]',

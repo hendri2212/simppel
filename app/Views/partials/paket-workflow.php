@@ -26,6 +26,138 @@
     </div>
 </div>
 
+<!-- MODAL: Konfirmasi Aksi Alur Paket (Pilih Paket, dsb) -->
+<div class="modal fade" id="wfConfirmActionModal" tabindex="-1" aria-labelledby="wfConfirmActionModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+            <!-- Strip Aksen Gradien -->
+            <div id="wfConfirmTopStrip" style="height: 5px; background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);"></div>
+
+            <!-- STATE 1: KONFIRMASI -->
+            <div class="modal-body p-4 text-center" id="wfConfirmBody">
+                <div class="modal-ajukan-icon-wrap mb-3" id="wfConfirmIconWrap">
+                    <svg class="sa-icon text-primary" style="width: 34px; height: 34px;" id="wfConfirmIcon">
+                        <use href="/icons/sprite.svg#check-square"></use>
+                    </svg>
+                </div>
+
+                <div class="mb-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fs-nano fw-semibold d-inline-flex align-items-center gap-1" id="wfConfirmActionBadge">
+                        <svg class="sa-icon text-primary" style="width: 12px; height: 12px;">
+                            <use href="/icons/sprite.svg#shield"></use>
+                        </svg>
+                        <span id="wfConfirmActionBadgeText">Penugasan Verifikator ULP</span>
+                    </span>
+                </div>
+
+                <h5 class="modal-title fw-bold text-body-emphasis mb-1" id="wfConfirmActionModalLabel">
+                    Pilih Paket untuk Diverifikasi?
+                </h5>
+                <p class="text-secondary fs-sm mb-3 px-1" id="wfConfirmActionDesc">
+                    Anda akan mengambil alih paket ini untuk diverifikasi berkas persyaratannya.
+                </p>
+
+                <!-- Ringkasan Paket yang Dipilih -->
+                <div class="card border bg-body-tertiary bg-opacity-50 rounded-3 mb-3 text-start shadow-2xs">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fs-nano text-uppercase text-muted fw-bold">Rincian Paket</span>
+                            <span class="badge bg-primary font-monospace fs-nano" id="wfConfirmPaketNo">0001</span>
+                        </div>
+                        <div class="fw-bold text-body-emphasis fs-sm mb-1" id="wfConfirmPaketName">-</div>
+                        <div class="text-muted fs-xs mb-2 d-flex align-items-center gap-1" id="wfConfirmPaketActivityWrap">
+                            <svg class="sa-icon text-muted" style="width: 12px; height: 12px;"><use href="/icons/sprite.svg#layers"></use></svg>
+                            <span id="wfConfirmPaketActivity">-</span>
+                        </div>
+                        <div class="row g-2 pt-2 border-top">
+                            <div class="col-7">
+                                <div class="fs-nano text-uppercase text-muted fw-semibold">SKPD / Satuan Kerja</div>
+                                <div class="fs-xs fw-semibold text-body-emphasis text-truncate" id="wfConfirmPaketSkpd">-</div>
+                            </div>
+                            <div class="col-5 text-end">
+                                <div class="fs-nano text-uppercase text-muted fw-semibold">Nilai HPS</div>
+                                <div class="font-monospace fs-xs fw-bold text-primary" id="wfConfirmPaketHps">Rp 0</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Poin-Poin Konsekuensi / Informasi -->
+                <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 rounded-3 mb-0 text-start overflow-hidden" id="wfConfirmInfoCard">
+                    <div class="card-header bg-primary-subtle bg-opacity-25 border-primary-subtle py-2 px-3 d-flex align-items-center gap-2">
+                        <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
+                            <use href="/icons/sprite.svg#info"></use>
+                        </svg>
+                        <span class="fs-xs fw-bold text-primary-emphasis text-uppercase" id="wfConfirmInfoTitle">Alur Setelah Memilih Paket</span>
+                    </div>
+                    <div class="card-body p-3" id="wfConfirmInfoList">
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <span class="ajukan-step-badge bg-primary text-white">1</span>
+                            <div class="fs-xs text-body">
+                                <strong>Antrean Kerja:</strong> Paket akan dialihkan ke tab kerja <strong>"Paket Saya"</strong> untuk proses verifikasi.
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2 mb-2">
+                            <span class="ajukan-step-badge bg-primary text-white">2</span>
+                            <div class="fs-xs text-body">
+                                <strong>Pemeriksaan Berkas:</strong> Anda dapat meninjau kelengkapan dokumen persyaratan dan memberikan catatan revisi jika diperlukan.
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <span class="ajukan-step-badge bg-primary text-white">3</span>
+                            <div class="fs-xs text-body">
+                                <strong>Eksklusivitas Penugasan:</strong> Paket terikat pada akun Anda sehingga verifikator ULP lain tidak akan memproses ganda.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Error (jika gagal) -->
+                <div class="alert alert-danger d-none py-2 px-3 mt-3 mb-0 fs-xs text-start" id="wfConfirmAlertError"></div>
+            </div>
+
+            <!-- STATE 2: NOTIFIKASI SUKSES -->
+            <div class="modal-body p-4 text-center d-none" id="wfConfirmSuccessBody">
+                <div class="modal-ajukan-success-icon-wrap mb-3">
+                    <svg class="sa-icon text-success" style="width: 38px; height: 38px;">
+                        <use href="/icons/sprite.svg#check"></use>
+                    </svg>
+                </div>
+                <h5 class="modal-title fw-bold text-body-emphasis mb-1" id="wfConfirmSuccessTitle">
+                    Paket Berhasil Dipilih!
+                </h5>
+                <p class="text-secondary fs-sm mb-3 px-1" id="wfConfirmSuccessDesc">
+                    Paket telah masuk ke antrean kerja verifikasi Anda. Memuat ulang data...
+                </p>
+                <div class="p-3 bg-success bg-opacity-10 border border-success-subtle rounded-3 mb-2">
+                    <div class="fs-xs text-success-emphasis fw-semibold">
+                        Paket siap diverifikasi pada tab <strong>Paket Saya</strong>.
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer bg-body-tertiary border-top py-2 px-4 d-flex justify-content-between align-items-center" id="wfConfirmFooter">
+                <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal" id="btnWfConfirmCancel">
+                    Batal
+                </button>
+                <button type="button" class="btn btn-primary btn-sm px-4 d-inline-flex align-items-center gap-2 shadow-xs" id="btnWfConfirmSubmit">
+                    <svg class="sa-icon" style="width: 14px; height: 14px;">
+                        <use href="/icons/sprite.svg#check-square"></use>
+                    </svg>
+                    <span id="btnWfConfirmSubmitText">Ya, Pilih Paket Ini</span>
+                </button>
+            </div>
+
+            <div class="modal-footer bg-body-tertiary border-top py-2 px-4 d-none justify-content-center" id="wfConfirmSuccessFooter">
+                <button type="button" class="btn btn-success btn-sm px-4 d-inline-flex align-items-center gap-2" disabled>
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Memuat Ulang...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
@@ -56,7 +188,10 @@
         // ---------- Aksi tahapan ----------
         const wfNoteModalEl = $('wfNoteModal');
         const noteModal = new bootstrap.Modal(wfNoteModalEl);
+        const wfConfirmModalEl = $('wfConfirmActionModal');
+        const wfConfirmModal = wfConfirmModalEl ? new bootstrap.Modal(wfConfirmModalEl) : null;
         let pending = null;
+        let pendingConfirmAction = null;
         let currentDetailPaket = null;
         let detailDirty = false;
 
@@ -78,6 +213,24 @@
             });
         }
 
+        if (wfConfirmModalEl) {
+            wfConfirmModalEl.addEventListener('show.bs.modal', function () {
+                wfConfirmModalEl.style.zIndex = '1065';
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        backdrops[backdrops.length - 1].style.zIndex = '1060';
+                    }
+                }, 10);
+            });
+            wfConfirmModalEl.addEventListener('hidden.bs.modal', function () {
+                const detailModal = $('detailPaketModal');
+                if (detailModal && detailModal.classList.contains('show')) {
+                    document.body.classList.add('modal-open');
+                }
+            });
+        }
+
         async function runAction(a, extra) {
             const res = await postForm(`/paket/aksi/${a.action}/${a.id}`, extra);
             if (res.ok) {
@@ -86,13 +239,139 @@
                 $('wfNoteAlert').textContent = res.j.message || 'Gagal memproses aksi.';
                 $('wfNoteAlert').classList.remove('d-none');
                 if (!$('wfNoteModal').classList.contains('show')) {
-                    alert(res.j.message || 'Gagal memproses aksi.');
                     if (['kembalikan', 'sarankaji', 'saranadd'].includes(a.action) && $('tab-catatan-link')) {
                         bootstrap.Tab.getOrCreateInstance($('tab-catatan-link')).show();
                     }
                 }
             }
             return res;
+        }
+
+        function openWfConfirmModal(a) {
+            if (!wfConfirmModal) {
+                runAction(a);
+                return;
+            }
+
+            pendingConfirmAction = a;
+            const p = a.paket || currentDetailPaket || {};
+
+            // Reset tampilan State 1 (Confirm) dan State 2 (Success)
+            $('wfConfirmBody').classList.remove('d-none');
+            $('wfConfirmFooter').classList.remove('d-none');
+            $('wfConfirmFooter').classList.add('d-flex');
+            $('wfConfirmSuccessBody').classList.add('d-none');
+            $('wfConfirmSuccessFooter').classList.add('d-none');
+            $('wfConfirmSuccessFooter').classList.remove('d-flex');
+
+            const alertError = $('wfConfirmAlertError');
+            if (alertError) {
+                alertError.classList.add('d-none');
+                alertError.textContent = '';
+            }
+
+            const btnSubmit = $('btnWfConfirmSubmit');
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+            }
+            const btnCancel = $('btnWfConfirmCancel');
+            if (btnCancel) {
+                btnCancel.disabled = false;
+            }
+
+            // Isi Data Paket
+            const noPaket = p.no_paket && String(p.no_paket).trim() !== '' ? p.no_paket : (a.id ? ('ID #' + a.id) : '-');
+            $('wfConfirmPaketNo').textContent = noPaket;
+            $('wfConfirmPaketName').textContent = p.package_name || a.label || 'Paket Pengadaan';
+
+            const actWrap = $('wfConfirmPaketActivityWrap');
+            const actSpan = $('wfConfirmPaketActivity');
+            const activityText = (p.activity || '').trim();
+            const packageNameText = (p.package_name || '').trim();
+            if (actWrap && actSpan) {
+                if (activityText && activityText !== '-' && activityText.toLowerCase() !== packageNameText.toLowerCase()) {
+                    actSpan.textContent = activityText;
+                    actWrap.classList.remove('d-none');
+                } else {
+                    actWrap.classList.add('d-none');
+                }
+            }
+
+            const skpdName = p.skpd_name || p.skpd_abbreviation || '-';
+            $('wfConfirmPaketSkpd').textContent = skpdName;
+            const hpsVal = parseFloat(p.nilai_hps || 0);
+            $('wfConfirmPaketHps').textContent = hpsVal > 0 ? fmtRupiah(hpsVal) : '-';
+
+            // Kustomisasi khusus jika aksi adalah "pilih" (Admin ULP)
+            if (a.action === 'pilih') {
+                $('wfConfirmTopStrip').style.background = 'linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)';
+                $('wfConfirmActionBadgeText').textContent = 'Penugasan Verifikator ULP';
+                $('wfConfirmActionModalLabel').textContent = 'Pilih Paket untuk Diverifikasi?';
+                $('wfConfirmActionDesc').textContent = 'Anda akan mengambil alih paket ini sebagai verifikator penanggung jawab kelengkapan berkas.';
+                $('btnWfConfirmSubmitText').textContent = 'Ya, Pilih Paket Ini';
+                $('wfConfirmInfoCard').classList.remove('d-none');
+            } else {
+                $('wfConfirmTopStrip').style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                $('wfConfirmActionBadgeText').textContent = 'Konfirmasi Aksi: ' + a.label;
+                $('wfConfirmActionModalLabel').textContent = a.label + '?';
+                $('wfConfirmActionDesc').textContent = a.confirm || 'Apakah Anda yakin ingin memproses tahapan pengadaan ini?';
+                $('btnWfConfirmSubmitText').textContent = 'Ya, ' + a.label;
+                $('wfConfirmInfoCard').classList.add('d-none');
+            }
+
+            wfConfirmModal.show();
+        }
+
+        const btnWfConfirmSubmit = $('btnWfConfirmSubmit');
+        if (btnWfConfirmSubmit) {
+            btnWfConfirmSubmit.addEventListener('click', async function () {
+                if (!pendingConfirmAction) return;
+
+                const btnSubmit = this;
+                const btnCancel = $('btnWfConfirmCancel');
+                const alertError = $('wfConfirmAlertError');
+
+                btnSubmit.disabled = true;
+                if (btnCancel) btnCancel.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses...';
+
+                if (alertError) alertError.classList.add('d-none');
+
+                const a = pendingConfirmAction;
+                const res = await postForm(`/paket/aksi/${a.action}/${a.id}`);
+
+                if (res.ok) {
+                    // Transisi State 2 (Success)
+                    $('wfConfirmBody').classList.add('d-none');
+                    $('wfConfirmFooter').classList.add('d-none');
+                    $('wfConfirmFooter').classList.remove('d-flex');
+
+                    if (a.action === 'pilih') {
+                        $('wfConfirmSuccessTitle').textContent = 'Paket Berhasil Dipilih!';
+                        $('wfConfirmSuccessDesc').textContent = 'Paket telah masuk ke antrean kerja verifikasi Anda. Memuat ulang data...';
+                    } else {
+                        $('wfConfirmSuccessTitle').textContent = 'Aksi Berhasil Diproses!';
+                        $('wfConfirmSuccessDesc').textContent = (res.j && res.j.message) ? res.j.message : 'Tahapan paket telah berhasil diperbarui.';
+                    }
+
+                    $('wfConfirmSuccessBody').classList.remove('d-none');
+                    $('wfConfirmSuccessFooter').classList.remove('d-none');
+                    $('wfConfirmSuccessFooter').classList.add('d-flex');
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1200);
+                } else {
+                    btnSubmit.disabled = false;
+                    if (btnCancel) btnCancel.disabled = false;
+                    btnSubmit.innerHTML = `<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#check-square"></use></svg> <span>${$('btnWfConfirmSubmitText').textContent}</span>`;
+
+                    if (alertError) {
+                        alertError.textContent = (res.j && res.j.message) ? res.j.message : 'Gagal memproses aksi. Silakan coba lagi.';
+                        alertError.classList.remove('d-none');
+                    }
+                }
+            });
         }
 
         function triggerWorkflowAction(a) {
@@ -116,20 +395,25 @@
                 $('wfGagalWrap').classList.add('d-none');
                 $('wfNoteAlert').classList.add('d-none');
                 noteModal.show();
-            } else if (confirm(a.confirm)) {
-                runAction(a);
+            } else {
+                openWfConfirmModal(a);
             }
         }
 
         document.querySelectorAll('.btn-wf').forEach(btn => {
             btn.addEventListener('click', function () {
                 if (btn.classList.contains('disabled')) return;
+                let pkt = null;
+                if (btn.dataset.paket) {
+                    try { pkt = JSON.parse(btn.dataset.paket); } catch (e) {}
+                }
                 triggerWorkflowAction({
                     id: btn.dataset.id,
                     action: btn.dataset.action,
                     label: btn.dataset.label,
                     note: btn.dataset.note,
-                    confirm: btn.dataset.confirm
+                    confirm: btn.dataset.confirm,
+                    paket: pkt
                 });
             });
         });
@@ -559,7 +843,8 @@
                             action: wa.key,
                             label: wa.label,
                             note: wa.note || '',
-                            confirm: wa.confirm || ''
+                            confirm: wa.confirm || '',
+                            paket: p
                         });
                     });
                     btnWrap.appendChild(b);
