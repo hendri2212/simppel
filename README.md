@@ -151,6 +151,20 @@ php spark migrate
 php spark db:seed DatabaseSeeder
 ```
 
+#### 🔄 Reset & Migrasi Ulang dari Awal (*Migrate Fresh / Refresh*)
+Di CodeIgniter 4, padanan perintah `migrate:fresh` adalah `migrate:refresh` (melakukan *rollback* semua migrasi lalu menjalankannya kembali dari awal):
+
+```bash
+# Rollback seluruh migrasi dan jalankan ulang dari awal
+php spark migrate:refresh
+
+# Reset migrasi sekaligus isi ulang data master seeder
+php spark migrate:refresh && php spark db:seed DatabaseSeeder
+
+# Opsi alternatif: Rollback ke batch 0 lalu migrasi ulang
+php spark migrate:rollback -b 0 && php spark migrate
+```
+
 ### 6. Menjalankan Server Lokal
 Jalankan server pengembangan bawaan CodeIgniter:
 
