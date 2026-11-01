@@ -183,7 +183,7 @@ Setelah menjalankan seeder `DatabaseSeeder`, Anda dapat masuk menggunakan akun p
 | :--- | :--- | :--- | :--- |
 | **Administrator** | `admin` *(atau `admin@simpple.com`)* | `admin123` | Akses penuh seluruh modul & manajemen akun |
 | **Admin ULP** | `ukpbj_adm_lili` | `12345678` | Akun verifikasi & penanganan ULP / UKPBJ |
-| **PPK** | `test` | `12345678` | Akun Pejabat Pembuat Komitmen (buat paket & RUP) |
+| **PPK** | `ppk.pupr-sda` | `12345678` | Akun Pejabat Pembuat Komitmen (buat paket & RUP) |
 | *Akun Lainnya* | *(Lihat daftar di `UserSeeder.php`)* | `12345678` | Akun simulasi SKPD dan peran lainnya |
 
 > [!IMPORTANT]

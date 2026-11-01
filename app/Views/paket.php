@@ -101,8 +101,9 @@
             color: var(--bs-secondary-color, #a7acb1);
         }
 
-        /* Modal Peringatan Dokumen Persyaratan Belum Lengkap */
-        #modalSyaratBelumLengkap {
+        /* Modal Peringatan Dokumen Persyaratan Belum Lengkap & Konfirmasi Pengajuan */
+        #modalSyaratBelumLengkap,
+        #modalKonfirmasiAjukanPaket {
             z-index: 1065;
         }
         .modal-syarat-icon-wrap {
@@ -117,6 +118,43 @@
             position: relative;
             box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.06);
             animation: pulse-syarat-alert 2s ease-in-out infinite;
+        }
+        .modal-ajukan-icon-wrap {
+            width: 74px;
+            height: 74px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.14) 0%, rgba(16, 185, 129, 0.14) 100%);
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.06);
+            animation: pulse-syarat-alert 2.2s ease-in-out infinite;
+        }
+        .modal-ajukan-success-icon-wrap {
+            width: 74px;
+            height: 74px;
+            background: rgba(16, 185, 129, 0.14);
+            color: #10b981;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.07);
+            animation: pulse-syarat-alert 2s ease-in-out infinite;
+        }
+        .ajukan-step-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            flex-shrink: 0;
         }
         @keyframes pulse-syarat-alert {
             0% { transform: scale(1); }
@@ -244,6 +282,93 @@
             background-color: var(--bs-body-bg, #1e293b);
             border-color: rgba(255, 255, 255, 0.12);
             color: #e2e8f0;
+        }
+
+        @media print {
+            @page {
+                size: auto;
+                margin: 10mm 12mm;
+            }
+
+            /* Sembunyikan elemen latar aplikasi dan backdrop agar tidak memakan tinggi vertikal halaman */
+            body.modal-open,
+            html {
+                height: auto !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+
+            body.modal-open .app-wrap,
+            body:has(#detailPaketModal.show) .app-wrap,
+            .modal-backdrop,
+            .modal:not(#detailPaketModal) {
+                display: none !important;
+            }
+
+            #detailPaketModal {
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                opacity: 1 !important;
+            }
+
+            #detailPaketModal .modal-dialog {
+                max-width: 100% !important;
+                width: 100% !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                transform: none !important;
+                display: block !important;
+            }
+
+            /* Matikan pseudo-element 100vh milik .modal-dialog-centered yang memicu lembar ke-2 kosong */
+            #detailPaketModal .modal-dialog-centered::before {
+                display: none !important;
+                height: 0 !important;
+                content: none !important;
+            }
+
+            #detailPaketModal .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+
+            #detailPaketModal .modal-header,
+            #detailPaketModal .modal-footer,
+            #detailPaketModal .btn-close,
+            #detailPaketTabs {
+                display: none !important;
+            }
+
+            #detailPaketModal .modal-body {
+                padding: 0.5rem 0 !important;
+                overflow: visible !important;
+            }
+
+            #detailPaketModal .tab-content > .tab-pane:not(.active) {
+                display: none !important;
+            }
+
+            #detailPaketModal .tab-content > .tab-pane.active {
+                display: block !important;
+            }
+
+            #detailPaketModal .card,
+            #detailPaketModal .rounded-2,
+            #detailPaketModal #modalWinnerSection {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
@@ -951,7 +1076,7 @@
                 <div class="px-4 pt-3 pb-0 border-bottom bg-body">
                     <div class="mb-3">
                         <h5 class="fw-bold text-body-emphasis mb-1" id="modalPaketTitle">-</h5>
-                        <div class="text-muted fs-sm">
+                        <div class="text-muted fs-sm" id="modalPaketActivityWrap">
                             <svg class="sa-icon me-1 text-muted" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#layers"></use></svg>
                             <span id="modalPaketActivity">-</span>
                         </div>
@@ -1256,7 +1381,7 @@
                             </svg>
                             <span>Ajukan Paket</span>
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm px-3 d-inline-flex align-items-center justify-content-center text-nowrap gap-2" onclick="alert('Mencetak lembar paket pengadaan...');">
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3 d-inline-flex align-items-center justify-content-center text-nowrap gap-2" onclick="printPaketDetail()">
                             <svg class="sa-icon" style="width: 15px; height: 15px;">
                                 <use href="/icons/sprite.svg#printer"></use>
                             </svg>
@@ -1328,6 +1453,136 @@
                             <use href="/icons/sprite.svg#upload"></use>
                         </svg>
                         <span>Lengkapi Dokumen Sekarang</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Konfirmasi & Notifikasi Sukses Pengajuan Paket ke UKPBJ -->
+    <div class="modal fade" id="modalKonfirmasiAjukanPaket" tabindex="-1" aria-labelledby="modalKonfirmasiAjukanPaketLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg overflow-hidden">
+                <!-- Strip Aksen Gradien Biru-Emerald -->
+                <div id="modalAjukanTopStrip" style="height: 5px; background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%);"></div>
+
+                <!-- STATE 1: KONFIRMASI PENGAJUAN -->
+                <div class="modal-body p-4 text-center" id="ajukanConfirmBody">
+                    <div class="modal-ajukan-icon-wrap mb-3">
+                        <svg class="sa-icon text-primary" style="width: 34px; height: 34px;">
+                            <use href="/icons/sprite.svg#send"></use>
+                        </svg>
+                    </div>
+
+                    <div class="mb-2">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fs-nano fw-semibold d-inline-flex align-items-center gap-1" id="modalAjukanSyaratBadge">
+                            <svg class="sa-icon text-success" style="width: 12px; height: 12px;">
+                                <use href="/icons/sprite.svg#check-circle"></use>
+                            </svg>
+                            <span>Seluruh Dokumen Wajib Lengkap</span>
+                        </span>
+                    </div>
+
+                    <h5 class="modal-title fw-bold text-body-emphasis mb-1" id="modalKonfirmasiAjukanPaketLabel">
+                        Ajukan Paket Pengadaan ke UKPBJ?
+                    </h5>
+                    <p class="text-secondary fs-sm mb-3 px-1">
+                        Pastikan seluruh data dan dokumen persyaratan telah sesuai sebelum paket dikirimkan ke Admin UKPBJ.
+                    </p>
+
+                    <!-- Ringkasan Paket yang Akan Diajukan -->
+                    <div class="card border bg-body-tertiary bg-opacity-50 rounded-3 mb-3 text-start shadow-2xs">
+                        <div class="card-body p-3">
+                            <div class="fs-nano text-uppercase text-muted fw-bold mb-1">Nama Paket Pengadaan</div>
+                            <div class="fw-bold text-body-emphasis fs-sm mb-2" id="modalAjukanPaketName">-</div>
+                            <div class="row g-2 pt-2 border-top">
+                                <div class="col-6">
+                                    <div class="fs-nano text-uppercase text-muted fw-semibold">Nomor RPP</div>
+                                    <div class="font-monospace fs-xs fw-semibold text-body-emphasis text-truncate" id="modalAjukanPaketRpp">-</div>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <div class="fs-nano text-uppercase text-muted fw-semibold">Nilai HPS</div>
+                                    <div class="font-monospace fs-xs fw-bold text-primary" id="modalAjukanPaketHps">Rp 0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tahapan Otomatis Setelah Diajukan -->
+                    <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 rounded-3 mb-0 text-start overflow-hidden">
+                        <div class="card-header bg-primary-subtle bg-opacity-25 border-primary-subtle py-2 px-3 d-flex align-items-center gap-2">
+                            <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
+                                <use href="/icons/sprite.svg#shield"></use>
+                            </svg>
+                            <span class="fs-xs fw-bold text-primary-emphasis text-uppercase">Konsekuensi Setelah Paket Diajukan</span>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <span class="ajukan-step-badge bg-primary text-white">1</span>
+                                <div class="fs-xs text-body">
+                                    <strong>Nomor Paket Otomatis:</strong> Sistem akan menerbitkan nomor urut paket baru secara otomatis (<code>+1</code>).
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start gap-2 mb-2">
+                                <span class="ajukan-step-badge bg-primary text-white">2</span>
+                                <div class="fs-xs text-body">
+                                    <strong>Perubahan Status:</strong> Status paket berubah menjadi <span class="badge bg-warning text-dark fs-nano">Diajukan (2)</span> untuk diverifikasi UKPBJ.
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-start gap-2">
+                                <span class="ajukan-step-badge bg-primary text-white">3</span>
+                                <div class="fs-xs text-body">
+                                    <strong>Penguncian Data RUP:</strong> Data RUP terkait dan berkas persyaratan akan dikunci (<code>rup_status = 2</code>).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alert Error Pengajuan (jika terjadi kendala) -->
+                    <div class="alert alert-danger d-none py-2 px-3 mt-3 mb-0 fs-xs text-start" id="modalAjukanAlertError"></div>
+                </div>
+
+                <!-- STATE 2: PENGAJUAN BERHASIL -->
+                <div class="modal-body p-4 text-center d-none" id="ajukanSuccessBody">
+                    <div class="modal-ajukan-success-icon-wrap mb-3">
+                        <svg class="sa-icon text-success" style="width: 36px; height: 36px;">
+                            <use href="/icons/sprite.svg#check-circle"></use>
+                        </svg>
+                    </div>
+
+                    <h5 class="modal-title fw-bold text-body-emphasis mb-1">
+                        Paket Berhasil Diajukan!
+                    </h5>
+                    <p class="text-secondary fs-sm mb-3 px-2" id="modalAjukanSuccessMessage">
+                        Paket pengadaan telah resmi diajukan ke UKPBJ dan data RUP terkait kini telah terkunci.
+                    </p>
+
+                    <div class="p-3 rounded-3 border border-success-subtle bg-success-subtle bg-opacity-10 mb-2">
+                        <div class="fs-nano text-uppercase text-muted fw-bold mb-1">Nomor Paket Terbit</div>
+                        <div class="fs-3 fw-bold font-monospace text-success" id="modalAjukanNewNoPaket">-</div>
+                    </div>
+                </div>
+
+                <!-- FOOTER STATE 1: KONFIRMASI -->
+                <div class="modal-footer bg-body-tertiary border-top py-2 px-4 d-flex justify-content-between align-items-center" id="ajukanConfirmFooter">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" id="btnCancelAjukanModal" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 d-inline-flex align-items-center gap-2 shadow-xs" id="btnConfirmAjukanPaket">
+                        <svg class="sa-icon" style="width: 14px; height: 14px;">
+                            <use href="/icons/sprite.svg#send"></use>
+                        </svg>
+                        <span>Ya, Ajukan Sekarang</span>
+                    </button>
+                </div>
+
+                <!-- FOOTER STATE 2: SUKSES -->
+                <div class="modal-footer bg-body-tertiary border-top py-2 px-4 d-none justify-content-center" id="ajukanSuccessFooter">
+                    <button type="button" class="btn btn-success btn-sm px-4 d-inline-flex align-items-center gap-2 shadow-xs" id="btnReloadAfterAjukan">
+                        <svg class="sa-icon" style="width: 14px; height: 14px;">
+                            <use href="/icons/sprite.svg#check"></use>
+                        </svg>
+                        <span>Selesai & Muat Ulang</span>
                     </button>
                 </div>
             </div>
@@ -1639,6 +1894,16 @@
                 return str;
             }
 
+            // Global handler untuk cetak detail Paket
+            window.printPaketDetail = function () {
+                const tabDetailLink = document.getElementById('tab-detail-link');
+                if (tabDetailLink && !tabDetailLink.classList.contains('active')) {
+                    const bsTab = bootstrap.Tab.getOrCreateInstance(tabDetailLink);
+                    bsTab.show();
+                }
+                window.print();
+            };
+
             // Event listener modal detail
             document.querySelectorAll('.btn-view-paket').forEach(btn => {
                 btn.addEventListener('click', function () {
@@ -1679,8 +1944,22 @@
                             }
                         }
 
-                        document.getElementById('modalPaketTitle').textContent = p.package_name || ('Paket #' + p.id);
-                        document.getElementById('modalPaketActivity').textContent = p.activity || '-';
+                        const pkgName = String(p.package_name || ('Paket #' + p.id)).trim();
+                        const actName = String(p.activity || '').trim();
+                        document.getElementById('modalPaketTitle').textContent = pkgName;
+
+                        const actEl = document.getElementById('modalPaketActivity');
+                        if (actEl) actEl.textContent = actName || '-';
+
+                        const actWrap = document.getElementById('modalPaketActivityWrap');
+                        if (actWrap) {
+                            const isRedundant = !actName || actName === '-' || actName.toLowerCase() === pkgName.toLowerCase();
+                            if (isRedundant) {
+                                actWrap.classList.add('d-none');
+                            } else {
+                                actWrap.classList.remove('d-none');
+                            }
+                        }
 
                         document.getElementById('modalPaketNoRpp').textContent = p.no_rpp || '-';
                         document.getElementById('modalPaketHps').textContent = formatRupiah(p.nilai_hps || 0);
@@ -2710,6 +2989,103 @@
                 });
             }
 
+            // Modal Konfirmasi & Sukses Pengajuan Paket
+            const modalAjukanEl = document.getElementById('modalKonfirmasiAjukanPaket');
+            let bsModalConfirmAjukan = null;
+            let pendingAjukanPaketId = null;
+            let pendingAjukanPaketName = '';
+
+            if (modalAjukanEl) {
+                modalAjukanEl.addEventListener('show.bs.modal', function () {
+                    modalAjukanEl.style.zIndex = '1065';
+                    setTimeout(() => {
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        if (backdrops.length > 1) {
+                            backdrops[backdrops.length - 1].style.zIndex = '1060';
+                        }
+                    }, 10);
+                });
+
+                modalAjukanEl.addEventListener('hidden.bs.modal', function () {
+                    const detailModal = document.getElementById('detailPaketModal');
+                    if (detailModal && detailModal.classList.contains('show')) {
+                        document.body.classList.add('modal-open');
+                    }
+                });
+            }
+
+            const btnConfirmAjukanPaket = document.getElementById('btnConfirmAjukanPaket');
+            const btnReloadAfterAjukan = document.getElementById('btnReloadAfterAjukan');
+
+            if (btnReloadAfterAjukan) {
+                btnReloadAfterAjukan.addEventListener('click', function () {
+                    window.location.reload();
+                });
+            }
+
+            function openModalKonfirmasiAjukan(paketId, paketName) {
+                if (!modalAjukanEl) return;
+
+                pendingAjukanPaketId = paketId;
+                pendingAjukanPaketName = paketName || 'Paket Pengadaan';
+
+                const confirmBody = document.getElementById('ajukanConfirmBody');
+                const successBody = document.getElementById('ajukanSuccessBody');
+                const confirmFooter = document.getElementById('ajukanConfirmFooter');
+                const successFooter = document.getElementById('ajukanSuccessFooter');
+                const topStrip = document.getElementById('modalAjukanTopStrip');
+                const alertError = document.getElementById('modalAjukanAlertError');
+                const btnCancel = document.getElementById('btnCancelAjukanModal');
+
+                if (confirmBody) confirmBody.classList.remove('d-none');
+                if (successBody) successBody.classList.add('d-none');
+                if (confirmFooter) {
+                    confirmFooter.classList.remove('d-none');
+                    confirmFooter.classList.add('d-flex');
+                }
+                if (successFooter) {
+                    successFooter.classList.add('d-none');
+                    successFooter.classList.remove('d-flex');
+                }
+                if (topStrip) {
+                    topStrip.style.background = 'linear-gradient(90deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%)';
+                }
+                if (alertError) {
+                    alertError.classList.add('d-none');
+                    alertError.innerHTML = '';
+                }
+                if (btnCancel) btnCancel.disabled = false;
+                if (btnConfirmAjukanPaket) {
+                    btnConfirmAjukanPaket.disabled = false;
+                    btnConfirmAjukanPaket.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ya, Ajukan Sekarang</span>';
+                }
+
+                const nameEl = document.getElementById('modalAjukanPaketName');
+                if (nameEl) nameEl.textContent = pendingAjukanPaketName;
+
+                const rppEl = document.getElementById('modalAjukanPaketRpp');
+                const modalNoRpp = document.getElementById('modalPaketNoRpp');
+                if (rppEl) rppEl.textContent = modalNoRpp ? modalNoRpp.textContent : '-';
+
+                const hpsEl = document.getElementById('modalAjukanPaketHps');
+                const modalHps = document.getElementById('modalPaketHps');
+                if (hpsEl) hpsEl.textContent = modalHps ? modalHps.textContent : 'Rp 0';
+
+                const syaratBadge = document.getElementById('modalAjukanSyaratBadge');
+                if (syaratBadge && currentSyaratSummary) {
+                    syaratBadge.innerHTML = `
+                        <svg class="sa-icon text-success" style="width: 12px; height: 12px;">
+                            <use href="/icons/sprite.svg#check-circle"></use>
+                        </svg>
+                        <span>Dokumen Wajib Lengkap (${currentSyaratSummary.wajib_uploaded}/${currentSyaratSummary.total_wajib})</span>`;
+                }
+
+                if (!bsModalConfirmAjukan) {
+                    bsModalConfirmAjukan = new bootstrap.Modal(modalAjukanEl);
+                }
+                bsModalConfirmAjukan.show();
+            }
+
             // Handler Tombol Ajukan Paket (Hanya dari Modal Detail)
             function handleAjukanPaket(paketId, paketName) {
                 if (!paketId) return;
@@ -2726,57 +3102,114 @@
                     return;
                 }
 
-                const confirmText = `Seluruh dokumen persyaratan wajib telah lengkap diunggah.\n\nApakah Anda yakin ingin mengajukan paket pengadaan ini ke UKPBJ?\n\n"${paketName || 'Paket Pengadaan'}"\n\nSetelah diajukan:\n1. Nomor paket baru akan digenerate otomatis (+1).\n2. Status paket berubah menjadi Diajukan (2).\n3. Data RUP terkait akan dikunci (rup_status = 2).`;
+                openModalKonfirmasiAjukan(paketId, paketName);
+            }
 
-                if (!confirm(confirmText)) {
-                    return;
-                }
+            if (btnConfirmAjukanPaket) {
+                btnConfirmAjukanPaket.addEventListener('click', function () {
+                    if (!pendingAjukanPaketId) return;
 
-                const modalBtnAjukan = document.getElementById('modalBtnAjukan');
-                if (modalBtnAjukan) {
-                    modalBtnAjukan.disabled = true;
-                    modalBtnAjukan.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses...';
-                }
+                    const alertError = document.getElementById('modalAjukanAlertError');
+                    const btnCancel = document.getElementById('btnCancelAjukanModal');
+                    const modalBtnAjukan = document.getElementById('modalBtnAjukan');
 
-                fetch(`/paket/ajukan/${paketId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                    if (alertError) {
+                        alertError.classList.add('d-none');
+                        alertError.innerHTML = '';
                     }
-                })
-                .then(response => response.json().then(data => ({ status: response.status, body: data })))
-                .then(res => {
-                    if (res.status === 200 && res.body.status === 'success') {
-                        alert(res.body.message || 'Paket pengadaan berhasil diajukan ke UKPBJ!');
-                        window.location.reload();
-                    } else {
+                    if (btnCancel) btnCancel.disabled = true;
+
+                    btnConfirmAjukanPaket.disabled = true;
+                    btnConfirmAjukanPaket.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses Pengajuan...';
+
+                    if (modalBtnAjukan) {
+                        modalBtnAjukan.disabled = true;
+                        modalBtnAjukan.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses...';
+                    }
+
+                    fetch(`/paket/ajukan/${pendingAjukanPaketId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json().then(data => ({ status: response.status, body: data })))
+                    .then(res => {
+                        if (res.status === 200 && res.body.status === 'success') {
+                            const confirmBody = document.getElementById('ajukanConfirmBody');
+                            const successBody = document.getElementById('ajukanSuccessBody');
+                            const confirmFooter = document.getElementById('ajukanConfirmFooter');
+                            const successFooter = document.getElementById('ajukanSuccessFooter');
+                            const topStrip = document.getElementById('modalAjukanTopStrip');
+                            const successMsg = document.getElementById('modalAjukanSuccessMessage');
+                            const newNoEl = document.getElementById('modalAjukanNewNoPaket');
+
+                            if (topStrip) {
+                                topStrip.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+                            }
+                            if (successMsg) {
+                                successMsg.textContent = res.body.message || 'Paket pengadaan berhasil diajukan ke UKPBJ!';
+                            }
+                            if (newNoEl) {
+                                newNoEl.textContent = res.body.no_paket || 'TERBIT';
+                            }
+                            if (confirmBody) confirmBody.classList.add('d-none');
+                            if (successBody) successBody.classList.remove('d-none');
+                            if (confirmFooter) {
+                                confirmFooter.classList.add('d-none');
+                                confirmFooter.classList.remove('d-flex');
+                            }
+                            if (successFooter) {
+                                successFooter.classList.remove('d-none');
+                                successFooter.classList.add('d-flex');
+                            }
+
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1800);
+                        } else {
+                            if (btnCancel) btnCancel.disabled = false;
+                            btnConfirmAjukanPaket.disabled = false;
+                            btnConfirmAjukanPaket.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ya, Ajukan Sekarang</span>';
+
+                            if (modalBtnAjukan) {
+                                modalBtnAjukan.disabled = false;
+                                modalBtnAjukan.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ajukan Paket</span>';
+                            }
+
+                            // Jika gagal karena syarat belum lengkap (HTTP 422)
+                            if (res.status === 422) {
+                                if (bsModalConfirmAjukan) bsModalConfirmAjukan.hide();
+                                const missingList = res.body.missing_syarat || (currentSyaratSummary ? currentSyaratSummary.missing_wajib : []);
+                                openModalSyaratBelumLengkap(missingList, pendingAjukanPaketName);
+
+                                const tabSyaratLink = document.getElementById('tab-syarat-link');
+                                if (tabSyaratLink) {
+                                    const bsTab = bootstrap.Tab.getOrCreateInstance(tabSyaratLink);
+                                    bsTab.show();
+                                }
+                                showSyaratAlert('error', res.body.message);
+                            } else if (alertError) {
+                                alertError.textContent = res.body.message || 'Gagal mengajukan paket pengadaan.';
+                                alertError.classList.remove('d-none');
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Ajukan error:', err);
+                        if (btnCancel) btnCancel.disabled = false;
+                        btnConfirmAjukanPaket.disabled = false;
+                        btnConfirmAjukanPaket.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ya, Ajukan Sekarang</span>';
+
                         if (modalBtnAjukan) {
                             modalBtnAjukan.disabled = false;
                             modalBtnAjukan.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ajukan Paket</span>';
                         }
-                        // Jika gagal karena syarat belum lengkap (HTTP 422)
-                        if (res.status === 422) {
-                            const missingList = res.body.missing_syarat || (currentSyaratSummary ? currentSyaratSummary.missing_wajib : []);
-                            openModalSyaratBelumLengkap(missingList, paketName);
-
-                            const tabSyaratLink = document.getElementById('tab-syarat-link');
-                            if (tabSyaratLink) {
-                                const bsTab = bootstrap.Tab.getOrCreateInstance(tabSyaratLink);
-                                bsTab.show();
-                            }
-                            showSyaratAlert('error', res.body.message);
-                        } else {
-                            alert(res.body.message || 'Gagal mengajukan paket pengadaan.');
+                        if (alertError) {
+                            alertError.textContent = 'Terjadi kesalahan jaringan atau server saat mengajukan paket.';
+                            alertError.classList.remove('d-none');
                         }
-                    }
-                })
-                .catch(err => {
-                    console.error('Ajukan error:', err);
-                    alert('Terjadi kesalahan jaringan atau server saat mengajukan paket.');
-                    if (modalBtnAjukan) {
-                        modalBtnAjukan.disabled = false;
-                        modalBtnAjukan.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#send"></use></svg> <span>Ajukan Paket</span>';
-                    }
+                    });
                 });
             }
 

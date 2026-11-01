@@ -82,37 +82,6 @@
 
         <div class="dropdown-divider m-0"></div>
 
-        <a href="#" class="dropdown-item d-flex justify-content-between align-items-center" data-action="app-fullscreen" aria-pressed="false" role="button">
-            <span data-i18n="drpdwn.fullscreen">Fullscreen</span>
-            <b class="text-muted fs-nano px-2 rounded font-monospace align-self-center border">F11</b>
-        </a>
-        <a href="#" class="dropdown-item d-flex justify-content-between align-items-center" data-action="app-print" role="button">
-            <span data-i18n="drpdwn.print">Print</span>
-            <span class="text-muted fs-nano px-2 rounded font-monospace align-self-center border">
-                <svg width="15" height="15">
-                    <path d="M4.505 4.496h2M5.505 5.496v5M8.216 4.496l.055 5.993M10 7.5c.333.333.5.667.5 1v2M12.326 4.5v5.996M8.384 4.496c1.674 0 2.116 0 2.116 1.5s-.442 1.5-2.116 1.5M3.205 9.303c-.09.448-.277 1.21-1.241 1.203C1 10.5.5 9.513.5 8V7c0-1.57.5-2.5 1.464-2.494.964.006 1.134.598 1.24 1.342M12.553 10.5h1.953" stroke-width="1.2" stroke="currentColor" fill="none" stroke-linecap="square"></path>
-                </svg>
-                + P
-            </span>
-        </a>
-
-        <div class="dropdown-multilevel dropdown-multilevel-left">
-            <div class="dropdown-item d-flex justify-content-between align-items-center">
-                <span data-i18n="drpdwn.language">Language</span>
-                <i class="sa sa-chevron-right"></i>
-            </div>
-            <div class="dropdown-menu">
-                <a href="#?lang=fr" class="dropdown-item" data-action="lang" data-lang="fr">Français</a>
-                <a href="#?lang=en" class="dropdown-item selected" data-action="lang" data-lang="en">English (US)</a>
-                <a href="#?lang=es" class="dropdown-item" data-action="lang" data-lang="es">Español</a>
-                <a href="#?lang=ru" class="dropdown-item" data-action="lang" data-lang="ru">Русский язык</a>
-                <a href="#?lang=jp" class="dropdown-item" data-action="lang" data-lang="jp">日本語</a>
-                <a href="#?lang=ch" class="dropdown-item" data-action="lang" data-lang="ch">中文</a>
-            </div>
-        </div>
-
-        <div class="dropdown-divider m-0"></div>
-
         <form action="/logout" method="POST" class="m-0">
             <?= csrf_field() ?>
             <button type="submit" class="dropdown-item py-3 fw-500 d-flex justify-content-between">

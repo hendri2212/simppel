@@ -194,27 +194,79 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
         }
 
         @media print {
-            body * {
-                visibility: hidden;
+            @page {
+                size: auto;
+                margin: 10mm 12mm;
             }
-            #detailPlanModal, #detailPlanModal * {
-                visibility: visible;
+
+            /* Sembunyikan elemen latar aplikasi dan backdrop agar tidak memakan tinggi vertikal halaman */
+            body.modal-open,
+            html {
+                height: auto !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                background: #ffffff !important;
+                color: #000000 !important;
             }
+
+            body.modal-open .app-wrap,
+            body:has(#detailPlanModal.show) .app-wrap,
+            .modal-backdrop,
+            .modal:not(#detailPlanModal) {
+                display: none !important;
+            }
+
             #detailPlanModal {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 0;
+                position: static !important;
+                display: block !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                opacity: 1 !important;
             }
+
             #detailPlanModal .modal-dialog {
-                max-width: 100%;
-                margin: 0;
+                max-width: 100% !important;
+                width: 100% !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                transform: none !important;
+                display: block !important;
             }
+
+            /* Matikan pseudo-element 100vh milik .modal-dialog-centered yang memicu lembar ke-2 kosong */
+            #detailPlanModal .modal-dialog-centered::before {
+                display: none !important;
+                height: 0 !important;
+                content: none !important;
+            }
+
+            #detailPlanModal .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+
+            #detailPlanModal .modal-header,
             #detailPlanModal .modal-footer,
             #detailPlanModal .btn-close {
                 display: none !important;
+            }
+
+            #detailPlanModal .modal-body {
+                padding: 0.5rem 0 !important;
+                overflow: visible !important;
+            }
+
+            #detailPlanModal .card,
+            #detailPlanModal .rounded-2 {
+                break-inside: avoid;
+                page-break-inside: avoid;
             }
         }
     </style>
@@ -274,7 +326,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                         <!-- Stat Cards Banner -->
                         <div class="row mb-4 g-3">
                             <!-- Card 1: Total Paket -->
-                            <div class="col-sm-6 col-xl-3">
+                            <div class="col-md-4">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body d-flex align-items-center">
                                         <div class="rounded-circle p-3 bg-primary bg-opacity-10 text-primary me-3 flex-shrink-0">
@@ -292,7 +344,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                             </div>
 
                             <!-- Card 2: Total Pagu Anggaran -->
-                            <div class="col-sm-6 col-xl-3">
+                            <div class="col-md-4">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body d-flex align-items-center">
                                         <div class="rounded-circle p-3 bg-success bg-opacity-10 text-success me-3 flex-shrink-0">
@@ -311,28 +363,8 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                 </div>
                             </div>
 
-                            <!-- Card 3: Status Akses Edit RUP -->
-                            <div class="col-sm-6 col-xl-3">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body d-flex align-items-center">
-                                        <div class="rounded-circle p-3 bg-info bg-opacity-10 text-info me-3 flex-shrink-0">
-                                            <svg class="sa-icon" style="width: 24px; height: 24px;">
-                                                <use href="/icons/sprite.svg#edit"></use>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <div class="text-muted fs-xs text-uppercase fw-semibold">Akses Edit RUP</div>
-                                            <div class="fs-2 fw-bold text-body-emphasis"><?= $editableCount ?> <span class="fs-sm fw-normal text-muted">Bisa Diedit</span></div>
-                                            <div class="fs-xs text-muted">
-                                                <?= $lockedCount ?> paket terkunci
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card 4: Alokasi DAK vs Sinkronisasi -->
-                            <div class="col-sm-6 col-xl-3">
+                            <!-- Card 3: Alokasi DAK vs Sinkronisasi -->
+                            <div class="col-md-4">
                                 <div class="card border-0 shadow-sm h-100">
                                     <div class="card-body d-flex align-items-center">
                                         <div class="rounded-circle p-3 bg-warning bg-opacity-10 text-warning me-3 flex-shrink-0">
@@ -395,7 +427,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                     <!-- Filter Toolbar Komprehensif -->
                                     <div class="row g-2 mb-3 align-items-center">
                                         <!-- Search Box -->
-                                        <div class="col-md-4 col-lg-3">
+                                        <div class="col-md-4 col-lg-4">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text">
                                                     <svg class="sa-icon" style="width: 14px; height: 14px;">
@@ -407,7 +439,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                         </div>
 
                                         <!-- Filter Jenis Pengadaan -->
-                                        <div class="col-6 col-md-2 col-lg-2">
+                                        <div class="col-6 col-md-3 col-lg-2">
                                             <select id="procTypeFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Jenis Pengadaan</option>
                                                 <option value="Barang">Barang</option>
@@ -420,7 +452,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                         </div>
 
                                         <!-- Filter Metode Pemilihan -->
-                                        <div class="col-6 col-md-2 col-lg-2">
+                                        <div class="col-6 col-md-3 col-lg-2">
                                             <select id="methodFilter" class="form-select form-select-sm">
                                                 <option value="">Semua Metode</option>
                                                 <option value="E-purchasing">E-Purchasing</option>
@@ -431,17 +463,8 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                             </select>
                                         </div>
 
-                                        <!-- Filter Akses Edit RUP -->
-                                        <div class="col-6 col-md-2 col-lg-2">
-                                            <select id="rupStatusFilter" class="form-select form-select-sm">
-                                                <option value="">Semua Akses Edit</option>
-                                                <option value="1">Bisa Diedit</option>
-                                                <option value="2">Terkunci</option>
-                                            </select>
-                                        </div>
-
                                         <!-- Filter Sumber Dana / DAK -->
-                                        <div class="col-6 col-md-2 col-lg-1">
+                                        <div class="col-6 col-md-2 col-lg-2">
                                             <select id="dakFilter" class="form-select form-select-sm">
                                                 <option value="">Semua DAK</option>
                                                 <option value="DAK">DAK</option>
@@ -450,7 +473,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                         </div>
 
                                         <!-- Per Page Selector -->
-                                        <div class="col-12 col-md-12 col-lg-2 ms-auto">
+                                        <div class="col-6 col-md-12 col-lg-2 ms-auto">
                                             <div class="d-flex align-items-center gap-1 justify-content-lg-end">
                                                 <span class="fs-xs text-muted text-nowrap">Tampil:</span>
                                                 <select id="perPageSelect" class="form-select form-select-sm" style="width: auto;">
@@ -673,8 +696,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
             <div class="modal-content">
                 <div class="modal-header bg-body-tertiary">
                     <div>
-                        <span class="badge bg-primary me-2 font-monospace" id="modalPlanCode">RUP-XXXX-XXXX</span>
-                        <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" id="modalPlanRupStatus">Bisa Diedit</span>
+                        <span class="badge bg-primary font-monospace fs-sm" id="modalPlanCode">RUP-XXXX-XXXX</span>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -682,7 +704,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                     <!-- Judul Paket & Program -->
                     <div class="border-bottom pb-3 mb-3">
                         <h5 class="fw-bold text-body-emphasis mb-1" id="modalPlanName">-</h5>
-                        <div class="text-muted fs-sm">
+                        <div class="text-muted fs-sm" id="modalPlanActivityWrap">
                             <svg class="sa-icon me-1 text-muted" style="width: 14px; height: 14px;">
                                 <use href="/icons/sprite.svg#layers"></use>
                             </svg>
@@ -753,29 +775,23 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                     <div class="detail-label">Metode Pemilihan</div>
                                     <div class="detail-value" id="modalPlanMethod">-</div>
                                 </div>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <div class="detail-label">Waktu / Durasi</div>
-                                        <div class="detail-value" id="modalPlanDuration">0 Hari</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="detail-label">Tanggal Pengajuan</div>
-                                        <div class="detail-value" id="modalPlanDate">-</div>
-                                    </div>
+                                <div>
+                                    <div class="detail-label">Waktu Pekerjaan</div>
+                                    <div class="detail-value" id="modalPlanDuration">0 Hari</div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="p-3 bg-body-tertiary rounded-2 h-100">
-                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Akses Edit & Tahun Anggaran</h6>
+                                <h6 class="fw-bold text-body-emphasis mb-3 fs-xs text-uppercase">Tahun Anggaran & Pengajuan</h6>
                                 <div class="mb-2">
-                                    <div class="detail-label">Status Akses Edit</div>
-                                    <div class="detail-value" id="modalPlanAksesStatus">-</div>
+                                    <div class="detail-label">Tahun Anggaran</div>
+                                    <div class="detail-value font-monospace fw-bold" id="modalPlanYear">2026</div>
                                 </div>
                                 <div>
-                                    <div class="detail-label">Tahun Anggaran</div>
-                                    <div class="detail-value" id="modalPlanYear">2026</div>
+                                    <div class="detail-label">Tanggal Rencana Pengajuan</div>
+                                    <div class="detail-value" id="modalPlanDate">-</div>
                                 </div>
                             </div>
                         </div>
@@ -1250,20 +1266,23 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                     const codeEl = document.getElementById('modalPlanCode');
                     if (codeEl) codeEl.textContent = p.package_code || ('DRAFT-' + p.id);
 
-                    const isEditable = parseInt(p.rup_status, 10) === 1;
-                    const statusEl = document.getElementById('modalPlanRupStatus');
-                    if (statusEl) {
-                        statusEl.textContent = isEditable ? 'Bisa Diedit' : 'Terkunci (Read-Only)';
-                        statusEl.className = isEditable 
-                            ? 'badge bg-success-subtle text-success-emphasis border border-success-subtle'
-                            : 'badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle';
-                    }
-
+                    const pkgName = String(p.package_name || '-').trim();
+                    const actName = String(p.activity || '').trim();
                     const nameEl = document.getElementById('modalPlanName');
-                    if (nameEl) nameEl.textContent = p.package_name || '-';
+                    if (nameEl) nameEl.textContent = pkgName;
 
                     const actEl = document.getElementById('modalPlanActivity');
-                    if (actEl) actEl.textContent = p.activity || '-';
+                    if (actEl) actEl.textContent = actName || '-';
+
+                    const actWrap = document.getElementById('modalPlanActivityWrap');
+                    if (actWrap) {
+                        const isRedundant = !actName || actName === '-' || actName.toLowerCase() === pkgName.toLowerCase();
+                        if (isRedundant) {
+                            actWrap.classList.add('d-none');
+                        } else {
+                            actWrap.classList.remove('d-none');
+                        }
+                    }
 
                     const skpdEl = document.getElementById('modalPlanSkpd');
                     if (skpdEl) {
@@ -1307,13 +1326,6 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
 
                     const dateEl = document.getElementById('modalPlanDate');
                     if (dateEl) dateEl.textContent = formatDate(p.submission_date);
-
-                    const aksesEl = document.getElementById('modalPlanAksesStatus');
-                    if (aksesEl) {
-                        aksesEl.innerHTML = isEditable
-                            ? '<span class="badge bg-success-subtle text-success border border-success-subtle"><svg class="sa-icon me-1 text-success" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#unlock"></use></svg> Bisa Diedit</span>'
-                            : '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><svg class="sa-icon me-1 text-secondary" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#lock"></use></svg> Terkunci</span>';
-                    }
 
                     const yearEl = document.getElementById('modalPlanYear');
                     if (yearEl) yearEl.textContent = p.fiscal_year || '2026';
@@ -1591,77 +1603,106 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                         // 1. Kode RUP & Tahun Anggaran
                         codeInputInaproc.value = d.kd_rup || cleanCode;
                         const fiscalYearInput = addPlanForm.querySelector('input[name="fiscal_year"]');
-                        if (fiscalYearInput && d.tahun_anggaran) {
-                            fiscalYearInput.value = d.tahun_anggaran;
+                        if (fiscalYearInput) {
+                            fiscalYearInput.value = d.tahun_anggaran || new Date().getFullYear();
                         }
 
-                        // 2. Nama Paket & Nama Kegiatan / Program
+                        // 2. Nama Paket & Nama Kegiatan / Program (selalu timpa nilai lama saat tarik ulang)
                         const packageNameInput = addPlanForm.querySelector('input[name="package_name"]');
-                        if (packageNameInput && d.nama_paket) {
-                            packageNameInput.value = d.nama_paket;
+                        if (packageNameInput) {
+                            packageNameInput.value = String(d.nama_paket || '').trim();
                         }
 
                         const activityInput = addPlanForm.querySelector('input[name="activity"]');
                         if (activityInput) {
-                            const apiActivity = d.nama_kegiatan || d.kegiatan || d.program || '';
-                            if (apiActivity) {
-                                activityInput.value = apiActivity;
-                            } else if (!activityInput.value.trim() && d.nama_paket) {
-                                activityInput.value = d.nama_paket;
-                            }
+                            const apiActivity = d.nama_kegiatan || d.kegiatan || d.program || d.nama_paket || '';
+                            activityInput.value = String(apiActivity).trim();
                         }
 
                         // 3. Jenis Pengadaan & Metode Pemilihan
                         const procTypeSelect = addPlanForm.querySelector('select[name="jenis_pengadaan_id"]');
-                        if (procTypeSelect && d.jenis_pengadaan) {
-                            selectOptionByText(procTypeSelect, d.jenis_pengadaan);
+                        if (procTypeSelect) {
+                            if (!d.jenis_pengadaan || !selectOptionByText(procTypeSelect, d.jenis_pengadaan)) {
+                                selectOptionByText(procTypeSelect, 'Pekerjaan Konstruksi');
+                            }
+                            procTypeSelect.dispatchEvent(new Event('change'));
                         }
 
                         const methodSelect = addPlanForm.querySelector('select[name="metode_pemilihan_id"]');
-                        if (methodSelect && d.metode_pengadaan) {
-                            selectOptionByText(methodSelect, d.metode_pengadaan);
+                        if (methodSelect) {
+                            if (!d.metode_pengadaan || !selectOptionByText(methodSelect, d.metode_pengadaan)) {
+                                selectOptionByText(methodSelect, 'Tender');
+                            }
+                            methodSelect.dispatchEvent(new Event('change'));
                         }
 
-                        // 4. Pagu Anggaran
+                        // 4. Pagu Anggaran & Mata Anggaran Kegiatan (MAK)
                         const budgetInput = addPlanForm.querySelector('input[name="budget_ceiling"]');
-                        if (budgetInput && d.pagu !== undefined && d.pagu !== null) {
-                            budgetInput.value = Number(d.pagu) || 0;
+                        if (budgetInput) {
+                            budgetInput.value = (d.pagu !== undefined && d.pagu !== null) ? (Number(d.pagu) || 0) : '';
                         }
 
-                        // 5. Volume Pekerjaan
+                        const makInput = addPlanForm.querySelector('input[name="account_code"]');
+                        if (makInput) {
+                            makInput.value = String(d.mak || d.kode_mak || d.kd_mak || d.account_code || '').trim();
+                        }
+
+                        // 4b. Sumber Dana & Status DAK
+                        const sumberDanaSelect = addPlanForm.querySelector('select[name="sumber_dana_id"]');
+                        if (sumberDanaSelect) {
+                            const apiSumber = d.sumber_dana || d.asal_dana || 'APBD';
+                            if (!selectOptionByText(sumberDanaSelect, apiSumber)) {
+                                selectOptionByText(sumberDanaSelect, 'APBD');
+                            }
+                        }
+
+                        const jenisDakSelect = addPlanForm.querySelector('select[name="jenis_dak_id"]');
+                        if (jenisDakSelect) {
+                            const apiDak = d.jenis_dak || 'NON DAK';
+                            if (!selectOptionByText(jenisDakSelect, apiDak)) {
+                                selectOptionByText(jenisDakSelect, 'NON DAK');
+                            }
+                        }
+
+                        // 5. Volume Pekerjaan (selalu timpa/reset nilai lama)
                         const volumeInput = addPlanForm.querySelector('input[name="volume"]');
-                        if (volumeInput && d.volume_pekerjaan) {
-                            volumeInput.value = d.volume_pekerjaan;
+                        if (volumeInput) {
+                            volumeInput.value = d.volume_pekerjaan ? String(d.volume_pekerjaan).trim() : '1 Paket';
                         }
 
-                        // 6. Waktu Pekerjaan (Hari Kalender dari tgl_awal_kontrak s/d tgl_akhir_kontrak)
+                        // 6. Waktu Pekerjaan (Hari Kalender dari tgl_awal_kontrak s/d tgl_akhir_kontrak; reset dahulu)
                         const durationInput = addPlanForm.querySelector('input[name="work_duration"]');
-                        if (durationInput && d.tgl_awal_kontrak && d.tgl_akhir_kontrak) {
-                            const startDt = new Date(d.tgl_awal_kontrak);
-                            const endDt = new Date(d.tgl_akhir_kontrak);
-                            if (!isNaN(startDt.getTime()) && !isNaN(endDt.getTime())) {
-                                const diffDays = Math.round((endDt.getTime() - startDt.getTime()) / (1000 * 60 * 60 * 24));
-                                if (diffDays > 0) {
-                                    durationInput.value = diffDays;
+                        if (durationInput) {
+                            durationInput.value = '';
+                            if (d.tgl_awal_kontrak && d.tgl_akhir_kontrak) {
+                                const startDt = new Date(d.tgl_awal_kontrak);
+                                const endDt = new Date(d.tgl_akhir_kontrak);
+                                if (!isNaN(startDt.getTime()) && !isNaN(endDt.getTime())) {
+                                    const diffDays = Math.round((endDt.getTime() - startDt.getTime()) / (1000 * 60 * 60 * 24));
+                                    if (diffDays > 0) {
+                                        durationInput.value = diffDays;
+                                    } else if (diffDays === 0) {
+                                        durationInput.value = 1;
+                                    }
                                 }
                             }
                         }
 
-                        // 7. Lokasi Pekerjaan
+                        // 7. Lokasi Pekerjaan (selalu timpa nilai lama)
                         const locationInput = addPlanForm.querySelector('input[name="location"]');
                         if (locationInput) {
                             const locVal = d.lokasi_pekerjaan || d.detail_lokasi || d.nama_klpd || '';
-                            if (locVal) locationInput.value = locVal;
+                            locationInput.value = String(locVal).trim();
                         }
 
-                        // 8. Uraian / Deskripsi Pekerjaan (termasuk key 'urarian_pekerjaan' dari API INAPROC)
+                        // 8. Uraian / Deskripsi Pekerjaan (selalu timpa nilai lama, termasuk jika kosong pada kode baru)
                         const descInput = addPlanForm.querySelector('textarea[name="description"]');
                         if (descInput) {
                             let descVal = d.urarian_pekerjaan || d.uraian_pekerjaan || '';
                             if (!descVal && d.spesifikasi_pekerjaan && d.spesifikasi_pekerjaan !== '-') {
                                 descVal = d.spesifikasi_pekerjaan;
                             }
-                            if (descVal) descInput.value = String(descVal).trim();
+                            descInput.value = String(descVal || '').trim();
                         }
 
                         // 9. Tandai status tersinkronisasi SiRUP
