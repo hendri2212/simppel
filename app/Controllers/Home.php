@@ -8,15 +8,15 @@ class Home extends BaseController
 {
     public function index()
     {
-        return view('index');
+        return redirect()->to('/dashboard-control-center');
     }
 
     public function root(...$segments)
     {
         $path = trim(implode('/', $segments), '/');
 
-        if ($path === '') {
-            return redirect()->to('/');
+        if ($path === '' || $path === 'index') {
+            return redirect()->to('/dashboard-control-center');
         }
 
         // Mencegah directory traversal dan karakter berbahaya

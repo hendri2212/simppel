@@ -183,115 +183,26 @@
                     <span class="nav-link-text" data-i18n>User Profile</span>
                 </a>
             </li>
-        </ul>
-    </li>
-
-
-
-
-    <li class="nav-title"><span>Design</span></li>
-
-
-
-    <li class="nav-item">
-        <a href="#" title="System Utilities" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#package"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>System Utilities</span>
-        </a>
-
-        <ul>
-            <li>
-                <a href="/utilities-colorpalette">
-                    <span class="nav-link-text" data-i18n>Color Palette</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-    <li class="nav-item">
-        <a href="#" title="Iconography" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#heart"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Iconography</span>
-        </a>
-
-        <ul>
-
-
             <li>
                 <a href="/icons-smartadmin">
                     <span class="nav-link-text" data-i18n>SmartAdmin Icons 1.0</span>
                 </a>
             </li>
-        </ul>
-    </li>
-
-
-    <li class="nav-item">
-        <a href="#" title="Forms" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#edit"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Forms</span>
-        </a>
-
-        <ul>
-
             <li>
-                <a href="/forms-groups">
-                    <span class="nav-link-text" data-i18n>Groups</span>
+                <a href="/utilities-colorpalette">
+                    <span class="nav-link-text" data-i18n>Color Palette</span>
                 </a>
             </li>
-            <li>
-                <a href="/forms-validation">
-                    <span class="nav-link-text" data-i18n>Validation</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-    <li class="nav-title"><span>Data Visualization</span></li>
-
-    <li class="nav-item">
-        <a href="#" title="Smart Tables" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#database"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Smart Tables</span>
-            <span class="badge bg-primary-500 badge-end">1.2.7</span>
-        </a>
-
-        <ul>
-
-            <li>
-                <a href="/smarttables-importexport-data">
-                    <span class="nav-link-text" data-i18n>Import & Export Data</span>
-                </a>
-            </li>
-
             <li>
                 <a href="/smarttables-server-side">
                     <span class="nav-link-text" data-i18n>Server-Side Mode</span>
                 </a>
             </li>
-        </ul>
-    </li>
-
-    <li class="nav-item">
-        <a href="#" title="Apex Charts" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#pie-chart"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Apex Charts</span>
-        </a>
-
-        <ul>
-
-
-
+            <li>
+                <a href="/smarttables-importexport-data">
+                    <span class="nav-link-text" data-i18n>Import & Export Data</span>
+                </a>
+            </li>
             <li>
                 <a href="/apex-candlestick">
                     <span class="nav-link-text" data-i18n>Candlestick Charts</span>
@@ -302,22 +213,13 @@
                     <span class="nav-link-text" data-i18n>Column Charts</span>
                 </a>
             </li>
-
-
-
-
             <li>
                 <a href="/apex-polar-area">
                     <span class="nav-link-text" data-i18n>Polar Area Charts</span>
                 </a>
             </li>
-
-
-
-
         </ul>
     </li>
-
 
     <li>
         <a href="/fullcalendar">

@@ -19,7 +19,7 @@ class Auth extends BaseController
     public function login()
     {
         if (session()->get('is_logged_in')) {
-            return redirect()->to('/');
+            return redirect()->to('/dashboard-control-center');
         }
 
         return view('auth/login');
@@ -95,7 +95,7 @@ class Auth extends BaseController
         ]);
         session()->setFlashdata('success', 'Selamat datang, ' . $user['full_name'] . '!');
 
-        return redirect()->to('/');
+        return redirect()->to('/dashboard-control-center');
     }
 
     private function attempts(string $key): int
@@ -126,7 +126,7 @@ class Auth extends BaseController
     public function register()
     {
         if (session()->get('is_logged_in')) {
-            return redirect()->to('/');
+            return redirect()->to('/dashboard-control-center');
         }
 
         return view('auth/register');
@@ -138,7 +138,7 @@ class Auth extends BaseController
     public function forgetPassword()
     {
         if (session()->get('is_logged_in')) {
-            return redirect()->to('/');
+            return redirect()->to('/dashboard-control-center');
         }
 
         return view('auth/forgetpassword');
