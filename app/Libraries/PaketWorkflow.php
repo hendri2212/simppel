@@ -45,7 +45,7 @@ class PaketWorkflow
             'confirm' => 'Kembalikan paket ke PPK untuk diperbaiki? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_kembali' => [
-            'label' => 'Ajukan Kembali ke ULP', 'roles' => self::PPK_SIDE, 'from' => [3], 'to' => 2,
+            'label' => 'Ajukan Kembali ke ULP', 'roles' => self::PPK_ONLY, 'from' => [3], 'to' => 2,
             'note' => null, 'variant' => 'primary',
             'confirm' => 'Ajukan kembali paket ke Admin ULP?',
         ],
@@ -70,7 +70,7 @@ class PaketWorkflow
             'confirm' => 'Kembalikan paket ke PPK untuk dikaji ulang? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_kaji' => [
-            'label' => 'Ajukan ke Pokja (Setelah Kaji)', 'roles' => self::PPK_SIDE, 'from' => [7], 'to' => 8,
+            'label' => 'Ajukan ke Pokja (Setelah Kaji)', 'roles' => self::PPK_ONLY, 'from' => [7], 'to' => 8,
             'note' => null, 'variant' => 'primary',
             'confirm' => 'Ajukan kembali paket ke Pokja?',
         ],
@@ -85,7 +85,7 @@ class PaketWorkflow
             'confirm' => 'Kembalikan paket ke PPK untuk addendum? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_add' => [
-            'label' => 'Ajukan Addendum ke Pokja', 'roles' => self::PPK_SIDE, 'from' => [10], 'to' => 11,
+            'label' => 'Ajukan Addendum ke Pokja', 'roles' => self::PPK_ONLY, 'from' => [10], 'to' => 11,
             'note' => null, 'variant' => 'primary',
             'confirm' => 'Ajukan addendum ke Pokja?',
         ],

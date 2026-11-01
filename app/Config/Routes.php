@@ -75,6 +75,8 @@ $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Filter per-route menimpa filter group, jadi auth disebut ulang di sini
     $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK', 'csrf']];
+    // Khusus pengajuan paket ke UKPBJ (PPK & Administrator, sesuai simppel level 3)
+    $ppkMutate   = ['filter' => ['auth', 'role:ADMINISTRATOR,PPK', 'csrf']];
     // Semua role proses (kecuali MONEV); hak aksi sebenarnya dicek per paket di PaketWorkflow
     $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 
@@ -88,7 +90,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/paket/store', 'PaketController::store', $writeMutate);
     $routes->post('/paket/update/(:num)', 'PaketController::update/$1', $writeMutate);
     $routes->post('/paket/delete/(:num)', 'PaketController::delete/$1', $writeMutate);
-    $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1', $writeMutate);
+    $routes->post('/paket/ajukan/(:num)', 'PaketController::ajukan/$1', $ppkMutate);
 
     // Manajemen Dokumen Persyaratan Paket
     $routes->get('/paket/syarat/(:num)', 'PaketController::getSyarat/$1');

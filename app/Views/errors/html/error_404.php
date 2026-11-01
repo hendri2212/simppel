@@ -51,8 +51,7 @@
                         </p>
 
                         <div class="mb-4">
-                            <a href="/" class="btn btn-primary me-2">Back to Home</a>
-                            <a href="#!" class="btn btn-success">Contact Support</a>
+                            <a href="/" class="btn btn-primary">Back to Home</a>
                         </div>
 
                         <div class="opacity-50 text-white small">

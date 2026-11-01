@@ -21,6 +21,9 @@ trait ProcurementScope
     /** Role yang boleh membuat / mengubah RUP & paket (tetap dibatasi kepemilikan). */
     public const WRITE_ROLES = ['ADMINISTRATOR', 'ADMIN PPK', 'PPK'];
 
+    /** Role yang berhak mengeksekusi pengajuan paket ke ULP / Pokja (khusus PPK & Administrator, sesuai contoh level 3). */
+    public const AJUKAN_ROLES = ['ADMINISTRATOR', 'PPK'];
+
     private ?array $actorCache = null;
 
     protected function actor(): array
@@ -49,6 +52,11 @@ trait ProcurementScope
     protected function canWrite(): bool
     {
         return in_array(strtoupper((string) $this->actor()['role_name']), self::WRITE_ROLES, true);
+    }
+
+    protected function canAjukan(): bool
+    {
+        return in_array(strtoupper((string) $this->actor()['role_name']), self::AJUKAN_ROLES, true);
     }
 
     /**

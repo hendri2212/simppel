@@ -295,7 +295,8 @@
                     // Kategori Role: apakah Admin ULP / Pusat atau PPK
                     $isAdminUlp = in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR', 'KEPALA ULP', 'DISTRIBUSI'], true);
                     $isPpk = in_array($currentRoleName, ['PPK', 'ADMIN PPK'], true) || !$isAdminUlp;
-                        $canWritePaket = in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
+                    $canWritePaket = in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
+                    $canAjukanPaket = $canAjukanPaket ?? in_array($currentRoleName, ['ADMINISTRATOR', 'PPK'], true);
                         ?>
 
                     <div class="main-content">
@@ -1685,7 +1686,7 @@
 
                         const modalBtnAjukan = document.getElementById('modalBtnAjukan');
                         if (modalBtnAjukan) {
-                            if (currentPaketStatus === 1) {
+                            if (currentPaketStatus === 1 && canUserAjukan) {
                                 modalBtnAjukan.classList.remove('d-none');
                                 modalBtnAjukan.classList.add('d-inline-flex');
                                 modalBtnAjukan.onclick = function () {
@@ -1756,6 +1757,7 @@
             let activePillUserId = null;
             const currentUserIdNum = <?= json_encode($currentUserId) ?>;
             const isStrictAdminUlp = <?= json_encode($currentRoleName === 'ADMIN ULP') ?>;
+            const canUserAjukan = <?= json_encode($canAjukanPaket) ?>;
 
             // Update badge hitungan di masing-masing pill berdasarkan data
             function updatePillCounters() {
@@ -2322,10 +2324,10 @@
                         // Tampilkan tombol Ajukan hanya jika user berhak mengajukan
                         const modalBtnAjukan = document.getElementById('modalBtnAjukan');
                         if (modalBtnAjukan) {
-                            if (currentSyaratSummary && currentSyaratSummary.can_ajukan) {
+                            if (currentSyaratSummary && currentSyaratSummary.can_ajukan && canUserAjukan) {
                                 modalBtnAjukan.classList.remove('d-none');
                                 modalBtnAjukan.classList.add('d-inline-flex');
-                            } else if (!canEditSyarat) {
+                            } else {
                                 modalBtnAjukan.classList.add('d-none');
                                 modalBtnAjukan.classList.remove('d-inline-flex');
                             }

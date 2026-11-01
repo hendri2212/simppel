@@ -161,6 +161,7 @@ class PaketController extends BaseController
             'availableRups'   => $availableRups,
             'statusPaketList' => PaketModel::STATUS_PAKET,
             'currentUser'     => $currentUser,
+            'canAjukanPaket'  => $this->canAjukan(),
             'totalPaket'      => count($pakets),
             'totalHps'        => $totalHps,
             'totalKontrak'    => $totalKontrak,
@@ -372,6 +373,10 @@ class PaketController extends BaseController
      */
     public function ajukan($id = null)
     {
+        if (! $this->canAjukan()) {
+            return $this->failWith('Hanya Pejabat Pembuat Komitmen (PPK) yang memiliki kewenangan untuk mengajukan paket ke UKPBJ.', 403, '/paket');
+        }
+
         $paket = $this->findPaketForActor((int) $id, true, $error);
         if (! $paket) {
             return $error;
@@ -500,7 +505,7 @@ class PaketController extends BaseController
                     'missing_wajib'  => $missingWajib,
                     'is_lengkap'     => empty($missingWajib),
                     'can_edit'       => in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true) && $this->canWrite(),
-                    'can_ajukan'     => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canWrite(),
+                    'can_ajukan'     => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canAjukan(),
                 ],
             ]);
         } catch (\Throwable $e) {
