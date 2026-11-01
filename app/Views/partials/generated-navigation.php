@@ -2,23 +2,13 @@
 
     <li class="nav-title"><span>Insights</span></li>
 
-    <li class="nav-item">
-        <a href="#" title="Dashboards" data-filter-tags>
+    <li>
+        <a href="/dashboard-control-center" title="Dashboard" data-filter-tags="dashboard insights">
             <svg class="sa-icon">
                 <use href="/icons/sprite.svg#trello"></use>
             </svg>
-            <span class="nav-link-text" data-i18n>Dashboards</span>
-            <span class="badge bg-danger-700 badge-end">New</span>
+            <span class="nav-link-text" data-i18n>Dashboard</span>
         </a>
-
-        <ul>
-            <li>
-                <a href="/dashboard-control-center">
-                    <span class="nav-link-text" data-i18n>Control Center</span>
-                </a>
-            </li>
-
-        </ul>
     </li>
 
     <li class="nav-title"><span>Perencanaan Pengadaan</span></li>

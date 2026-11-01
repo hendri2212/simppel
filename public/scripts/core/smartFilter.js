@@ -389,7 +389,7 @@
 
                 // Handle window resize for responsive layouts
                 this._resizeHandler = debounce(function() {
-                    if (self.input.value.length > self.settings.minLength) {
+                    if (self.input.value.length >= self.settings.minLength) {
                         self.filter();
                     }
                 }, 250);
@@ -500,7 +500,7 @@
                     filter = filter.toLowerCase();
                 }
 
-                if (filter.length > this.settings.minLength) {
+                if (filter.length >= this.settings.minLength) {
                     // Add active class when filter is active
                     this.list.classList.add(SELECTORS.LIST_ACTIVE);
                     this._performFilter(filter);
@@ -538,10 +538,12 @@
                     var item = this._cache.items[j];
                     var text = getNavItemText(item);
                     var title = item.getAttribute('title') || '';
+                    var tags = item.getAttribute('data-filter-tags') || '';
                     
                     var textScore = fuzzyMatch(filter, text);
                     var titleScore = fuzzyMatch(filter, title);
-                    var score = Math.max(textScore, titleScore);
+                    var tagsScore = fuzzyMatch(filter, tags);
+                    var score = Math.max(textScore, titleScore, tagsScore);
                     
                     if (score > 0) {
                         matches.push({

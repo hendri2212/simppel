@@ -40,12 +40,6 @@
         </svg>
     </button>
 
-    <!-- Sidebar -->
-    <button type="button" class="btn btn-system d-none d-sm-block d-sm-none d-md-none d-lg-block" data-action="toggle-swap" data-toggleclass="open" data-target="aside.js-app-drawer" aria-label="Open Sidebar">
-        <svg class="sa-icon sa-icon-2x">
-            <use href="/icons/sprite.svg#aperture"></use>
-        </svg>
-    </button>
 
     <!-- Full Screen Mode -->
     <button type="button" class="btn btn-system d-none d-sm-block d-sm-none d-md-none d-lg-block" data-action="app-fullscreen" aria-label="Toggle Dark Mode" aria-pressed="false">
@@ -57,16 +51,6 @@
         </svg>
     </button>
 
-    <!-- Notifications -->
-    <button type="button" class="btn btn-system dropdown-toggle no-arrow" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Open Notifications">
-        <span class="badge badge-icon pos-top pos-end">5</span>
-        <svg class="sa-icon sa-icon-2x">
-            <use href="/icons/sprite.svg#bell"></use>
-        </svg>
-    </button>
-
-    <!-- Notifications dropdown -->
-    <?= $this->include('partials/app-notifications') ?>
 
     <!-- Profile -->
     <button type="button" data-bs-toggle="dropdown" title="drlantern@getwebora.com" class="btn-system bg-transparent d-flex flex-shrink-0 align-items-center justify-content-center" aria-label="Open Profile Dropdown">
@@ -94,9 +78,6 @@
         </a>
         <a href="#" class="dropdown-item" data-action="toggle-swap" data-toggleclass="open" data-target="aside.js-drawer-settings" role="button">
             <span data-i18n="drpdwn.settings">Settings</span>
-        </a>
-        <a href="#" class="dropdown-item d-block d-sm-block d-md-block d-lg-none" data-action="toggle-swap" data-toggleclass="open" data-target="aside.js-app-drawer" role="button">
-            <span data-i18n="drpdwn.settings">Virtual Assistant</span>
         </a>
 
         <div class="dropdown-divider m-0"></div>

@@ -377,7 +377,6 @@
             <?= $this->include('partials/app-footer') ?>
         </main>
 
-        <?= $this->include('partials/app-drawer') ?>
         <?= $this->include('partials/app-settings') ?>
     </div>
 

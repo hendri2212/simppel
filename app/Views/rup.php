@@ -662,7 +662,6 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
 
         </main>
 
-        <?= $this->include('partials/app-drawer') ?>
 
         <?= $this->include('partials/app-settings') ?>
 

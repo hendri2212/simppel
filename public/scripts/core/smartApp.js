@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
         {
             messageSelector: '.js-filter-message',
             debounceWait: 200,
-            minLength: 2,
+            minLength: 1,
             caseSensitive: false,
             onFilter: function (filter) {
                 console.log('Filtering with:', filter);
