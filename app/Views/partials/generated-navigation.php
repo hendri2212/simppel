@@ -27,11 +27,6 @@
                     <span class="nav-link-text" data-i18n>Marketing & Sales</span>
                 </a>
             </li>
-            <li>
-                <a href="/dashboard-project-management">
-                    <span class="nav-link-text" data-i18n>Project Management</span>
-                </a>
-            </li>
         </ul>
     </li>
 
@@ -91,11 +86,6 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/emaildesign">
-                    <span class="nav-link-text" data-i18n>Email Templates</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a href="#" title="Error Pages" data-filter-tags>
                     <span class="nav-link-text" data-i18n>Error Pages</span>
@@ -103,18 +93,8 @@
 
                 <ul>
                     <li>
-                        <a href="/error-404">
-                            <span class="nav-link-text" data-i18n>404 Not Found</span>
-                        </a>
-                    </li>
-                    <li>
                         <a href="/error-404-2">
                             <span class="nav-link-text" data-i18n>404 Not Found 2</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/error-500">
-                            <span class="nav-link-text" data-i18n>500 Internal Server</span>
                         </a>
                     </li>
                 </ul>
@@ -127,86 +107,8 @@
         </ul>
     </li>
 
-    <li class="nav-item">
-        <a href="#" title="Communication" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#message-square"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Communication</span>
-        </a>
 
-        <ul>
-            <li>
-                <a href="/messenger">
-                    <span class="nav-link-text" data-i18n>Messenger & Chat</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#" title="Email" data-filter-tags>
-                    <span class="nav-link-text" data-i18n>Email</span>
-                </a>
 
-                <ul>
-                    <li>
-                        <a href="/systemmail">
-                            <span class="nav-link-text" data-i18n>System Mail</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/systemmail-read">
-                            <span class="nav-link-text" data-i18n>Mail Read</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-            <li>
-                <a href="/usercontact">
-                    <span class="nav-link-text" data-i18n>User Contact</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-    <li class="nav-item">
-        <a href="#" title="Miscellaneous" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#archive"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Miscellaneous</span>
-        </a>
-
-        <ul>
-            <li>
-                <a href="/forum">
-                    <span class="nav-link-text" data-i18n>Forum General</span>
-                </a>
-            </li>
-            <li>
-                <a href="/forum-threads">
-                    <span class="nav-link-text" data-i18n>Forum Threads</span>
-                </a>
-            </li>
-            <li>
-                <a href="/forum-discussion">
-                    <span class="nav-link-text" data-i18n>Forum Discussions</span>
-                </a>
-            </li>
-            <li>
-                <a href="/search">
-                    <span class="nav-link-text" data-i18n>Search</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-    <li>
-        <a href="/landing" target="_blank">
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#zap"></use>
-            </svg>
-            <span class="nav-link-text">Landing</span>
-        </a>
-    </li>
 
     <li class="nav-title"><span>Design</span></li>
 
@@ -324,11 +226,6 @@
                     <span class="nav-link-text" data-i18n>List Filter</span>
                 </a>
             </li>
-            <li>
-                <a href="/ui-sidepanels">
-                    <span class="nav-link-text" data-i18n>Side Panels</span>
-                </a>
-            </li>
         </ul>
     </li>
 
@@ -423,40 +320,9 @@
                     <span class="nav-link-text" data-i18n>SmartAdmin Icons 1.0</span>
                 </a>
             </li>
-            <li>
-                <a href="/icons-stackgenerator">
-                    <span class="nav-link-text" data-i18n>Stack Generator</span>
-                </a>
-            </li>
-            <li>
-                <a href="/icons-stacklibrary">
-                    <span class="nav-link-text" data-i18n>Stack Library</span>
-                </a>
-            </li>
         </ul>
     </li>
 
-    <li class="nav-item">
-        <a href="#" title="Tables" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#table"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Tables</span>
-        </a>
-
-        <ul>
-            <li>
-                <a href="/tables-basic">
-                    <span class="nav-link-text" data-i18n>Basic Tables</span>
-                </a>
-            </li>
-            <li>
-                <a href="/tables-style-generator">
-                    <span class="nav-link-text" data-i18n>Tables Style Generator</span>
-                </a>
-            </li>
-        </ul>
-    </li>
 
     <li class="nav-item">
         <a href="#" title="Forms" data-filter-tags>
@@ -503,11 +369,6 @@
 
         <ul>
             <li>
-                <a href="/smarttables-minimal">
-                    <span class="nav-link-text" data-i18n>Minimal Settings</span>
-                </a>
-            </li>
-            <li>
                 <a href="/smarttables-responsive">
                     <span class="nav-link-text" data-i18n>Responsive Settings</span>
                 </a>
@@ -526,11 +387,6 @@
                 <a href="/smarttables-manage-records">
                     <span class="nav-link-text" data-i18n>Manage Records</span>
                     <span class="badge bg-warning text-dark badge-end">New</span>
-                </a>
-            </li>
-            <li>
-                <a href="/smarttables-fuzzy-matching">
-                    <span class="nav-link-text" data-i18n>Fuzzy Matching</span>
                 </a>
             </li>
             <li>
@@ -566,11 +422,6 @@
                 </a>
             </li>
             <li>
-                <a href="/apex-bubble">
-                    <span class="nav-link-text" data-i18n>Bubble Charts</span>
-                </a>
-            </li>
-            <li>
                 <a href="/apex-candlestick">
                     <span class="nav-link-text" data-i18n>Candlestick Charts</span>
                 </a>
@@ -583,11 +434,6 @@
             <li>
                 <a href="/apex-funnel">
                     <span class="nav-link-text" data-i18n>Funnel Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-heatmap">
-                    <span class="nav-link-text" data-i18n>Heatmap Charts</span>
                 </a>
             </li>
             <li>
@@ -626,16 +472,6 @@
                 </a>
             </li>
             <li>
-                <a href="/apex-scatter">
-                    <span class="nav-link-text" data-i18n>Scatter Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-slope">
-                    <span class="nav-link-text" data-i18n>Slope Charts</span>
-                </a>
-            </li>
-            <li>
                 <a href="/apex-sparkline">
                     <span class="nav-link-text" data-i18n>Sparklines</span>
                 </a>
@@ -645,40 +481,9 @@
                     <span class="nav-link-text" data-i18n>Timeline Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-treemap">
-                    <span class="nav-link-text" data-i18n>Treemap Charts</span>
-                </a>
-            </li>
         </ul>
     </li>
 
-    <li class="nav-item">
-        <a href="#" title="Data Bites" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#grid"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Data Bites</span>
-        </a>
-
-        <ul>
-            <li>
-                <a href="/peity-charts">
-                    <span class="nav-link-text" data-i18n>Peity Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/streamline">
-                    <span class="nav-link-text" data-i18n>Streamline</span>
-                </a>
-            </li>
-            <li>
-                <a href="/easy-pie-chart">
-                    <span class="nav-link-text" data-i18n>Easy Pie Chart</span>
-                </a>
-            </li>
-        </ul>
-    </li>
 
     <li>
         <a href="/fullcalendar">
