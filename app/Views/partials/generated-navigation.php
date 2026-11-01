@@ -146,6 +146,15 @@
             <span class="nav-link-text" data-i18n>Accounts</span>
         </a>
     </li>
+
+    <li>
+        <a href="/skpd-ppk" title="SKPD & PPK" data-filter-tags="user management master skpd ppk bidang instansi">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#briefcase"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>SKPD &amp; PPK</span>
+        </a>
+    </li>
     <?php endif; ?>
 
     <li class="nav-title"><span>Layouts</span></li>

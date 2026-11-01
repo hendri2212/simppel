@@ -55,7 +55,7 @@ $routes->get('/auth-lockscreen', 'Auth::lockscreen');
 $routes->get('/twofactor', 'Auth::twoFactor');
 $routes->get('/auth-twofactor', 'Auth::twoFactor');
 
-// Manajemen Akun (khusus ADMINISTRATOR, mutasi dilindungi CSRF)
+// Manajemen Akun & Master SKPD-PPK (khusus ADMINISTRATOR, mutasi dilindungi CSRF)
 $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function ($routes) {
     // Filter per-route menimpa filter group, jadi seluruhnya disebut ulang di sini
     $mutate = ['filter' => ['auth', 'role:ADMINISTRATOR', 'csrf']];
@@ -69,6 +69,19 @@ $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function
     $routes->post('/accounts/update', 'AccountController::update', $mutate);
     $routes->post('/accounts/reset-password/(:num)', 'AccountController::resetPassword/$1', $mutate);
     $routes->post('/accounts/reset-password', 'AccountController::resetPassword', $mutate);
+
+    // Manajemen SKPD & Relasi PPK (Bidang)
+    $routes->get('/skpd-ppk', 'SkpdPpkController::index');
+    $routes->post('/skpd-ppk/skpd/store', 'SkpdPpkController::storeSkpd', $mutate);
+    $routes->post('/skpd-ppk/skpd/update/(:num)', 'SkpdPpkController::updateSkpd/$1', $mutate);
+    $routes->post('/skpd-ppk/skpd/update', 'SkpdPpkController::updateSkpd', $mutate);
+    $routes->post('/skpd-ppk/skpd/delete/(:num)', 'SkpdPpkController::deleteSkpd/$1', $mutate);
+    $routes->post('/skpd-ppk/skpd/delete', 'SkpdPpkController::deleteSkpd', $mutate);
+    $routes->post('/skpd-ppk/ppk/store', 'SkpdPpkController::storePpk', $mutate);
+    $routes->post('/skpd-ppk/ppk/update/(:num)', 'SkpdPpkController::updatePpk/$1', $mutate);
+    $routes->post('/skpd-ppk/ppk/update', 'SkpdPpkController::updatePpk', $mutate);
+    $routes->post('/skpd-ppk/ppk/delete/(:num)', 'SkpdPpkController::deletePpk/$1', $mutate);
+    $routes->post('/skpd-ppk/ppk/delete', 'SkpdPpkController::deletePpk', $mutate);
 });
 
 // Protected Routes (Requires Login / AuthFilter)

@@ -177,14 +177,22 @@ Akses aplikasi melalui peramban web di: `http://localhost:8080`
 
 ## 🔑 Akun Uji Coba (Login)
 
-Setelah menjalankan seeder `DatabaseSeeder`, Anda dapat masuk menggunakan akun pengujian berikut:
+Setelah menjalankan seeder `DatabaseSeeder`, Anda dapat masuk menggunakan contoh akun untuk setiap peran (*role*) berikut:
 
-| Peran (Role) | Username | Password | Keterangan |
+| Peran (Role) | Username | Password | Unit Kerja / Keterangan |
 | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin` *(atau `admin@simpple.com`)* | `admin123` | Akses penuh seluruh modul & manajemen akun |
-| **Admin ULP** | `ukpbj_adm_lili` | `12345678` | Akun verifikasi & penanganan ULP / UKPBJ |
-| **PPK** | `ppk.pupr-sda` | `12345678` | Akun Pejabat Pembuat Komitmen (buat paket & RUP) |
-| *Akun Lainnya* | *(Lihat daftar di `UserSeeder.php`)* | `12345678` | Akun simulasi SKPD dan peran lainnya |
+| **Administrator** | `admin` *(atau `admin@simpple.com`)* | `admin123` | Akses penuh seluruh modul & manajemen pengguna |
+| **Admin PPK** | `dpupr_sda_ppk` | `12345678` | DPUPR - Bidang SDA *(1 dinas & 1 bidang dengan `ppk.pupr-sda`)* |
+| **PPK** | `ppk.pupr-sda` | `12345678` | DPUPR - Bidang SDA *(Pejabat Pembuat Komitmen)* |
+| **Admin ULP** | `ukpbj_adm_lili` | `12345678` | UKPBJ / Verifikator berkas tender |
+| **Distribusi** | `ukpbj_kasub_lola_anta` | `12345678` | UKPBJ / Disposisi & distribusi paket |
+| **Kepala ULP** | `simppel_kukpbj_trianto` | `12345678` | Kepala UKPBJ / Persetujuan & penugasan |
+| **Pokja** | `ardiansyah_pokja18` | `12345678` | Kelompok Kerja Pengadaan / Pemilihan |
+| **Admin Agency** | *(Dapat dibuat via admin)* | `12345678` | Didaftarkan melalui menu Manajemen Pengguna |
+| **Monev** | `monev1` *(atau `sekdakotabaru`)* | `12345678` | Monitoring & Evaluasi (Pimpinan Daerah / Sekda) |
+
+> [!NOTE]
+> Seluruh akun bawaan seeder lainnya (total 132+ akun SKPD) menggunakan password default `12345678`. Daftar lengkap akun dapat dilihat pada file [`app/Database/Seeds/UserSeeder.php`](file:///Users/hendriarifin/CODE/simpple/app/Database/Seeds/UserSeeder.php).
 
 > [!IMPORTANT]
 > Segera ubah password default saat menerapkan aplikasi di lingkungan produksi (*production*).

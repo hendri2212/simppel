@@ -190,11 +190,11 @@ class UserSeeder extends Seeder
                 'username'        => 'dpupr_sda_ppk',
                 'full_name'       => 'Hasbiyanta, ST, M.Eng',
                 'nip'             => '19781013 200312 1 004',
-                'role_id'         => 3,
+                'role_id'         => 2,
                 'skpd_id'       => 16,
                 'email'           => 'hasbiyanta@gmail.com',
                 'whatsapp_number' => '08125166146',
-                'is_active'       => 0,
+                'is_active'       => 1,
             ],
             [
                 'username'        => 'dpupr_sek_ppk',
