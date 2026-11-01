@@ -5,13 +5,13 @@ namespace App\Controllers\Traits;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * Kontrol akses data RUP / Paket berdasarkan role dan kepemilikan (SKPD / PPK).
+ * Kontrol akses data RUP / Paket berdasarkan role dan kepemilikan (SKPD & Bidang/PPK).
  *
- * - Role pusat (ULP & administrator) dapat melihat seluruh data.
- * - Role penyusun (PPK, ADMIN PPK, ADMIN AGENCY) hanya melihat/mengubah data milik SKPD-nya
- *   (atau PPK-nya, bila role PPK dan akun terhubung ke PPK tertentu).
+ * - Role pusat (ULP, Pokja, Monev & Administrator) dapat melihat seluruh data.
+ * - Role penyusun (PPK, ADMIN PPK) hanya melihat/mengubah data milik kombinasi SKPD (`skpd_id`)
+ *   dan Bidang/PPK (`ppk_id`) tempat akun tersebut bernaung.
  *
- * Data user selalu dibaca dari database (bukan session) agar perubahan role / SKPD langsung berlaku.
+ * Data user selalu dibaca dari database (bukan session) agar perubahan role / SKPD / Bidang langsung berlaku.
  */
 trait ProcurementScope
 {
@@ -60,7 +60,7 @@ trait ProcurementScope
     }
 
     /**
-     * Batasi query (model/builder) pada data milik user.
+     * Batasi query (model/builder) pada data milik user berdasarkan SKPD dan Bidang (PPK).
      *
      * @param object $query Model atau BaseBuilder
      */
@@ -72,19 +72,22 @@ trait ProcurementScope
 
         $actor = $this->actor();
 
-        if (strtoupper((string) $actor['role_name']) === 'PPK' && ! empty($actor['ppk_id'])) {
-            return $query->where($ppkColumn, (int) $actor['ppk_id']);
-        }
-        if (! empty($actor['skpd_id'])) {
-            return $query->where($skpdColumn, (int) $actor['skpd_id']);
+        if (empty($actor['skpd_id'])) {
+            // Tanpa afiliasi SKPD: tidak boleh melihat data apa pun
+            return $query->where('1 = 0', null, false);
         }
 
-        // Tanpa afiliasi SKPD/PPK: tidak boleh melihat data apa pun
-        return $query->where('1 = 0', null, false);
+        $query->where($skpdColumn, (int) $actor['skpd_id']);
+
+        if (! empty($actor['ppk_id'])) {
+            $query->where($ppkColumn, (int) $actor['ppk_id']);
+        }
+
+        return $query;
     }
 
     /**
-     * Apakah baris yang memuat skpd_id / ppk_id berada dalam cakupan user.
+     * Apakah baris yang memuat skpd_id dan ppk_id berada dalam cakupan SKPD & Bidang user.
      */
     protected function inScope(array $row): bool
     {
@@ -94,11 +97,15 @@ trait ProcurementScope
 
         $actor = $this->actor();
 
-        if (strtoupper((string) $actor['role_name']) === 'PPK' && ! empty($actor['ppk_id'])) {
+        if (empty($actor['skpd_id']) || (int) ($row['skpd_id'] ?? 0) !== (int) $actor['skpd_id']) {
+            return false;
+        }
+
+        if (! empty($actor['ppk_id'])) {
             return (int) ($row['ppk_id'] ?? 0) === (int) $actor['ppk_id'];
         }
 
-        return ! empty($actor['skpd_id']) && (int) ($row['skpd_id'] ?? 0) === (int) $actor['skpd_id'];
+        return true;
     }
 
     /**

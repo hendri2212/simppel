@@ -504,7 +504,8 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                 <?php foreach ($plans as $p): ?>
                                                     <?php
                                                     $planJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
-                                                    $canEdit = (int) ($p['rup_status'] ?? 1) === 1 && empty($p['paket_id']);
+                                                    $canEdit = (int) ($p['rup_status'] ?? 1) === 1;
+                                                    $canDelete = $canEdit && empty($p['paket_id']);
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
                                                     $isDak = ($p['jenis_dak_name'] ?? '') === 'DAK';
                                                     ?>
@@ -628,6 +629,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                                                     Ubah Paket
                                                                                 </a>
                                                                             </li>
+                                                                            <?php if ($canDelete): ?>
                                                                             <li><hr class="dropdown-divider"></li>
                                                                             <li>
                                                                                 <a class="dropdown-item text-danger btn-delete-plan" href="javascript:void(0);" data-plan='<?= $planJson ?>'>
@@ -637,6 +639,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                                                     Hapus Paket
                                                                                 </a>
                                                                             </li>
+                                                                            <?php endif; ?>
                                                                         </ul>
                                                                     </div>
                                                                 <?php endif; ?>
@@ -1831,7 +1834,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
 
                 try {
                     const p = JSON.parse(rawData);
-                    if (parseInt(p.rup_status, 10) !== 1 || p.paket_id) return;
+                    if (parseInt(p.rup_status, 10) !== 1) return;
 
                     document.getElementById('editPlanId').value = p.id || '';
                     document.getElementById('editPlanFiscalYear').value = p.fiscal_year || new Date().getFullYear();

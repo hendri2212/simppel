@@ -95,8 +95,28 @@ class PaketSeeder extends Seeder
             ],
         ];
 
+        $seededIds = array_column($pakets, 'id');
+        if (! empty($seededIds)) {
+            $this->db->table('paket')->whereNotIn('id', $seededIds)->delete();
+        }
+
         foreach ($pakets as $paket) {
             $this->db->table('paket')->upsert($paket);
+        }
+
+        // Sinkronisasi rup_status pada tabel rup sesuai ketersediaan paket:
+        // - RUP yang sudah masuk ke paket (id 1, 2, 3) -> rup_status = 2 (Terkunci)
+        // - RUP yang belum masuk ke paket (id 4) -> rup_status = 1 (Bisa Diedit)
+        $usedRupIds = array_map('intval', array_column($pakets, 'rup_id'));
+        if (! empty($usedRupIds)) {
+            $this->db->table('rup')->whereIn('id', $usedRupIds)->update([
+                'rup_status' => 2,
+                'updated_at' => $now,
+            ]);
+            $this->db->table('rup')->whereNotIn('id', $usedRupIds)->update([
+                'rup_status' => 1,
+                'updated_at' => $now,
+            ]);
         }
     }
 }

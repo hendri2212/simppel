@@ -308,7 +308,7 @@ class RupController extends BaseController
             return $this->failWith('Data RUP tidak ditemukan.', 404, '/rup');
         }
 
-        if (! empty($rup['paket_id']) || (int) ($rup['rup_status'] ?? 1) !== 1) {
+        if ((int) ($rup['rup_status'] ?? 1) !== 1) {
             return $this->failWith('Paket RUP ini sudah terkunci karena sudah dibuatkan Paket Pengadaan dan tidak dapat diubah.', 422, '/rup');
         }
 
@@ -480,8 +480,8 @@ class RupController extends BaseController
             default                                 => 'badge-proc-default',
         };
 
-        // Jika sudah dibuatkan Paket Pengadaan (paket_id tidak kosong), paksa status RUP menjadi Terkunci (2)
-        if (! empty($item['paket_id'])) {
+        // Jika sudah dibuatkan Paket Pengadaan (dan bukan dalam status Saran-Kaji = 7 yang sengaja membuka kembali RUP), pastikan status Terkunci (2)
+        if (! empty($item['paket_id']) && (int) ($item['paket_status'] ?? 0) !== 7 && (int) ($item['paket_status'] ?? 0) !== 0) {
             $item['rup_status'] = 2;
         }
 

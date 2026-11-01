@@ -1358,6 +1358,98 @@ class UserSeeder extends Seeder
             ],
         ];
 
+        // Pemetaan akun PPK ke Bidang (ppk.id) yang sesuai pada masing-masing SKPD
+        $ppkMappingByUsername = [
+            // BAPENDA (skpd_id = 4)
+            'ppk.bapenda1'                  => 65,
+            // DINKES (skpd_id = 9)
+            'dinkes_set_ppk'                => 37,
+            'dinkes_sdk_ppk1'               => 37,
+            'sugi_kesmas@dinkes.ppk'        => 38,
+            'dinkes_yankes_ppk'             => 40,
+            'dinkes_sdk_ppk'                => 41,
+            'akhmadsaleh@ppksdkdinkes.2024' => 41,
+            // DISNAKERTRANS (skpd_id = 11)
+            'sekretariat@ppk.disnakertrans' => 48,
+            'asrulsani@ppk.disnakertrans'   => 49,
+            // DINKOPERINDAG (skpd_id = 13)
+            'dinkoperindag_um_ppk'          => 44,
+            'dinkoperindag_umikro_ppk'      => 44,
+            'dinkoperindag_perin_ppk'       => 45,
+            'dinkoperindag_s&sdp_ppk'       => 47,
+            'ppk-ssdp@diskoperindag'        => 47,
+            // DLH (skpd_id = 14)
+            'rahadian@ppk.pplb3.dlh'        => 30,
+            'bid_pslb3@dlh.ppk'             => 32,
+            // DISPARPORA (skpd_id = 15)
+            'ronald@disparpora_ppk'         => 13,
+            'rudi@disparpora_ppk'           => 15,
+            'hendra@disparpora.ppk'         => 16,
+            'disparpora_olahraga_ppk'       => 17,
+            // DPUPR (skpd_id = 16)
+            'dpupr_pr_ppk'                  => 1,
+            'obet@ppk.dpupr.2024'           => 1,
+            'dpupr_bg&jk_ppk'               => 2,
+            'naili@ppk.dpupr.2024'          => 2,
+            'dpupr_bgjaskon_ppk'            => 2,
+            'dpupr_am&pl_ppk'               => 3,
+            'dpupr_sda_ppk'                 => 3,
+            'dpupr_am&pl_pa'                => 3,
+            'dpupr_sda&pl_ppk'              => 3,
+            'hasbi@ppk.dpupr.2024'          => 3,
+            'ppk.pupr-sda'                  => 3,
+            'dpupr_sek_ppk'                 => 4,
+            'pupr.sekretariat.ppk'          => 4,
+            'dpupr_bm_koko'                 => 5,
+            'dpupr_bm_ppk_agus'             => 5,
+            'agus@ppk.dpupr.2024'           => 5,
+            'ppk.bm.dpupr@2026'             => 5,
+            // DISDIKBUD (skpd_id = 20)
+            'sekretariat@disdikbud_ppk'     => 22,
+            'disdikbud_sd_ppk'              => 23,
+            'disdikbud_psd_ppk'             => 23,
+            'sumarsono@disdikbud_ppk'       => 23,
+            'disdikbud_smp_ppk'             => 24,
+            'afriandi@disdikbud_ppk'        => 24,
+            'ppk.paudnonformal.disdikbud'   => 61,
+            'eddycahyono@disdikbud_ppk'     => 62,
+            // DISHUB (skpd_id = 21)
+            'dishub_angkutan_ppk'           => 10,
+            'Sopiani@ppk.dishub'            => 10,
+            'khairian_dishub@ppk.angkutan'  => 10,
+            'dishub_lalin_ppk'              => 11,
+            // DISKAN (skpd_id = 22)
+            'diskan_skrt_ppk'               => 33,
+            'diskan_ppbi_ppk'               => 34,
+            'ppk.ppi@diskan'                => 34,
+            'diskan_ppi_ppk'                => 35,
+            'diskan_ppi_tony'               => 35,
+            'diskan_bpbsds_ppk'             => 36,
+            // DPRPP (skpd_id = 24)
+            'dprpp_wasmuk_ppk'              => 19,
+            'dprpp_waskim_ppk'              => 19,
+            'rakhmadi@dprpp_ppk'            => 19,
+            'dprpp_pera_ppk'                => 20,
+            'dprpp_perumrakyat_ppk'         => 20,
+            'imilda_ppk@dprpp2024'          => 20,
+            'ppk@perumrakyat.dprpp'         => 20,
+            'fahmi_ppk@dprpp2024'           => 21,
+            // DINSOS (skpd_id = 25)
+            'dinsos_sek_ppk'                => 63,
+            'sarwani@ppk.set.dinsos'        => 63,
+            // SATKER LATIHAN (skpd_id = 54)
+            'ppk_latihan_simppel'           => 6,
+            'ppk@latihan.2024'              => 6,
+            // DKPP (skpd_id = 55)
+            'ppkdkppktb1'                   => 54,
+            'dkpp.psp_ppk'                  => 57,
+            'saperiani@ppk.diskpp2024'      => 57,
+            'ppk.prasarana.dkpp'            => 57,
+            'ppk.bpkh@dkpp'                 => 60,
+            // SL (skpd_id = 56)
+            'latihansimppel2024'            => 8,
+        ];
+
         // Sinkronisasi data ke database users
         $existingUsers = $this->db->table('users')->select('id, username')->get()->getResultArray();
         $existingUserMap = array_column($existingUsers, 'id', 'username');
@@ -1365,6 +1457,7 @@ class UserSeeder extends Seeder
         $toInsert = [];
 
         foreach ($importedUsers as $user) {
+            $user['ppk_id']     = $ppkMappingByUsername[$user['username']] ?? ($user['ppk_id'] ?? null);
             $user['password']   = $defaultPasswordHash;
             $user['updated_at'] = $now;
 
