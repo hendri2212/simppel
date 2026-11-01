@@ -16,10 +16,10 @@ use CodeIgniter\HTTP\ResponseInterface;
 trait ProcurementScope
 {
     /** Role yang dapat melihat seluruh data lintas SKPD. */
-    protected const GLOBAL_ROLES = ['ADMINISTRATOR', 'ADMIN ULP', 'KEPALA ULP', 'DISTRIBUSI', 'POKJA', 'MONEV'];
+    protected const GLOBAL_ROLES = ['ADMINISTRATOR', 'ADMIN ULP', 'KEPALA ULP', 'DISTRIBUSI', 'POKJA', 'ADMIN AGENCY', 'MONEV'];
 
     /** Role yang boleh membuat / mengubah RUP & paket (tetap dibatasi kepemilikan). */
-    public const WRITE_ROLES = ['ADMINISTRATOR', 'ADMIN PPK', 'PPK', 'ADMIN AGENCY'];
+    public const WRITE_ROLES = ['ADMINISTRATOR', 'ADMIN PPK', 'PPK'];
 
     private ?array $actorCache = null;
 

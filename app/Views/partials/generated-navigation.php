@@ -86,19 +86,6 @@
         </a>
 
         <ul>
-            <li class="nav-item">
-                <a href="#" title="Error Pages" data-filter-tags>
-                    <span class="nav-link-text" data-i18n>Error Pages</span>
-                </a>
-
-                <ul>
-                    <li>
-                        <a href="/error-404-2">
-                            <span class="nav-link-text" data-i18n>404 Not Found 2</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
             <li>
                 <a href="/profile">
                     <span class="nav-link-text" data-i18n>User Profile</span>

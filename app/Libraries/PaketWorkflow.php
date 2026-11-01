@@ -35,14 +35,14 @@ class PaketWorkflow
      */
     public const ACTIONS = [
         'pilih' => [
-            'label' => 'Ambil untuk Diverifikasi', 'roles' => self::ULP, 'from' => [2], 'to' => null,
-            'note' => null, 'variant' => 'primary',
-            'confirm' => 'Ambil paket ini untuk diverifikasi oleh Anda?',
+            'label' => 'Pilih Paket', 'roles' => self::ULP, 'from' => [2], 'to' => null,
+            'note' => null, 'variant' => 'danger',
+            'confirm' => 'Pilih paket ini untuk diverifikasi oleh Anda?',
         ],
         'kembalikan' => [
-            'label' => 'Kembalikan ke PPK', 'roles' => self::ULP, 'from' => [2], 'to' => 3,
-            'note' => 'required', 'assigned' => true, 'variant' => 'danger',
-            'confirm' => 'Kembalikan paket ke PPK? Tuliskan alasan pengembalian.',
+            'label' => 'Verifikasi (Kembalikan ke PPK)', 'roles' => self::ULP, 'from' => [2], 'to' => 3,
+            'note' => 'optional', 'assigned' => true, 'variant' => 'danger',
+            'confirm' => 'Kembalikan paket ke PPK untuk diperbaiki? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_kembali' => [
             'label' => 'Ajukan Kembali ke ULP', 'roles' => self::PPK_SIDE, 'from' => [3], 'to' => 2,
@@ -50,24 +50,24 @@ class PaketWorkflow
             'confirm' => 'Ajukan kembali paket ke Admin ULP?',
         ],
         'terima' => [
-            'label' => 'Terima Berkas', 'roles' => self::ULP, 'from' => [2], 'to' => 4,
+            'label' => 'Terima', 'roles' => self::ULP, 'from' => [2], 'to' => 4,
             'note' => null, 'assigned' => true, 'variant' => 'success',
-            'confirm' => 'Terima berkas paket ini?',
+            'confirm' => 'Terima berkas paket ini untuk dilanjutkan ke distribusi Pokja?',
         ],
         'saran' => [
-            'label' => 'Berikan Saran Distribusi', 'roles' => self::DISTRIBUSI, 'from' => [4], 'to' => 5,
-            'note' => null, 'pokja' => true, 'variant' => 'primary',
+            'label' => 'Saran Distribusi', 'roles' => self::DISTRIBUSI, 'from' => [4], 'to' => 5,
+            'note' => null, 'pokja' => true, 'variant' => 'danger',
             'confirm' => 'Kirim usulan Pokja ke Kepala ULP?',
         ],
         'distribusi' => [
-            'label' => 'Tetapkan Distribusi', 'roles' => self::KEPALA, 'from' => [5], 'to' => 6,
-            'note' => null, 'pokja' => true, 'variant' => 'success',
+            'label' => 'Distribusi', 'roles' => self::KEPALA, 'from' => [5], 'to' => 6,
+            'note' => null, 'pokja' => true, 'variant' => 'danger',
             'confirm' => 'Tetapkan distribusi paket ke Pokja terpilih?',
         ],
         'sarankaji' => [
-            'label' => 'Saran Kaji Ulang ke PPK', 'roles' => self::POKJA, 'from' => [6, 8], 'to' => 7,
-            'note' => 'required', 'member' => true, 'variant' => 'warning',
-            'confirm' => 'Kembalikan paket ke PPK untuk dikaji ulang. Tuliskan sarannya.',
+            'label' => 'Saran Kaji', 'roles' => self::POKJA, 'from' => [6, 8], 'to' => 7,
+            'note' => 'optional', 'member' => true, 'variant' => 'danger',
+            'confirm' => 'Kembalikan paket ke PPK untuk dikaji ulang? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_kaji' => [
             'label' => 'Ajukan ke Pokja (Setelah Kaji)', 'roles' => self::PPK_SIDE, 'from' => [7], 'to' => 8,
@@ -75,14 +75,14 @@ class PaketWorkflow
             'confirm' => 'Ajukan kembali paket ke Pokja?',
         ],
         'lelang' => [
-            'label' => 'Tayangkan Lelang', 'roles' => self::POKJA, 'from' => [6, 8], 'to' => 9,
+            'label' => 'Tayangkan Paket', 'roles' => self::POKJA, 'from' => [6, 8], 'to' => 9,
             'note' => null, 'member' => true, 'variant' => 'success',
             'confirm' => 'Tayangkan paket ini (proses lelang dimulai)?',
         ],
         'saranadd' => [
             'label' => 'Saran Addendum ke PPK', 'roles' => self::POKJA, 'from' => [9, 11], 'to' => 10,
-            'note' => 'required', 'member' => true, 'variant' => 'warning',
-            'confirm' => 'Kembalikan paket ke PPK untuk addendum. Tuliskan sarannya.',
+            'note' => 'optional', 'member' => true, 'variant' => 'warning',
+            'confirm' => 'Kembalikan paket ke PPK untuk addendum? (Catatan harus sudah diisi atau tulis di bawah ini)',
         ],
         'ajukan_add' => [
             'label' => 'Ajukan Addendum ke Pokja', 'roles' => self::PPK_SIDE, 'from' => [10], 'to' => 11,
@@ -181,10 +181,15 @@ class PaketWorkflow
         $pokjaMember = $admin || ($role === 'POKJA' && $isMember);
 
         return [
-            'pokja'   => ($admin || $role === 'DISTRIBUSI') && in_array($status, [4, 5], true),
-            'dokumen' => $pokjaMember && in_array($status, [9, 11], true),
+            // Langkah 1a & 2a: Admin Distribusi (status 4 & 5) dan Kepala ULP (status 5) dapat mengubah susunan Pokja
+            'pokja'   => ($admin && in_array($status, [4, 5], true))
+                || ($role === 'DISTRIBUSI' && in_array($status, [4, 5], true))
+                || ($role === 'KEPALA ULP' && $status === 5),
+            // Langkah 3b: Pokja dapat mengunggah dokumen lelang mulai saat paket terdistribusi (6, 8) hingga lelang/addendum (9, 11)
+            'dokumen' => $pokjaMember && in_array($status, [6, 8, 9, 11], true),
             'hasil'   => $pokjaMember && in_array($status, [9, 11], true),
-            'lpse'    => ($admin || $role === 'ADMIN AGENCY') && (int) ($paket['is_lpse'] ?? 0) === 0 && $status >= 6 && $status <= 13,
+            // Langkah 3a: Admin Agency memproses Room LPSE untuk paket berstatus 6 s/d 14 yang belum lpse=1
+            'lpse'    => ($admin || $role === 'ADMIN AGENCY') && (int) ($paket['is_lpse'] ?? 0) === 0 && $status >= 6 && $status <= 14,
             'catatan' => $role !== 'MONEV' && $status >= 2,
         ];
     }

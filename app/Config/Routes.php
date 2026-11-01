@@ -74,7 +74,7 @@ $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function
 // Protected Routes (Requires Login / AuthFilter)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Filter per-route menimpa filter group, jadi auth disebut ulang di sini
-    $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']];
+    $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK', 'csrf']];
     // Semua role proses (kecuali MONEV); hak aksi sebenarnya dicek per paket di PaketWorkflow
     $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 
@@ -105,6 +105,7 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->get('/paket/catatan/(:num)', 'PaketWorkflowController::catatan/$1');
     $routes->post('/paket/catatan/store', 'PaketWorkflowController::catatanStore', $writeAny);
     $routes->post('/paket/catatan/jawab/(:num)', 'PaketWorkflowController::catatanJawab/$1', $writeAny);
+    $routes->post('/paket/catatan/delete/(:num)', 'PaketWorkflowController::catatanDelete/$1', $writeAny);
     $routes->post('/paket/hasil/(:num)', 'PaketWorkflowController::simpanHasil/$1', $writeAny);
     $routes->post('/paket/lpse/(:num)', 'PaketWorkflowController::lpse/$1', $writeAny);
     $routes->get('/paket/dokumen/(:num)', 'PaketWorkflowController::dokumen/$1');

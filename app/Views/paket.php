@@ -295,7 +295,8 @@
                     // Kategori Role: apakah Admin ULP / Pusat atau PPK
                     $isAdminUlp = in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR', 'KEPALA ULP', 'DISTRIBUSI'], true);
                     $isPpk = in_array($currentRoleName, ['PPK', 'ADMIN PPK'], true) || !$isAdminUlp;
-                    ?>
+                        $canWritePaket = in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
+                        ?>
 
                     <div class="main-content">
 
@@ -429,7 +430,7 @@
                                                     <use href="/icons/sprite.svg#filter"></use>
                                                 </svg>
                                                 <span class="fs-xs fw-bold text-uppercase text-secondary" style="letter-spacing: 0.5px;">
-                                                    Filter Cepat Status <?= $isAdminUlp ? '(Admin ULP / UKPBJ)' : '(Pejabat Pembuat Komitmen)' ?>
+                                                    Filter Cepat Antrean (<?= esc($currentRoleName ?: 'Pengguna') ?>)
                                                 </span>
                                             </div>
                                             <div class="fs-nano text-muted">
@@ -444,42 +445,130 @@
                                                 <span class="badge bg-secondary badge-count" id="countPillAll"><?= count($pakets) ?></span>
                                             </button>
 
-                                            <?php if ($isAdminUlp): ?>
-                                                <!-- Pill: Semua Draf -->
-                                                <button type="button" class="status-pill-btn" data-filter-type="status" data-status-codes="1" title="Semua berkas draf yang sedang disusun PPK">
-                                                    <span>Semua Draf</span>
-                                                    <span class="badge bg-secondary badge-count" id="countPillDraft">0</span>
+                                            <?php if (in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR'], true)): ?>
+                                                <!-- 5 Tab Antrean Admin ULP -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="ulp_daftar" title="Antrean bersama paket baru dari PPK yang belum diambil Admin ULP (status = 2, admin_ulp = kosong)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#inbox"></use></svg>
+                                                    <span>Daftar</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillUlpDaftar">0</span>
                                                 </button>
-
-                                                <!-- Pill: Paket Saya (admin_ukpbj_id = current user) -->
-                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="my_assigned" data-user-id="<?= $currentUserId ?>" title="Paket yang ditugaskan kepada Anda sebagai Admin UKPBJ">
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="ulp_verifikasi" data-user-id="<?= $currentUserId ?>" title="Paket yang sedang diperiksa oleh Anda (status = 2, admin_ulp = Anda)">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#user-check"></use></svg>
-                                                    <span>Paket Saya (Dipilih)</span>
-                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillMyAssigned" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                    <span>Verifikasi</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillUlpVerifikasi" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
                                                 </button>
-
-                                                <!-- Pill: Dikembalikan (Status 3) -->
-                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="status" data-status-codes="3" title="Berkas yang dikembalikan ke PPK untuk diperbaiki">
+                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="ulp_dikembalikan" data-user-id="<?= $currentUserId ?>" title="Paket yang dikembalikan ke PPK karena berkas belum lengkap / perlu revisi">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#corner-up-left"></use></svg>
                                                     <span>Dikembalikan</span>
-                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillDikembalikan">0</span>
+                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillUlpDikembalikan">0</span>
                                                 </button>
-
-                                                <!-- Pill: Diterima (Status 4) -->
-                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="4" title="Berkas lolos verifikasi dan diterima ULP">
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="ulp_diterima" data-user-id="<?= $currentUserId ?>" title="Paket yang sudah lolos verifikasi Admin ULP (status >= 4)">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
                                                     <span>Diterima</span>
-                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillDiterima">0</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillUlpDiterima">0</span>
                                                 </button>
-
-                                                <!-- Pill: Hasil Lelang (Status 12) -->
-                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="12" title="Proses lelang selesai dan ada penetapan pemenang">
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="0,9,12,14,15" title="Pemantauan paket tayang lelang atau hasil/selesai lelang">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
                                                     <span>Hasil Lelang</span>
-                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillHasil">0</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillUlpLelang">0</span>
                                                 </button>
 
-                                            <?php else: /* TAMPILAN ROLE PPK / DEFAULT */ ?>
+                                            <?php elseif ($currentRoleName === 'DISTRIBUSI'): ?>
+                                                <!-- 5 Tab Antrean Admin Distribusi (submenu5) -->
+                                                <button type="button" class="status-pill-btn" data-filter-type="status" data-status-codes="2,3,4,5,6,7,8,9,10,11,12,13,14,15" title="Semua paket yang sudah diajukan (status != 1)">
+                                                    <span>Daftar</span>
+                                                    <span class="badge bg-secondary badge-count" id="countPillDistDaftar">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="4" title="Antrean kerja utama Admin Distribusi: Paket diterima Admin ULP & menunggu pemilihan Pokja (status = 4)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#users"></use></svg>
+                                                    <span>Diterima</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillDistDiterima">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="status" data-status-codes="5" title="Paket yang sudah disarankan Pokjanya dan menunggu penetapan Kepala ULP (status = 5)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#send"></use></svg>
+                                                    <span>Saran Distribusi</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillDistSaran" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="6,7,8,9,10,11,12,13,14,15" title="Paket yang sudah terdistribusi ke Pokja (status >= 6)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    <span>Distribusi</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillDistTerdistribusi">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="12,14" title="Paket dengan hasil lelang / selesai (status 12, 14)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                                    <span>Hasil Lelang</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillDistHasil">0</span>
+                                                </button>
+
+                                            <?php elseif ($currentRoleName === 'KEPALA ULP'): ?>
+                                                <!-- 5 Tab Antrean Kepala ULP (submenu6) -->
+                                                <button type="button" class="status-pill-btn" data-filter-type="status" data-status-codes="2,3,4,5,6,7,8,9,10,11,12,13,14,15" title="Semua paket yang sudah diajukan (status != 1)">
+                                                    <span>Daftar</span>
+                                                    <span class="badge bg-secondary badge-count" id="countPillDistDaftar">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="5" title="Antrean kerja utama Kepala ULP: Usulan Pokja dari Admin Distribusi yang menunggu penetapan (status = 5)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#user-check"></use></svg>
+                                                    <span>Saran Distribusi</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillDistSaran">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="6,7,8,9,10,11,12,13,14,15" title="Paket yang telah ditetapkan distribusinya (status >= 6)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    <span>Distribusi</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillDistTerdistribusi">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="status" data-status-codes="9" title="Paket yang sedang tayang lelang (status = 9)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#activity"></use></svg>
+                                                    <span>Lelang</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillKulpLelang" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="12,14" title="Paket dengan hasil lelang / selesai (status 12, 14)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                                    <span>Hasil Lelang</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillDistHasil">0</span>
+                                                </button>
+
+                                            <?php elseif ($currentRoleName === 'POKJA'): ?>
+                                                <!-- Tab Antrean Pokja (submenu7) - khusus paket yang menugaskan personil Pokja ini -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="pokja_status" data-status-codes="6" title="Paket baru terdistribusi ke Pokja Anda untuk dikaji ulang / ditayangkan (status = 6)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#inbox"></use></svg>
+                                                    <span>Distribusi</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillPokjaDistribusi">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="pokja_status" data-status-codes="7" title="Paket yang dikembalikan Pokja ke PPK untuk kaji ulang (status = 7)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#corner-up-left"></use></svg>
+                                                    <span>Saran Kaji</span>
+                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillPokjaSaranKaji">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-purple" data-filter-type="pokja_status" data-status-codes="8" title="Paket yang diajukan kembali oleh PPK pasca kaji ulang (status = 8)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#refresh-cw"></use></svg>
+                                                    <span>Kaji Ulang</span>
+                                                    <span class="badge bg-purple-subtle text-purple badge-count" id="countPillPokjaKaji" style="background-color: rgba(147, 51, 234, 0.2); color: #7e22ce;">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-info" data-filter-type="pokja_status" data-status-codes="9,10,11,13" title="Paket yang sedang dalam proses lelang / addendum / lelang ulang (status 9, 10, 11, 13)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#activity"></use></svg>
+                                                    <span>Proses Lelang</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillPokjaLelang">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="pokja_status" data-status-codes="12,14,15" title="Paket yang hasil lelangnya sudah dikirim / selesai (status 12, 14, 15)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                                    <span>Hasil & Selesai</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillPokjaHasil">0</span>
+                                                </button>
+
+                                            <?php elseif ($currentRoleName === 'ADMIN AGENCY'): ?>
+                                                <!-- 2 Tab Antrean Admin Agency (submenu8) -->
+                                                <button type="button" class="status-pill-btn pill-warning" data-filter-type="agency_baru" title="Paket terdistribusi (status 6-14) yang belum dibuatkan Room LPSE (is_lpse = 0)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#inbox"></use></svg>
+                                                    <span>Baru (Belum Room LPSE)</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillAgencyBaru">0</span>
+                                                </button>
+                                                <button type="button" class="status-pill-btn pill-success" data-filter-type="agency_sudah" title="Paket yang sudah diproses Room LPSE (is_lpse = 1)">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    <span>Sudah Proses (LPSE)</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillAgencySudah">0</span>
+                                                </button>
+
+                                            <?php else: /* TAMPILAN ROLE PPK / ADMIN PPK */ ?>
 
                                                 <!-- Pill: Draft (Status 1) -->
                                                 <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="1" title="Draf paket yang belum diajukan ke ULP">
@@ -619,7 +708,8 @@
                                                     <?php
                                                     $paketJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
                                                     $hasWinner = !empty($p['nama_pemenang']);
-                                                    $canModifyPaket = (int) ($p['status_paket'] ?? 0) === 1;
+                                                    $canModifyPaket = $canWritePaket && (int) ($p['status_paket'] ?? 0) === 1;
+                                                    $pokjaUserIdsCsv = implode(',', array_map('intval', array_column($p['pokja_members'] ?? [], 'user_id')));
                                                     ?>
                                                     <tr class="paket-row"
                                                         data-id="<?= $p['id'] ?>"
@@ -631,7 +721,9 @@
                                                         data-winner="<?= esc(strtolower($p['nama_pemenang'] ?? '')) ?>"
                                                         data-status-paket="<?= (int) ($p['status_paket'] ?? 0) ?>"
                                                         data-status-verifikasi="<?= (int) ($p['status_verifikasi'] ?? 0) ?>"
-                                                        data-admin-ukpbj-id="<?= (int) ($p['admin_ukpbj_id'] ?? 0) ?>">
+                                                        data-admin-ukpbj-id="<?= (int) ($p['admin_ukpbj_id'] ?? 0) ?>"
+                                                        data-is-lpse="<?= (int) ($p['is_lpse'] ?? 0) ?>"
+                                                        data-pokja-users="<?= esc($pokjaUserIdsCsv) ?>">
 
                                                         <!-- No. Paket -->
                                                         <td>
@@ -884,8 +976,8 @@
                         </div>
                     </div>
 
-                    <!-- 2 Tabulasi: Rincian Paket & Dokumen Persyaratan -->
-                    <ul class="nav nav-tabs nav-tabs-clean border-0 gap-2" id="detailPaketTabs" role="tablist">
+                    <!-- Tabulasi Detail Paket: Rincian Paket, Dokumen Persyaratan, Catatan, Pokja, Dokumen Lelang, Hasil Lelang -->
+                    <ul class="nav nav-tabs nav-tabs-clean border-0 gap-2 flex-wrap" id="detailPaketTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active fw-semibold d-flex align-items-center gap-2 px-3 py-2" id="tab-detail-link" data-bs-toggle="tab" data-bs-target="#tabDetailContent" type="button" role="tab" aria-controls="tabDetailContent" aria-selected="true">
                                 <svg class="sa-icon" style="width: 15px; height: 15px;"><use href="/icons/sprite.svg#file-text"></use></svg>
@@ -898,6 +990,33 @@
                                 <span>Dokumen Persyaratan</span>
                                 <span class="badge bg-danger rounded-pill fs-nano ms-1 d-none" id="badgeSyaratPending">0 Belum</span>
                                 <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill fs-nano ms-1 d-none" id="badgeSyaratLengkap">Lengkap</span>
+                            </button>
+                        </li>
+                        <li class="nav-item d-none" role="presentation" id="navItemCatatanDetail">
+                            <button class="nav-link fw-semibold d-flex align-items-center gap-2 px-3 py-2" id="tab-catatan-link" data-bs-toggle="tab" data-bs-target="#tabCatatanContent" type="button" role="tab" aria-controls="tabCatatanContent" aria-selected="false">
+                                <svg class="sa-icon" style="width: 15px; height: 15px;"><use href="/icons/sprite.svg#message-square"></use></svg>
+                                <span>Catatan</span>
+                                <span class="badge bg-secondary rounded-pill fs-nano ms-1 d-none" id="badgeCatatanCount">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item d-none" role="presentation" id="navItemPokjaDetail">
+                            <button class="nav-link fw-semibold d-flex align-items-center gap-2 px-3 py-2" id="tab-pokja-link" data-bs-toggle="tab" data-bs-target="#tabPokjaContent" type="button" role="tab" aria-controls="tabPokjaContent" aria-selected="false">
+                                <svg class="sa-icon" style="width: 15px; height: 15px;"><use href="/icons/sprite.svg#users"></use></svg>
+                                <span>Pokja</span>
+                                <span class="badge bg-secondary rounded-pill fs-nano ms-1 d-none" id="badgePokjaCount">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item d-none" role="presentation" id="navItemDokumenDetail">
+                            <button class="nav-link fw-semibold d-flex align-items-center gap-2 px-3 py-2" id="tab-dokumen-link" data-bs-toggle="tab" data-bs-target="#tabDokumenContent" type="button" role="tab" aria-controls="tabDokumenContent" aria-selected="false">
+                                <svg class="sa-icon" style="width: 15px; height: 15px;"><use href="/icons/sprite.svg#folder"></use></svg>
+                                <span>Dokumen Lelang</span>
+                                <span class="badge bg-secondary rounded-pill fs-nano ms-1 d-none" id="badgeDokumenCount">0</span>
+                            </button>
+                        </li>
+                        <li class="nav-item d-none" role="presentation" id="navItemHasilDetail">
+                            <button class="nav-link fw-semibold d-flex align-items-center gap-2 px-3 py-2" id="tab-hasil-link" data-bs-toggle="tab" data-bs-target="#tabHasilContent" type="button" role="tab" aria-controls="tabHasilContent" aria-selected="false">
+                                <svg class="sa-icon" style="width: 15px; height: 15px;"><use href="/icons/sprite.svg#award"></use></svg>
+                                <span>Hasil Lelang</span>
                             </button>
                         </li>
                     </ul>
@@ -1096,22 +1215,73 @@
 
                         </div>
 
+                        <!-- TABULASI 3: CATATAN VERIFIKASI / REVISI -->
+                        <div class="tab-pane fade" id="tabCatatanContent" role="tabpanel" aria-labelledby="tab-catatan-link">
+                            <div class="alert alert-info py-2 px-3 mb-3 fs-xs d-flex align-items-center gap-2">
+                                <svg class="sa-icon text-info flex-shrink-0" style="width: 16px; height: 16px;"><use href="/icons/sprite.svg#info"></use></svg>
+                                <div>
+                                    Tuliskan alasan pengembalian atau catatan kaji ulang di sini sebelum mengembalikan paket ke PPK. PPK dapat menjawab catatan ini setelah memperbaiki berkas.
+                                </div>
+                            </div>
+                            <div class="alert d-none py-2 px-3 mb-3 fs-xs" id="detailCatatanAlert"></div>
+                            <div id="detailCatatanBox" class="fs-sm">
+                                <div class="text-muted">Memuat catatan...</div>
+                            </div>
+                        </div>
+
+                        <!-- TABULASI 4: ANGGOTA POKJA PEMILIHAN -->
+                        <div class="tab-pane fade" id="tabPokjaContent" role="tabpanel" aria-labelledby="tab-pokja-link">
+                            <div class="alert alert-info py-2 px-3 mb-3 fs-xs d-flex align-items-center gap-2">
+                                <svg class="sa-icon text-info flex-shrink-0" style="width: 16px; height: 16px;"><use href="/icons/sprite.svg#info"></use></svg>
+                                <div>
+                                    Pilih <strong>3, 5, atau 7 orang</strong> personil Kelompok Kerja (Pokja) beserta jabatannya sebelum menekan tombol <strong>Saran Distribusi</strong> (Admin Distribusi) atau <strong>Distribusi</strong> (Kepala ULP).
+                                </div>
+                            </div>
+                            <div class="alert d-none py-2 px-3 mb-3 fs-xs" id="detailPokjaAlert"></div>
+                            <div id="detailPokjaBox" class="fs-sm">
+                                <div class="text-muted">Memuat susunan Pokja...</div>
+                            </div>
+                        </div>
+
+                        <!-- TABULASI 5: DOKUMEN LELANG (POKJA) -->
+                        <div class="tab-pane fade" id="tabDokumenContent" role="tabpanel" aria-labelledby="tab-dokumen-link">
+                            <div class="alert alert-info py-2 px-3 mb-3 fs-xs d-flex align-items-center gap-2">
+                                <svg class="sa-icon text-info flex-shrink-0" style="width: 16px; height: 16px;"><use href="/icons/sprite.svg#info"></use></svg>
+                                <div>
+                                    Unggah dokumen lelang oleh Pokja Pemilihan. Dokumen akan dikunci otomatis setelah hasil lelang dikirim ke PPK.
+                                </div>
+                            </div>
+                            <div class="alert d-none py-2 px-3 mb-3 fs-xs" id="detailDokumenAlert"></div>
+                            <div id="detailDokumenBox" class="fs-sm">
+                                <div class="text-muted">Memuat dokumen lelang...</div>
+                            </div>
+                        </div>
+
+                        <!-- TABULASI 6: INPUT HASIL LELANG / PEMENANG -->
+                        <div class="tab-pane fade" id="tabHasilContent" role="tabpanel" aria-labelledby="tab-hasil-link">
+                            <div class="alert d-none py-2 px-3 mb-3 fs-xs" id="detailHasilAlert"></div>
+                            <div id="detailHasilBox" class="fs-sm"></div>
+                        </div>
+
                     </div>
                 </div>
-                <div class="modal-footer bg-body-tertiary">
-                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary btn-sm px-4 d-none align-items-center gap-1" id="modalBtnAjukan">
-                        <svg class="sa-icon" style="width: 14px; height: 14px;">
-                            <use href="/icons/sprite.svg#send"></use>
-                        </svg>
-                        <span>Ajukan Paket</span>
-                    </button>
-                    <button type="button" class="btn btn-outline-primary btn-sm px-3 d-inline-flex align-items-center justify-content-center text-nowrap gap-2" onclick="alert('Mencetak lembar paket pengadaan...');">
-                        <svg class="sa-icon" style="width: 15px; height: 15px;">
-                            <use href="/icons/sprite.svg#printer"></use>
-                        </svg>
-                        <span>Cetak Lembar Paket</span>
-                    </button>
+                <div class="modal-footer bg-body-tertiary d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex flex-wrap gap-2" id="modalWorkflowActionButtons"></div>
+                    <div class="d-flex flex-wrap gap-2 ms-auto">
+                        <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Tutup</button>
+                        <button type="button" class="btn btn-primary btn-sm px-4 d-none align-items-center gap-1" id="modalBtnAjukan">
+                            <svg class="sa-icon" style="width: 14px; height: 14px;">
+                                <use href="/icons/sprite.svg#send"></use>
+                            </svg>
+                            <span>Ajukan Paket</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm px-3 d-inline-flex align-items-center justify-content-center text-nowrap gap-2" onclick="alert('Mencetak lembar paket pengadaan...');">
+                            <svg class="sa-icon" style="width: 15px; height: 15px;">
+                                <use href="/icons/sprite.svg#printer"></use>
+                            </svg>
+                            <span>Cetak Lembar Paket</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1569,6 +1739,9 @@
                         // Muat daftar dokumen persyaratan untuk paket ini
                         loadSyarat(currentPaketId, currentPaketStatus);
 
+                        // Beri tahu modul workflow bahwa modal detail paket dibuka
+                        document.dispatchEvent(new CustomEvent('paket:detail-opened', { detail: p }));
+
                         const modal = new bootstrap.Modal(document.getElementById('detailPaketModal'));
                         modal.show();
                     } catch (e) {
@@ -1581,6 +1754,8 @@
             let activePillFilterType = 'all';
             let activePillStatusCodes = [];
             let activePillUserId = null;
+            const currentUserIdNum = <?= json_encode($currentUserId) ?>;
+            const isStrictAdminUlp = <?= json_encode($currentRoleName === 'ADMIN ULP') ?>;
 
             // Update badge hitungan di masing-masing pill berdasarkan data
             function updatePillCounters() {
@@ -1622,28 +1797,70 @@
                     proses: 0,
                     hasil: 0,
                     selesai: 0,
-                    diterima: 0,
-                    myAssigned: 0,
+                    ulpDaftar: 0,
+                    ulpVerifikasi: 0,
+                    ulpDikembalikan: 0,
+                    ulpDiterima: 0,
+                    ulpLelang: 0,
+                    distDaftar: 0,
+                    distDiterima: 0,
+                    distSaran: 0,
+                    distTerdistribusi: 0,
+                    distHasil: 0,
+                    kulpLelang: 0,
+                    pokjaDistribusi: 0,
+                    pokjaSaranKaji: 0,
+                    pokjaKaji: 0,
+                    pokjaLelang: 0,
+                    pokjaHasil: 0,
+                    agencyBaru: 0,
+                    agencySudah: 0,
                 };
-
-                const currentUserIdNum = <?= json_encode($currentUserId) ?>;
 
                 baseRows.forEach(row => {
                     const st = parseInt(row.getAttribute('data-status-paket') || '0', 10);
                     const adminUkpbjId = parseInt(row.getAttribute('data-admin-ukpbj-id') || '0', 10);
+                    const isLpse = parseInt(row.getAttribute('data-is-lpse') || '0', 10);
+                    const pokjaUsers = (row.getAttribute('data-pokja-users') || '')
+                        .split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+                    const isPokjaMember = currentUserIdNum && pokjaUsers.includes(currentUserIdNum);
+                    const isMineOrAdmin = !isStrictAdminUlp || (currentUserIdNum && adminUkpbjId === currentUserIdNum);
 
                     if (st === 1) counts.draft++;
                     if (st === 3) counts.dikembalikan++;
-                    if (st === 4) counts.diterima++;
                     if (st === 7) counts.saranKaji++;
                     if (st === 10) counts.saranAdd++;
                     if ([2, 4, 5, 6, 8, 9, 11, 13].includes(st)) counts.proses++;
                     if (st === 12) counts.hasil++;
                     if (st === 14) counts.selesai++;
 
-                    if (currentUserIdNum && adminUkpbjId === currentUserIdNum) {
-                        counts.myAssigned++;
+                    // 5 Tab Antrean Admin ULP
+                    if (st === 2 && adminUkpbjId === 0) counts.ulpDaftar++;
+                    if (st === 2 && adminUkpbjId > 0 && isMineOrAdmin) counts.ulpVerifikasi++;
+                    if (st === 3 && isMineOrAdmin) counts.ulpDikembalikan++;
+                    if (st >= 4 && isMineOrAdmin) counts.ulpDiterima++;
+                    if ([0, 9, 12, 14, 15].includes(st)) counts.ulpLelang++;
+
+                    // Antrean Admin Distribusi & Kepala ULP
+                    if (st >= 2) counts.distDaftar++;
+                    if (st === 4) counts.distDiterima++;
+                    if (st === 5) counts.distSaran++;
+                    if (st >= 6) counts.distTerdistribusi++;
+                    if ([12, 14].includes(st)) counts.distHasil++;
+                    if (st === 9) counts.kulpLelang++;
+
+                    // Antrean Pokja (khusus paket di mana user terdaftar sebagai anggota Pokja)
+                    if (isPokjaMember) {
+                        if (st === 6) counts.pokjaDistribusi++;
+                        if (st === 7) counts.pokjaSaranKaji++;
+                        if (st === 8) counts.pokjaKaji++;
+                        if ([9, 10, 11, 13].includes(st)) counts.pokjaLelang++;
+                        if ([12, 14, 15].includes(st)) counts.pokjaHasil++;
                     }
+
+                    // Antrean Admin Agency (Room LPSE)
+                    if (st >= 6 && st <= 14 && isLpse === 0) counts.agencyBaru++;
+                    if (isLpse === 1) counts.agencySudah++;
                 });
 
                 // Update teks badge di DOM
@@ -1670,8 +1887,24 @@
                 setElCount('countPillProses', counts.proses);
                 setElCount('countPillHasil', counts.hasil);
                 setElCount('countPillSelesai', counts.selesai);
-                setElCount('countPillDiterima', counts.diterima);
-                setElCount('countPillMyAssigned', counts.myAssigned);
+                setElCount('countPillUlpDaftar', counts.ulpDaftar);
+                setElCount('countPillUlpVerifikasi', counts.ulpVerifikasi);
+                setElCount('countPillUlpDikembalikan', counts.ulpDikembalikan);
+                setElCount('countPillUlpDiterima', counts.ulpDiterima);
+                setElCount('countPillUlpLelang', counts.ulpLelang);
+                setElCount('countPillDistDaftar', counts.distDaftar);
+                setElCount('countPillDistDiterima', counts.distDiterima);
+                setElCount('countPillDistSaran', counts.distSaran);
+                setElCount('countPillDistTerdistribusi', counts.distTerdistribusi);
+                setElCount('countPillDistHasil', counts.distHasil);
+                setElCount('countPillKulpLelang', counts.kulpLelang);
+                setElCount('countPillPokjaDistribusi', counts.pokjaDistribusi);
+                setElCount('countPillPokjaSaranKaji', counts.pokjaSaranKaji);
+                setElCount('countPillPokjaKaji', counts.pokjaKaji);
+                setElCount('countPillPokjaLelang', counts.pokjaLelang);
+                setElCount('countPillPokjaHasil', counts.pokjaHasil);
+                setElCount('countPillAgencyBaru', counts.agencyBaru);
+                setElCount('countPillAgencySudah', counts.agencySudah);
             }
 
             // Filter logic
@@ -1704,11 +1937,28 @@
                     const matchesDropdownStatus = !statusVal || String(stPaket) === String(statusVal);
 
                     // Cocokkan pill status aktif
+                    const isLpse = parseInt(row.getAttribute('data-is-lpse') || '0', 10);
+                    const pokjaUsers = (row.getAttribute('data-pokja-users') || '')
+                        .split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+                    const isPokjaMember = currentUserIdNum && pokjaUsers.includes(currentUserIdNum);
+                    const isMineOrAdmin = !isStrictAdminUlp || (currentUserIdNum && adminUkpbjId === currentUserIdNum);
                     let matchesPill = true;
                     if (activePillFilterType === 'status') {
                         matchesPill = activePillStatusCodes.includes(stPaket);
-                    } else if (activePillFilterType === 'my_assigned') {
-                        matchesPill = activePillUserId ? (adminUkpbjId === parseInt(activePillUserId, 10)) : true;
+                    } else if (activePillFilterType === 'ulp_daftar') {
+                        matchesPill = stPaket === 2 && adminUkpbjId === 0;
+                    } else if (activePillFilterType === 'ulp_verifikasi') {
+                        matchesPill = stPaket === 2 && adminUkpbjId > 0 && isMineOrAdmin;
+                    } else if (activePillFilterType === 'ulp_dikembalikan') {
+                        matchesPill = stPaket === 3 && isMineOrAdmin;
+                    } else if (activePillFilterType === 'ulp_diterima') {
+                        matchesPill = stPaket >= 4 && isMineOrAdmin;
+                    } else if (activePillFilterType === 'pokja_status') {
+                        matchesPill = isPokjaMember && activePillStatusCodes.includes(stPaket);
+                    } else if (activePillFilterType === 'agency_baru') {
+                        matchesPill = stPaket >= 6 && stPaket <= 14 && isLpse === 0;
+                    } else if (activePillFilterType === 'agency_sudah') {
+                        matchesPill = isLpse === 1;
                     }
 
                     const matchesVerif = !verifVal || String(stVerif) === String(verifVal);
@@ -1732,7 +1982,7 @@
                     const type = this.getAttribute('data-filter-type') || 'all';
                     activePillFilterType = type;
 
-                    if (type === 'status') {
+                    if (type === 'status' || type === 'pokja_status') {
                         const rawCodes = this.getAttribute('data-status-codes') || '';
                         activePillStatusCodes = rawCodes.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
                     } else if (type === 'my_assigned') {
@@ -2058,12 +2308,26 @@
                             }
                         }
 
-                        // Sembunyikan form tambah syarat jika status paket sudah diajukan (bukan draf / 1)
+                        const canEditSyarat = Boolean(currentSyaratSummary && currentSyaratSummary.can_edit);
+
+                        // Sembunyikan form tambah syarat jika user tidak berhak mengubah syarat
                         if (tfootSyarat) {
-                            if ([1, 3, 7, 10].includes(statusPaket)) {
+                            if (canEditSyarat) {
                                 tfootSyarat.classList.remove('d-none');
                             } else {
                                 tfootSyarat.classList.add('d-none');
+                            }
+                        }
+
+                        // Tampilkan tombol Ajukan hanya jika user berhak mengajukan
+                        const modalBtnAjukan = document.getElementById('modalBtnAjukan');
+                        if (modalBtnAjukan) {
+                            if (currentSyaratSummary && currentSyaratSummary.can_ajukan) {
+                                modalBtnAjukan.classList.remove('d-none');
+                                modalBtnAjukan.classList.add('d-inline-flex');
+                            } else if (!canEditSyarat) {
+                                modalBtnAjukan.classList.add('d-none');
+                                modalBtnAjukan.classList.remove('d-inline-flex');
                             }
                         }
 
@@ -2150,7 +2414,7 @@
 
                                 // Kolom Aksi
                                 let actionButtons = '';
-                                if ([1, 3, 7, 10].includes(statusPaket)) {
+                                if (canEditSyarat) {
                                     if (isUploaded) {
                                         actionButtons = `
                                             <div class="d-inline-flex align-items-center gap-1">

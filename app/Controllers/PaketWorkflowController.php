@@ -80,6 +80,25 @@ class PaketWorkflowController extends BaseController
             return $this->failWith('Catatan wajib diisi (minimal 3 karakter).', 422, '/paket');
         }
 
+        // Pengembalian oleh Admin ULP / Pokja wajib memiliki catatan (baik yang sudah disimpan di tab Catatan maupun dari form)
+        $expectedNoteStatus = match ($action) {
+            'kembalikan' => 3,
+            'sarankaji'  => 7,
+            'saranadd'   => 10,
+            default      => null,
+        };
+        if ($expectedNoteStatus !== null && mb_strlen($note) < 3) {
+            $hasOpenNote = $this->catatanModel
+                ->where('paket_id', (int) $paket['id'])
+                ->where('status_paket', $expectedNoteStatus)
+                ->groupStart()->where('isi_jawaban IS NULL')->orWhere('isi_jawaban', '')->groupEnd()
+                ->countAllResults() > 0;
+
+            if (! $hasOpenNote) {
+                return $this->failWith('Harap isi Catatan terlebih dahulu (pada tab Catatan atau form ini) sebelum mengembalikan paket ke PPK.', 422, '/paket');
+            }
+        }
+
         // Pengajuan ulang oleh PPK: dokumen persyaratan wajib harus tetap lengkap
         if (in_array($action, ['ajukan_kembali', 'ajukan_kaji', 'ajukan_add'], true)) {
             $missing = (new \App\Models\SyaratModel())->select('nama_persyaratan')
@@ -219,8 +238,12 @@ class PaketWorkflowController extends BaseController
         }
 
         return $this->response->setJSON([
-            'status' => 'success', 'members' => $members, 'candidates' => $candidates,
-            'can_edit' => $caps['pokja'], 'sizes' => PaketWorkflow::POKJA_SIZES,
+            'status'   => 'success',
+            'members'  => $members,
+            'candidates' => $candidates,
+            'can_edit' => $caps['pokja'],
+            'sizes'    => PaketWorkflow::POKJA_SIZES,
+            'roles'    => ['Ketua', 'Sekretaris', 'Anggota'],
         ]);
     }
 
@@ -232,7 +255,12 @@ class PaketWorkflowController extends BaseController
         }
 
         $userId = (int) $this->request->getPost('user_id');
-        $user   = $this->userModel->select('users.id')->join('roles', 'roles.id = users.role_id')
+        $jabatan = trim((string) $this->request->getPost('role')) ?: 'Anggota';
+        if (! in_array($jabatan, ['Ketua', 'Sekretaris', 'Anggota'], true)) {
+            $jabatan = 'Anggota';
+        }
+
+        $user = $this->userModel->select('users.id')->join('roles', 'roles.id = users.role_id')
             ->where('users.id', $userId)->where('roles.name', 'POKJA')->where('users.is_active', 1)->first();
         if (! $user) {
             return $this->failWith('Personil Pokja tidak valid.', 422);
@@ -240,13 +268,13 @@ class PaketWorkflowController extends BaseController
 
         $paketId = (int) $paket['id'];
         if ($this->pokjaModel->where(['paket_id' => $paketId, 'user_id' => $userId])->countAllResults() > 0) {
-            return $this->failWith('Personil sudah dipilih untuk paket ini.', 409);
+            return $this->failWith('Personil sudah ada di dalam Pokja paket ini.', 409);
         }
         if ($this->pokjaModel->where('paket_id', $paketId)->countAllResults() >= max(PaketWorkflow::POKJA_SIZES)) {
             return $this->failWith('Anggota Pokja maksimal ' . max(PaketWorkflow::POKJA_SIZES) . ' orang.', 422);
         }
 
-        $this->pokjaModel->insert(['paket_id' => $paketId, 'user_id' => $userId]);
+        $this->pokjaModel->insert(['paket_id' => $paketId, 'user_id' => $userId, 'role' => $jabatan]);
 
         return $this->okWith('Anggota Pokja ditambahkan.');
     }
@@ -275,12 +303,22 @@ class PaketWorkflowController extends BaseController
             return $this->failWith('Data paket tidak ditemukan.', 404);
         }
 
-        $caps = PaketWorkflow::capabilities($paket, $this->actor(), $this->context($paket)['isMember']);
+        $actor = $this->actor();
+        $role  = strtoupper((string) ($actor['role_name'] ?? ''));
+        $caps  = PaketWorkflow::capabilities($paket, $actor, $this->context($paket)['isMember']);
+        $rows  = $this->catatanModel->getByPaketId((int) $paket['id']);
+
+        foreach ($rows as &$r) {
+            $isOwner = (int) ($r['user_id'] ?? 0) === (int) $actor['id'];
+            $r['can_delete'] = (PaketWorkflow::isAdmin($actor) || $isOwner) && empty($r['isi_jawaban']);
+            $r['can_jawab']  = $caps['catatan'] && empty($r['isi_jawaban']) && (PaketWorkflow::isAdmin($actor) || in_array($role, ['PPK', 'ADMIN PPK'], true));
+        }
+        unset($r);
 
         return $this->response->setJSON([
-            'status' => 'success',
-            'data'   => $this->catatanModel->getByPaketId((int) $paket['id']),
-            'can_add' => $caps['catatan'],
+            'status'   => 'success',
+            'data'     => $rows,
+            'can_add'  => $caps['catatan'],
             'statuses' => array_map(static fn ($s) => $s['name'], PaketModel::STATUS_PAKET),
         ]);
     }
@@ -299,16 +337,59 @@ class PaketWorkflowController extends BaseController
             return $this->failWith('Isi catatan minimal 3 karakter.', 422);
         }
 
-        $actor = $this->actor();
-        $this->catatanModel->insert([
+        $actor      = $this->actor();
+        $role       = strtoupper((string) ($actor['role_name'] ?? ''));
+        $statusCode = (int) $this->request->getPost('status_paket');
+        if ($statusCode <= 0) {
+            $curStatus = (int) $paket['status_paket'];
+            // Petakan id_proses catatan sesuai rekonstruksi:
+            // - Admin ULP saat status 2 -> 3 (Dikembalikan ULP)
+            // - Pokja saat status 6 atau 8 -> 7 (Saran Kaji)
+            // - Pokja saat status 9 atau 11 -> 10 (Saran Addendum)
+            if ($role === 'ADMIN ULP' && $curStatus === 2) {
+                $statusCode = 3;
+            } elseif ($role === 'POKJA' && in_array($curStatus, [6, 8], true)) {
+                $statusCode = 7;
+            } elseif ($role === 'POKJA' && in_array($curStatus, [9, 11], true)) {
+                $statusCode = 10;
+            } else {
+                $statusCode = $curStatus;
+            }
+        }
+
+        $insertId = $this->catatanModel->insert([
             'paket_id'     => (int) $paket['id'],
             'user_id'      => (int) $actor['id'],
             'role_id'      => (int) $actor['role_id'],
-            'status_paket' => (int) $paket['status_paket'],
+            'status_paket' => $statusCode,
             'isi_catatan'  => $text,
         ]);
 
-        return $this->okWith('Catatan ditambahkan.');
+        return $this->okWith('Catatan ditambahkan.', ['catatan_id' => $insertId]);
+    }
+
+    public function catatanDelete($id = null)
+    {
+        $row   = $this->catatanModel->find((int) $id);
+        $paket = $row ? $this->loadPaket((int) $row['paket_id']) : null;
+        if (! $paket) {
+            return $this->failWith('Catatan tidak ditemukan.', 404);
+        }
+
+        $actor   = $this->actor();
+        $isAdmin = PaketWorkflow::isAdmin($actor);
+        $isOwner = (int) ($row['user_id'] ?? 0) === (int) $actor['id'];
+
+        if (! $isAdmin && ! $isOwner) {
+            return $this->failWith('Anda hanya dapat menghapus catatan yang Anda buat sendiri.', 403);
+        }
+        if (! empty($row['isi_jawaban'])) {
+            return $this->failWith('Catatan yang sudah dijawab oleh PPK tidak dapat dihapus.', 409);
+        }
+
+        $this->catatanModel->delete((int) $id);
+
+        return $this->okWith('Catatan berhasil dihapus.');
     }
 
     public function catatanJawab($id = null)

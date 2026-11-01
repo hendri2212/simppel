@@ -499,6 +499,7 @@ class PaketController extends BaseController
                     'wajib_uploaded' => $wajibUploaded,
                     'missing_wajib'  => $missingWajib,
                     'is_lengkap'     => empty($missingWajib),
+                    'can_edit'       => in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true) && $this->canWrite(),
                     'can_ajukan'     => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canWrite(),
                 ],
             ]);
