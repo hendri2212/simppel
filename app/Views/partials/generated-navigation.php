@@ -200,16 +200,7 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/ui-alerts">
-                    <span class="nav-link-text" data-i18n>Alerts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-cards">
-                    <span class="nav-link-text" data-i18n>Cards</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/ui-breadcrumbs">
                     <span class="nav-link-text" data-i18n>Breadcrumbs</span>
@@ -273,58 +264,8 @@
 
         <ul>
             <li>
-                <a href="/utilities-borders">
-                    <span class="nav-link-text" data-i18n>Borders</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-display-property">
-                    <span class="nav-link-text" data-i18n>Display Property</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-responsivegrid">
-                    <span class="nav-link-text" data-i18n>Responsive Grid</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-position">
-                    <span class="nav-link-text" data-i18n>Position</span>
-                </a>
-            </li>
-            <li>
                 <a href="/utilities-colorpalette">
                     <span class="nav-link-text" data-i18n>Color Palette</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-typography">
-                    <span class="nav-link-text" data-i18n>Typography</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-sizing">
-                    <span class="nav-link-text" data-i18n>Sizing</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-spacing">
-                    <span class="nav-link-text" data-i18n>Spacing</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-flexbox">
-                    <span class="nav-link-text" data-i18n>Flexbox</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-helpers">
-                    <span class="nav-link-text" data-i18n>Helpers</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-visibility-generator">
-                    <span class="nav-link-text" data-i18n>Visibility Generator</span>
                 </a>
             </li>
         </ul>
@@ -367,16 +308,7 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/forms-inputs">
-                    <span class="nav-link-text" data-i18n>Inputs</span>
-                </a>
-            </li>
-            <li>
-                <a href="/forms-checkbox-radio">
-                    <span class="nav-link-text" data-i18n>Checkbox & Radio</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/forms-groups">
                     <span class="nav-link-text" data-i18n>Groups</span>
@@ -439,16 +371,8 @@
                     <span class="nav-link-text" data-i18n>Area Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-bar">
-                    <span class="nav-link-text" data-i18n>Bar Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-box-whisker">
-                    <span class="nav-link-text" data-i18n>Box & Whisker Charts</span>
-                </a>
-            </li>
+
+
             <li>
                 <a href="/apex-candlestick">
                     <span class="nav-link-text" data-i18n>Candlestick Charts</span>
@@ -459,36 +383,20 @@
                     <span class="nav-link-text" data-i18n>Column Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-funnel">
-                    <span class="nav-link-text" data-i18n>Funnel Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-line">
-                    <span class="nav-link-text" data-i18n>Line Charts</span>
-                </a>
-            </li>
+
+
             <li>
                 <a href="/apex-mixed-combo">
                     <span class="nav-link-text" data-i18n>Mixed/Combo Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-pie-donut">
-                    <span class="nav-link-text" data-i18n>Pie/Donuts</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/apex-polar-area">
                     <span class="nav-link-text" data-i18n>Polar Area Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-radar">
-                    <span class="nav-link-text" data-i18n>Radar Charts</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/apex-radialbars-circle">
                     <span class="nav-link-text" data-i18n>RadialBars/Circle Charts</span>
@@ -499,16 +407,8 @@
                     <span class="nav-link-text" data-i18n>Range Area Charts</span>
                 </a>
             </li>
-            <li>
-                <a href="/apex-sparkline">
-                    <span class="nav-link-text" data-i18n>Sparklines</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-timeline">
-                    <span class="nav-link-text" data-i18n>Timeline Charts</span>
-                </a>
-            </li>
+
+
         </ul>
     </li>
 
