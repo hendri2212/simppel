@@ -22,6 +22,26 @@ class PaketWorkflow
     /** Jumlah anggota Pokja yang diperbolehkan. */
     public const POKJA_SIZES = [3, 5, 7];
 
+    /** Daftar label status paket (0 s/d 15) */
+    public const STATUS_LABELS = [
+        0  => 'Dibatalkan',
+        1  => 'Draft / Belum Diajukan',
+        2  => 'Diajukan (Verifikasi ULP)',
+        3  => 'Dikembalikan ULP',
+        4  => 'Diterima UKPBJ',
+        5  => 'Saran Distribusi Pokja',
+        6  => 'Terdistribusi ke Pokja',
+        7  => 'Saran Kaji Ulang',
+        8  => 'Selesai Kaji Ulang',
+        9  => 'Proses Lelang (Tayang)',
+        10 => 'Saran Addendum',
+        11 => 'Selesai Addendum',
+        12 => 'Hasil Lelang',
+        13 => 'Lelang Ulang',
+        14 => 'Selesai Lelang',
+        15 => 'Gagal Lelang',
+    ];
+
     /**
      * Opsi tiap aksi:
      *  roles     role yang boleh (ADMINISTRATOR selalu boleh)
