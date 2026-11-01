@@ -81,6 +81,9 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 
     $routes->get('/', 'Home::index');
+    // Dashboard Control Center (data grafik dibatasi sesuai cakupan role)
+    $routes->get('/dashboard-control-center', 'DashboardController::index');
+    $routes->get('/dashboard-control-center/data', 'DashboardController::data');
     $routes->get('/rup', 'RupController::index', ['filter' => ['auth', 'role:!ADMIN ULP']]);
     $routes->get('/rup/inaproc/(:segment)', 'RupController::fetchInaproc/$1', ['filter' => ['auth', 'role:!ADMIN ULP']]);
     $routes->post('/rup/store', 'RupController::store', $writeMutate);

@@ -165,11 +165,6 @@
                 </a>
             </li>
             <li>
-                <a href="/icons-smartadmin">
-                    <span class="nav-link-text" data-i18n>SmartAdmin Icons 1.0</span>
-                </a>
-            </li>
-            <li>
                 <a href="/utilities-colorpalette">
                     <span class="nav-link-text" data-i18n>Color Palette</span>
                 </a>
@@ -187,11 +182,6 @@
             <li>
                 <a href="/apex-candlestick">
                     <span class="nav-link-text" data-i18n>Candlestick Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-column">
-                    <span class="nav-link-text" data-i18n>Column Charts</span>
                 </a>
             </li>
             <li>

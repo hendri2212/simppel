@@ -32,7 +32,7 @@ class Home extends BaseController
         }
 
         // Blokir view yang wajib melalui controller khusus berotorisasi
-        $controllerViews = ['accounts', 'account', 'rup', 'paket'];
+        $controllerViews = ['accounts', 'account', 'rup', 'paket', 'dashboard-control-center'];
         if (in_array($path, $controllerViews, true)) {
             throw PageNotFoundException::forPageNotFound();
         }
