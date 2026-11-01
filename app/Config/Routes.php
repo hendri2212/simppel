@@ -115,6 +115,28 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/paket/dokumen/delete/(:num)', 'PaketWorkflowController::dokumenDelete/$1', $writeAny);
     $routes->get('/paket/dokumen/download/(:num)', 'PaketWorkflowController::dokumenDownload/$1');
 
+    // e-MONEV (Monitoring & Evaluasi Pengadaan - Seluruh Role sesuai hak akses modul & cakupan SKPD/Pokja)
+    $routes->get('/rup/summary', 'MonevController::rekap');
+    $routes->get('/monev', 'MonevController::index');
+    $routes->get('/monev/rup', 'MonevController::rup');
+    $routes->get('/monev/satu', 'MonevController::rup');
+    $routes->get('/monev/belum-masuk', 'MonevController::belumMasuk');
+    $routes->get('/monev/dua', 'MonevController::belumMasuk');
+    $routes->get('/monev/rekap', 'MonevController::rekap');
+    $routes->get('/monev/tiga', 'MonevController::rekap');
+    $routes->get('/monev/distribusi-pokja', 'MonevController::distribusiPokja');
+    $routes->get('/monev/empat', 'MonevController::distribusiPokja');
+    $routes->get('/monev/daftar-paket', 'MonevController::daftarPaket');
+    $routes->get('/monev/lima', 'MonevController::daftarPaket');
+    $routes->get('/monev/grafik', 'MonevController::grafik');
+    $routes->get('/monev/enam', 'MonevController::grafik');
+    $routes->get('/monev/paket-selesai', 'MonevController::paketSelesai');
+    $routes->get('/monev/tujuh', 'MonevController::paketSelesai');
+    $routes->get('/monev/paket-proses', 'MonevController::paketProses');
+    $routes->get('/monev/delapan', 'MonevController::paketProses');
+    $routes->get('/monev/detail-rup/(:num)', 'MonevController::detailRup/$1');
+    $routes->get('/monev/detail-paket/(:num)', 'MonevController::detailPaket/$1');
+
     $routes->get('/(:any)', 'Home::root/$1');
 });
 

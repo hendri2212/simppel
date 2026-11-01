@@ -32,7 +32,14 @@
 
     <li class="nav-title"><span>Perencanaan Pengadaan</span></li>
 
-    <?php if ((int) session('role_id') !== 4 && strtoupper((string) session('role_name')) !== 'ADMIN ULP'): ?>
+    <?php
+    $navRoleId   = (int) session('role_id');
+    $navRoleName = strtoupper(trim((string) session('role_name')));
+    $isNavAdminUlp = ($navRoleId === 4 || $navRoleName === 'ADMIN ULP');
+    $isNavPpkSide  = in_array($navRoleId, [2, 3], true) || in_array($navRoleName, ['ADMIN PPK', 'PPK'], true);
+    ?>
+
+    <?php if (! $isNavAdminUlp): ?>
     <li>
         <a href="/rup" title="Daftar RUP" data-filter-tags="perencanaan pengadaan rup daftar">
             <svg class="sa-icon">
@@ -58,6 +65,91 @@
                 <use href="/icons/sprite.svg#bar-chart-2"></use>
             </svg>
             <span class="nav-link-text" data-i18n>Rekapitulasi Pagu</span>
+        </a>
+    </li>
+
+    <li class="nav-title"><span>e-MONEV</span></li>
+
+    <li>
+        <a href="/monev" title="Dashboard e-MONEV" data-filter-tags="emonev e-monev monitoring evaluasi dashboard">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#grid"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Dashboard e-MONEV</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/rup" title="RUP (Paket Lelang)" data-filter-tags="emonev rup paket lelang satu">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#file-text"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>RUP (Paket Lelang)</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/belum-masuk" title="Paket Lelang Belum Masuk" data-filter-tags="emonev paket belum masuk dua">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#clock"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Paket Belum Masuk</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/rekap" title="Rekap Paket Data Lelang" data-filter-tags="emonev rekap paket data lelang tiga">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#layers"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Rekap Data Lelang</span>
+        </a>
+    </li>
+
+    <?php if (! $isNavPpkSide): ?>
+    <li>
+        <a href="/monev/distribusi-pokja" title="Distribusi Pokja ULP" data-filter-tags="emonev distribusi pokja ulp empat">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#users"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Distribusi Pokja ULP</span>
+        </a>
+    </li>
+    <?php endif; ?>
+
+    <li>
+        <a href="/monev/daftar-paket" title="Daftar Paket Lelang" data-filter-tags="emonev daftar paket lelang lima">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#list"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Daftar Paket Lelang</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/grafik" title="Grafik Lelang" data-filter-tags="emonev grafik lelang enam">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#pie-chart"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Grafik Lelang</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/paket-selesai" title="Paket Lelang Selesai" data-filter-tags="emonev paket lelang selesai tujuh">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#check-circle"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Paket Lelang Selesai</span>
+        </a>
+    </li>
+
+    <li>
+        <a href="/monev/paket-proses" title="Paket Lelang Dalam Proses" data-filter-tags="emonev paket dalam proses delapan">
+            <svg class="sa-icon">
+                <use href="/icons/sprite.svg#activity"></use>
+            </svg>
+            <span class="nav-link-text" data-i18n>Paket Dalam Proses</span>
         </a>
     </li>
 
@@ -114,26 +206,6 @@
                 </a>
             </li>
             <li>
-                <a href="/ui-accordions">
-                    <span class="nav-link-text" data-i18n>Accordions</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-badges">
-                    <span class="nav-link-text" data-i18n>Badges</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-buttons">
-                    <span class="nav-link-text" data-i18n>Buttons</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-buttongroup">
-                    <span class="nav-link-text" data-i18n>Button Group</span>
-                </a>
-            </li>
-            <li>
                 <a href="/ui-cards">
                     <span class="nav-link-text" data-i18n>Cards</span>
                 </a>
@@ -149,21 +221,6 @@
                 </a>
             </li>
             <li>
-                <a href="/ui-navbars">
-                    <span class="nav-link-text" data-i18n>Navbars</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-pagination">
-                    <span class="nav-link-text" data-i18n>Pagination</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-scrollspy">
-                    <span class="nav-link-text" data-i18n>ScrollSpy</span>
-                </a>
-            </li>
-            <li>
                 <a href="/ui-collapse">
                     <span class="nav-link-text" data-i18n>Collapse</span>
                 </a>
@@ -171,11 +228,6 @@
             <li>
                 <a href="/ui-tabs-pills">
                     <span class="nav-link-text" data-i18n>Tabs & Pills</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-tooltips">
-                    <span class="nav-link-text" data-i18n>Tooltips</span>
                 </a>
             </li>
             <li>
@@ -196,11 +248,6 @@
             <li>
                 <a href="/ui-spinners">
                     <span class="nav-link-text" data-i18n>Spinners</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-carousels">
-                    <span class="nav-link-text" data-i18n>Carousels</span>
                 </a>
             </li>
             <li>
@@ -368,12 +415,6 @@
             <li>
                 <a href="/smarttables-json-source">
                     <span class="nav-link-text" data-i18n>JSON Data Source</span>
-                </a>
-            </li>
-            <li>
-                <a href="/smarttables-manage-records">
-                    <span class="nav-link-text" data-i18n>Manage Records</span>
-                    <span class="badge bg-warning text-dark badge-end">New</span>
                 </a>
             </li>
             <li>
