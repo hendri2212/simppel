@@ -75,12 +75,6 @@ class CreatePaketTable extends Migration
                 'default'    => 0,
                 'comment'    => 'Hasil Verifikasi Berkas (0: Belum, 1: Lengkap/Disetujui, 2: Perlu Perbaikan)',
             ],
-            'catatan_verifikasi' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 255,
-                'null'       => true,
-                'comment'    => 'Catatan / Keterangan Verifikasi Admin UKPBJ',
-            ],
             'admin_distribusi_id' => [
                 'type'       => 'INT',
                 'constraint' => 11,
