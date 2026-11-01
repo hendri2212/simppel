@@ -589,52 +589,34 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                                         <use href="/icons/sprite.svg#eye"></use>
                                                                     </svg>
                                                                 </button>
-                                                                <div class="dropdown">
-                                                                    <button class="btn btn-sm btn-icon btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu Opsi">
-                                                                        <svg class="sa-icon" style="width: 14px; height: 14px;">
-                                                                            <use href="/icons/sprite.svg#more-vertical"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                                                        <li>
-                                                                            <?php if ($canEdit): ?>
+                                                                <?php if ($canEdit): ?>
+                                                                    <div class="dropdown">
+                                                                        <button class="btn btn-sm btn-icon btn-light" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Menu Opsi">
+                                                                            <svg class="sa-icon" style="width: 14px; height: 14px;">
+                                                                                <use href="/icons/sprite.svg#more-vertical"></use>
+                                                                            </svg>
+                                                                        </button>
+                                                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                                                            <li>
                                                                                 <a class="dropdown-item btn-edit-plan" href="javascript:void(0);" data-plan='<?= $planJson ?>'>
                                                                                     <svg class="sa-icon me-2 text-secondary" style="width: 13px; height: 13px;">
                                                                                         <use href="/icons/sprite.svg#edit"></use>
                                                                                     </svg>
                                                                                     Ubah Paket
                                                                                 </a>
-                                                                            <?php else: ?>
-                                                                                <span class="dropdown-item text-muted disabled" style="cursor: not-allowed;" title="Paket RUP terkunci karena sudah dibuatkan Paket Pengadaan">
-                                                                                    <svg class="sa-icon me-2 text-muted" style="width: 13px; height: 13px;">
-                                                                                        <use href="/icons/sprite.svg#lock"></use>
-                                                                                    </svg>
-                                                                                    <span class="text-decoration-line-through text-muted">Ubah Paket</span>
-                                                                                    <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">Terkunci</span>
-                                                                                </span>
-                                                                            <?php endif; ?>
-                                                                        </li>
-                                                                        <li><hr class="dropdown-divider"></li>
-                                                                        <li>
-                                                                            <?php if ($canEdit): ?>
+                                                                            </li>
+                                                                            <li><hr class="dropdown-divider"></li>
+                                                                            <li>
                                                                                 <a class="dropdown-item text-danger btn-delete-plan" href="javascript:void(0);" data-plan='<?= $planJson ?>'>
                                                                                     <svg class="sa-icon me-2 text-danger" style="width: 13px; height: 13px;">
                                                                                         <use href="/icons/sprite.svg#trash-2"></use>
                                                                                     </svg>
                                                                                     Hapus Paket
                                                                                 </a>
-                                                                            <?php else: ?>
-                                                                                <span class="dropdown-item text-muted disabled" style="cursor: not-allowed;" title="Paket RUP terkunci karena sudah dibuatkan Paket Pengadaan">
-                                                                                    <svg class="sa-icon me-2 text-muted" style="width: 13px; height: 13px;">
-                                                                                        <use href="/icons/sprite.svg#trash-2"></use>
-                                                                                    </svg>
-                                                                                    <span class="text-decoration-line-through text-muted">Hapus Paket</span>
-                                                                                    <span class="badge bg-secondary-subtle text-secondary ms-1" style="font-size: 0.65rem;">Terkunci</span>
-                                                                                </span>
-                                                                            <?php endif; ?>
-                                                                        </li>
-                                                                    </ul>
-                                                                </div>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </td>
                                                     </tr>

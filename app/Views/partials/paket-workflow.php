@@ -1,9 +1,9 @@
-<?php /* Modal & skrip alur paket: aksi tahapan (termasuk di detail modal), catatan, pokja, dokumen lelang, hasil lelang, LPSE. */ ?>
+<?php /* Modal & skrip alur paket: aksi tahapan, catatan, pokja, dokumen lelang, hasil lelang, dan LPSE terintegrasi pada Detail Paket Modal. */ ?>
 
 <!-- MODAL: Catatan untuk aksi tahapan -->
 <div class="modal fade" id="wfNoteModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
                 <h5 class="modal-title" id="wfNoteTitle">Aksi Paket</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
@@ -26,41 +26,17 @@
     </div>
 </div>
 
-<!-- MODAL: Kelola paket (catatan, pokja, dokumen lelang, hasil) -->
-<div class="modal fade" id="wfManageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div>
-                    <h5 class="modal-title" id="wfManageTitle">Kelola Paket</h5>
-                    <div class="fs-xs text-muted" id="wfManageSub"></div>
-                </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert d-none py-2" id="wfManageAlert" role="alert"></div>
-                <ul class="nav nav-tabs mb-3" id="wfTabs" role="tablist">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#wfTabCatatan" type="button">Catatan</button></li>
-                    <li class="nav-item" id="wfNavPokja"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#wfTabPokja" type="button">Pokja</button></li>
-                    <li class="nav-item" id="wfNavDokumen"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#wfTabDokumen" type="button">Dokumen Lelang</button></li>
-                    <li class="nav-item" id="wfNavHasil"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#wfTabHasil" type="button">Hasil Lelang</button></li>
-                </ul>
-                <div class="tab-content">
-                    <div class="tab-pane fade show active" id="wfTabCatatan"></div>
-                    <div class="tab-pane fade" id="wfTabPokja"></div>
-                    <div class="tab-pane fade" id="wfTabDokumen"></div>
-                    <div class="tab-pane fade" id="wfTabHasil"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
         const $ = id => document.getElementById(id);
         const fmtDate = d => d ? new Date(d.replace(' ', 'T')).toLocaleString('id-ID') : '';
+        const fmtShortDate = str => {
+            if (!str || str === '0000-00-00') return '-';
+            const parts = String(str).split('-');
+            return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : str;
+        };
+        const fmtRupiah = amount => 'Rp ' + Number(amount || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
         async function api(url, opts) {
             try {
@@ -78,9 +54,29 @@
         };
 
         // ---------- Aksi tahapan ----------
-        const noteModal = new bootstrap.Modal($('wfNoteModal'));
+        const wfNoteModalEl = $('wfNoteModal');
+        const noteModal = new bootstrap.Modal(wfNoteModalEl);
         let pending = null;
         let currentDetailPaket = null;
+        let detailDirty = false;
+
+        if (wfNoteModalEl) {
+            wfNoteModalEl.addEventListener('show.bs.modal', function () {
+                wfNoteModalEl.style.zIndex = '1065';
+                setTimeout(() => {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        backdrops[backdrops.length - 1].style.zIndex = '1060';
+                    }
+                }, 10);
+            });
+            wfNoteModalEl.addEventListener('hidden.bs.modal', function () {
+                const detailModal = $('detailPaketModal');
+                if (detailModal && detailModal.classList.contains('show')) {
+                    document.body.classList.add('modal-open');
+                }
+            });
+        }
 
         async function runAction(a, extra) {
             const res = await postForm(`/paket/aksi/${a.action}/${a.id}`, extra);
@@ -187,6 +183,11 @@
                 }
             }
 
+            const verifNoteEl = $('modalPaketCatatanVerif');
+            if (verifNoteEl) {
+                verifNoteEl.textContent = list.length > 0 ? list[list.length - 1].isi_catatan : 'Tidak ada catatan khusus.';
+            }
+
             let html = '';
             if (!list.length) {
                 html += '<div class="text-muted mb-3 fst-italic">Belum ada catatan pada paket ini.</div>';
@@ -232,13 +233,13 @@
             boxEl.querySelectorAll('.wf-jawab-btn').forEach(b => b.addEventListener('click', async () => {
                 const v = b.parentElement.querySelector('.wf-jawab-input').value.trim();
                 const r = await postForm(`/paket/catatan/jawab/${b.dataset.id}`, {isi_jawaban: v});
-                r.ok ? (al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                r.ok ? (detailDirty = true, al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
             }));
 
             boxEl.querySelectorAll('.wf-catatan-del').forEach(b => b.addEventListener('click', async () => {
                 if (!confirm('Hapus catatan ini?')) return;
                 const r = await postForm(`/paket/catatan/delete/${b.dataset.id}`);
-                r.ok ? (al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                r.ok ? (detailDirty = true, al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
             }));
 
             const addBtn = boxEl.querySelector('.wf-add-catatan-btn');
@@ -248,7 +249,7 @@
                     addBtn.disabled = true;
                     const r = await postForm('/paket/catatan/store', {paket_id: paketId, isi_catatan: txt});
                     addBtn.disabled = false;
-                    r.ok ? (al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                    r.ok ? (detailDirty = true, al.show('success', r.j.message), renderCatatanInto(paketId, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
                 });
             }
         }
@@ -329,7 +330,7 @@
             boxEl.querySelectorAll('.wf-pokja-del').forEach(b => b.addEventListener('click', async () => {
                 if (!confirm('Hapus personil ini dari Pokja paket?')) return;
                 const r = await postForm(`/paket/pokja/delete/${b.dataset.id}`);
-                r.ok ? (al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                r.ok ? (detailDirty = true, al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
             }));
 
             const add = boxEl.querySelector('.wf-pokja-add');
@@ -341,7 +342,7 @@
                     add.disabled = true;
                     const r = await postForm('/paket/pokja/store', {paket_id: paketObj.id, user_id: userId, role: roleVal});
                     add.disabled = false;
-                    r.ok ? (al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                    r.ok ? (detailDirty = true, al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
                 });
             }
         }
@@ -398,7 +399,7 @@
             boxEl.querySelectorAll('.wf-dok-del').forEach(b => b.addEventListener('click', async () => {
                 if (!confirm('Hapus dokumen lelang ini?')) return;
                 const r = await postForm(`/paket/dokumen/delete/${b.dataset.id}`);
-                r.ok ? (al.show('success', r.j.message), renderDokumenInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                r.ok ? (detailDirty = true, al.show('success', r.j.message), renderDokumenInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
             }));
 
             const add = boxEl.querySelector('.wf-dok-add');
@@ -415,12 +416,30 @@
                     add.disabled = true;
                     const r = await api('/paket/dokumen/upload', {method: 'POST', body: fd});
                     add.disabled = false;
-                    r.ok ? (al.show('success', r.j.message), renderDokumenInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                    r.ok ? (detailDirty = true, al.show('success', r.j.message), renderDokumenInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
                 });
             }
         }
 
         // ---------- 4. Render Hasil Lelang ----------
+        function syncWinnerSection(p) {
+            const winnerSec = $('modalWinnerSection');
+            if (!winnerSec) return;
+            if (p.nama_pemenang && String(p.nama_pemenang).trim() !== '') {
+                winnerSec.style.display = '';
+                if ($('modalWinnerName')) $('modalWinnerName').textContent = p.nama_pemenang;
+                if ($('modalWinnerNpwp')) $('modalWinnerNpwp').textContent = p.npwp || '-';
+                if ($('modalWinnerAddress')) $('modalWinnerAddress').textContent = p.alamat || '-';
+                if ($('modalWinnerLeader')) $('modalWinnerLeader').textContent = p.nama_penanggung || '-';
+                const rawContract = String(p.nilai_kontrak || 0).replace(/[^0-9.,]/g, '').replace(/\./g, '').replace(',', '.');
+                if ($('modalWinnerContract')) $('modalWinnerContract').textContent = fmtRupiah(parseFloat(rawContract) || 0);
+                if ($('modalWinnerLetterNo')) $('modalWinnerLetterNo').textContent = p.no_surat || '-';
+                if ($('modalWinnerDate')) $('modalWinnerDate').textContent = fmtShortDate(p.tgl_penetapan || p.tgl_surat);
+            } else {
+                winnerSec.style.display = 'none';
+            }
+        }
+
         function renderHasilInto(paketObj, boxEl, alertEl) {
             if (!boxEl) return;
             if (parseInt(paketObj.status_paket) < 9) { boxEl.innerHTML = ''; return; }
@@ -448,7 +467,9 @@
                     const r = await postForm(`/paket/hasil/${paketObj.id}`, data);
                     save.disabled = false;
                     if (r.ok) {
+                        detailDirty = true;
                         Object.assign(paketObj, data);
+                        syncWinnerSection(paketObj);
                         al.show('success', r.j.message);
                     } else {
                         al.show('danger', r.j.message);
@@ -462,6 +483,7 @@
             const p = ev.detail;
             if (!p) return;
             currentDetailPaket = p;
+            detailDirty = false;
 
             const st = parseInt(p.status_paket || 0, 10);
 
@@ -577,31 +599,13 @@
             }
         });
 
-        // ---------- Modal kelola (tetap didukung dari tombol Kelola pada baris tabel) ----------
-        const manageModal = new bootstrap.Modal($('wfManageModal'));
-        let P = null;
-
-        document.querySelectorAll('.btn-wf-manage').forEach(btn => {
-            btn.addEventListener('click', function () {
-                P = JSON.parse(btn.dataset.paket);
-                const st = parseInt(P.status_paket);
-                $('wfManageTitle').textContent = P.package_name || ('Paket #' + P.id);
-                $('wfManageSub').textContent = (P.no_paket ? 'No. ' + P.no_paket + ' · ' : '') + (P.status_label || '');
-                $('wfNavPokja').classList.toggle('d-none', st < 4);
-                $('wfNavDokumen').classList.toggle('d-none', st < 6);
-                $('wfNavHasil').classList.toggle('d-none', st < 9);
-                $('wfManageAlert').classList.add('d-none');
-                bootstrap.Tab.getOrCreateInstance(document.querySelector('#wfTabs .nav-link')).show();
-                renderCatatanInto(P.id, $('wfTabCatatan'), $('wfManageAlert'), null);
-                renderPokjaInto(P, $('wfTabPokja'), $('wfManageAlert'), null);
-                renderDokumenInto(P, $('wfTabDokumen'), $('wfManageAlert'), null);
-                renderHasilInto(P, $('wfTabHasil'), $('wfManageAlert'));
-                manageModal.show();
+        const detailModalEl = $('detailPaketModal');
+        if (detailModalEl) {
+            detailModalEl.addEventListener('hidden.bs.modal', function () {
+                if (detailDirty) {
+                    window.location.reload();
+                }
             });
-        });
-
-        $('wfManageModal').addEventListener('hidden.bs.modal', function () {
-            if (P && $('wfManageAlert').classList.contains('alert-success')) window.location.reload();
-        });
+        }
     });
 </script>

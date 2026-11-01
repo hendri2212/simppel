@@ -837,14 +837,12 @@
                                                         <!-- Aksi -->
                                                         <td class="text-end">
                                                             <div class="d-flex justify-content-end gap-1">
-                                                                <button type="button" class="btn btn-sm btn-icon btn-light btn-view-paket" data-paket='<?= $paketJson ?>' title="Lihat Detail Paket">
+                                                                <button type="button" class="btn btn-sm btn-icon btn-light btn-view-paket" data-paket='<?= $paketJson ?>' title="Lihat Detail & Kelola Paket">
                                                                     <svg class="sa-icon text-primary" style="width: 14px; height: 14px;">
                                                                         <use href="/icons/sprite.svg#eye"></use>
                                                                     </svg>
                                                                 </button>
-                                                                <?php if ((int) ($p['status_paket'] ?? 0) >= 2): ?>
-                                                                <button type="button" class="btn btn-sm btn-light btn-wf-manage fs-xs" data-paket='<?= $paketJson ?>' title="Catatan, Pokja, Dokumen Lelang & Hasil">Kelola</button>
-                                                                <?php endif; ?>
+                                                                <?php if (!empty($p['workflow_actions']) || $canModifyPaket): ?>
                                                                 <div class="dropdown">
                                                                     <button type="button" class="btn btn-sm btn-icon btn-light" data-bs-toggle="dropdown" aria-expanded="false" title="Pilihan Aksi">
                                                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
@@ -862,7 +860,7 @@
                                                                                 </a>
                                                                             </li>
                                                                         <?php endforeach; ?>
-                                                                        <?php if (!empty($p['workflow_actions'])): ?><li><hr class="dropdown-divider"></li><?php endif; ?>
+                                                                        <?php if (!empty($p['workflow_actions']) && $canModifyPaket): ?><li><hr class="dropdown-divider"></li><?php endif; ?>
                                                                         <?php if ($canModifyPaket): ?>
                                                                             <li>
                                                                                 <a class="dropdown-item d-flex align-items-center gap-2 btn-edit-paket" href="javascript:void(0);" data-paket='<?= $paketJson ?>'>
@@ -881,27 +879,10 @@
                                                                                     <span>Hapus Paket</span>
                                                                                 </a>
                                                                             </li>
-                                                                        <?php else: ?>
-                                                                            <li>
-                                                                                <span class="dropdown-item text-muted d-flex align-items-center gap-2 disabled" title="Paket sudah diajukan dan tidak dapat diubah">
-                                                                                    <svg class="sa-icon text-muted" style="width: 14px; height: 14px;">
-                                                                                        <use href="/icons/sprite.svg#edit-3"></use>
-                                                                                    </svg>
-                                                                                    <span>Ubah Paket <small class="badge bg-secondary-subtle text-secondary ms-1">Terkunci</small></span>
-                                                                                </span>
-                                                                            </li>
-                                                                            <li><hr class="dropdown-divider"></li>
-                                                                            <li>
-                                                                                <span class="dropdown-item text-muted d-flex align-items-center gap-2 disabled" title="Paket sudah diajukan dan tidak dapat dihapus">
-                                                                                    <svg class="sa-icon text-muted" style="width: 14px; height: 14px;">
-                                                                                        <use href="/icons/sprite.svg#trash-2"></use>
-                                                                                    </svg>
-                                                                                    <span>Hapus Paket <small class="badge bg-secondary-subtle text-secondary ms-1">Terkunci</small></span>
-                                                                                </span>
-                                                                            </li>
                                                                         <?php endif; ?>
                                                                     </ul>
                                                                 </div>
+                                                                <?php endif; ?>
                                                             </div>
                                                         </td>
                                                     </tr>
