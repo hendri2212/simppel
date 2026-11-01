@@ -749,6 +749,9 @@
                                                                         <use href="/icons/sprite.svg#eye"></use>
                                                                     </svg>
                                                                 </button>
+                                                                <?php if ((int) ($p['status_paket'] ?? 0) >= 2): ?>
+                                                                <button type="button" class="btn btn-sm btn-light btn-wf-manage fs-xs" data-paket='<?= $paketJson ?>' title="Catatan, Pokja, Dokumen Lelang & Hasil">Kelola</button>
+                                                                <?php endif; ?>
                                                                 <div class="dropdown">
                                                                     <button type="button" class="btn btn-sm btn-icon btn-light" data-bs-toggle="dropdown" aria-expanded="false" title="Pilihan Aksi">
                                                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
@@ -756,6 +759,17 @@
                                                                         </svg>
                                                                     </button>
                                                                     <ul class="dropdown-menu dropdown-menu-end fs-xs">
+                                                                        <?php foreach (($p['workflow_actions'] ?? []) as $wa): ?>
+                                                                            <li>
+                                                                                <a class="dropdown-item d-flex align-items-center gap-2 btn-wf text-<?= esc($wa['variant']) ?><?= !empty($wa['blocked']) ? ' disabled' : '' ?>" href="javascript:void(0);"
+                                                                                    data-id="<?= (int) $p['id'] ?>" data-action="<?= esc($wa['key']) ?>" data-label="<?= esc($wa['label']) ?>"
+                                                                                    data-note="<?= esc((string) ($wa['note'] ?? '')) ?>" data-confirm="<?= esc($wa['confirm']) ?>"
+                                                                                    <?php if (!empty($wa['blocked'])): ?>title="<?= esc($wa['blocked']) ?>"<?php endif; ?>>
+                                                                                    <span><?= esc($wa['label']) ?></span>
+                                                                                </a>
+                                                                            </li>
+                                                                        <?php endforeach; ?>
+                                                                        <?php if (!empty($p['workflow_actions'])): ?><li><hr class="dropdown-divider"></li><?php endif; ?>
                                                                         <?php if ($canModifyPaket): ?>
                                                                             <li>
                                                                                 <a class="dropdown-item d-flex align-items-center gap-2 btn-edit-paket" href="javascript:void(0);" data-paket='<?= $paketJson ?>'>
@@ -1430,6 +1444,7 @@
 
     <?= $this->include('partials/app-scripts') ?>
 
+    <?= $this->include('partials/paket-workflow') ?>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById('paketTable');
@@ -1526,7 +1541,7 @@
                         document.getElementById('modalPaketTglPengajuan').textContent = formatDate(p.tgl_pengajuan);
                         document.getElementById('modalPaketTglDistribusi').textContent = formatDate(p.tgl_distribusi);
                         document.getElementById('modalPaketTglTayang').textContent = formatDate(p.tgl_tayang);
-                        document.getElementById('modalPaketCatatanVerif').textContent = p.catatan_verifikasi || 'Tidak ada catatan khusus.';
+                        document.getElementById('modalPaketCatatanVerif').textContent = p.catatan_terakhir || 'Tidak ada catatan khusus.';
                         document.getElementById('modalPaketLpse').textContent = (parseInt(p.is_lpse) === 1) ? 'Sudah Dipublikasikan ke LPSE' : 'Belum / Non-LPSE';
 
                         // Winner section
@@ -2045,7 +2060,7 @@
 
                         // Sembunyikan form tambah syarat jika status paket sudah diajukan (bukan draf / 1)
                         if (tfootSyarat) {
-                            if (statusPaket === 1) {
+                            if ([1, 3, 7, 10].includes(statusPaket)) {
                                 tfootSyarat.classList.remove('d-none');
                             } else {
                                 tfootSyarat.classList.add('d-none');
@@ -2135,7 +2150,7 @@
 
                                 // Kolom Aksi
                                 let actionButtons = '';
-                                if (statusPaket === 1) {
+                                if ([1, 3, 7, 10].includes(statusPaket)) {
                                     if (isUploaded) {
                                         actionButtons = `
                                             <div class="d-inline-flex align-items-center gap-1">

@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Controllers\Traits\ProcurementScope;
+use App\Libraries\PaketWorkflow;
+use App\Models\CatatanModel;
 use App\Models\PaketModel;
 use App\Models\PaketPokjaModel;
 use App\Models\RupModel;
@@ -31,6 +33,9 @@ class PaketController extends BaseController
         'png'  => ['image/png'],
         'zip'  => ['application/zip', 'application/x-zip-compressed'],
     ];
+
+    /** Status saat PPK boleh mengubah dokumen persyaratan (Draft, Dikembalikan ULP, Saran-Kaji, Saran-Add). */
+    private const SYARAT_EDITABLE = [1, 3, 7, 10];
 
     protected PaketModel $paketModel;
     protected PaketPokjaModel $paketPokjaModel;
@@ -77,8 +82,27 @@ class PaketController extends BaseController
                 }
             }
 
-            $pakets = array_map(function ($item) use ($pokjaByPaket) {
-                $item['pokja_members'] = $pokjaByPaket[$item['id']] ?? [];
+            // Catatan terakhir per paket (untuk ringkasan di detail paket)
+            $lastNote = [];
+            if ($paketIds !== []) {
+                $notes = (new CatatanModel())->select('paket_id, isi_catatan')
+                    ->whereIn('paket_id', $paketIds)->orderBy('id', 'ASC')->findAll();
+                foreach ($notes as $n) {
+                    $lastNote[$n['paket_id']] = $n['isi_catatan'];
+                }
+            }
+
+            $actor = $this->actor();
+
+            $pakets = array_map(function ($item) use ($pokjaByPaket, $lastNote, $actor) {
+                $members  = $pokjaByPaket[$item['id']] ?? [];
+                $isMember = in_array((int) $actor['id'], array_map('intval', array_column($members, 'user_id')), true);
+
+                $item['pokja_members']    = $members;
+                $item['catatan_terakhir'] = $lastNote[$item['id']] ?? null;
+                $item['workflow_actions'] = array_values(PaketWorkflow::available($item, $actor, $isMember, count($members)));
+                $item['wf']               = PaketWorkflow::capabilities($item, $actor, $isMember);
+
                 return $this->formatPaketRow($item);
             }, $paketsFromDb);
 
@@ -499,7 +523,7 @@ class PaketController extends BaseController
         if (! $paket) {
             return $error;
         }
-        if ((int) $paket['status_paket'] !== 1) {
+        if (! in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true)) {
             return $this->failWith('Paket telah diajukan atau terkunci. Tidak dapat mengubah dokumen.', 403);
         }
 
@@ -545,7 +569,7 @@ class PaketController extends BaseController
         if (! $paket) {
             return $error;
         }
-        if ((int) $paket['status_paket'] !== 1) {
+        if (! in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true)) {
             return $this->failWith('Paket telah diajukan atau terkunci. Tidak dapat menambah syarat baru.', 403);
         }
 
@@ -593,7 +617,7 @@ class PaketController extends BaseController
         if (! $paket) {
             return $error;
         }
-        if ((int) $paket['status_paket'] !== 1) {
+        if (! in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true)) {
             return $this->failWith('Paket telah diajukan. Dokumen tidak dapat dihapus.', 403);
         }
 

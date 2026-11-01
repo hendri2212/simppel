@@ -38,9 +38,10 @@ class Session extends BaseConfig
      * --------------------------------------------------------------------------
      *
      * The number of SECONDS you want the session to last.
-     * Setting to 0 (zero) means expire when the browser is closed.
+     * Diset 31536000 (1 tahun) agar sesi pengguna tetap aktif (persisten)
+     * dan tidak logout otomatis, kecuali pengguna mengklik Logout secara manual.
      */
-    public int $expiration = 7200;
+    public int $expiration = 31536000; // 1 tahun (365 hari)
 
     /**
      * --------------------------------------------------------------------------

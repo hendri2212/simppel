@@ -75,6 +75,8 @@ $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Filter per-route menimpa filter group, jadi auth disebut ulang di sini
     $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK,ADMIN AGENCY', 'csrf']];
+    // Semua role proses (kecuali MONEV); hak aksi sebenarnya dicek per paket di PaketWorkflow
+    $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 
     $routes->get('/', 'Home::index');
     $routes->get('/rup', 'RupController::index', ['filter' => ['auth', 'role:!ADMIN ULP']]);
@@ -94,6 +96,21 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/paket/syarat/upload2', 'PaketController::uploadSyaratBaru', $writeMutate);
     $routes->post('/paket/syarat/delete/(:num)', 'PaketController::deleteSyarat/$1', $writeMutate);
     $routes->get('/paket/syarat/download/(:num)', 'PaketController::downloadSyarat/$1');
+
+    // Tahapan paket setelah diajukan (verifikasi ULP, Pokja, lelang, hasil, selesai)
+    $routes->post('/paket/aksi/(:segment)/(:num)', 'PaketWorkflowController::transition/$1/$2', $writeAny);
+    $routes->get('/paket/pokja/(:num)', 'PaketWorkflowController::pokja/$1');
+    $routes->post('/paket/pokja/store', 'PaketWorkflowController::pokjaStore', $writeAny);
+    $routes->post('/paket/pokja/delete/(:num)', 'PaketWorkflowController::pokjaDelete/$1', $writeAny);
+    $routes->get('/paket/catatan/(:num)', 'PaketWorkflowController::catatan/$1');
+    $routes->post('/paket/catatan/store', 'PaketWorkflowController::catatanStore', $writeAny);
+    $routes->post('/paket/catatan/jawab/(:num)', 'PaketWorkflowController::catatanJawab/$1', $writeAny);
+    $routes->post('/paket/hasil/(:num)', 'PaketWorkflowController::simpanHasil/$1', $writeAny);
+    $routes->post('/paket/lpse/(:num)', 'PaketWorkflowController::lpse/$1', $writeAny);
+    $routes->get('/paket/dokumen/(:num)', 'PaketWorkflowController::dokumen/$1');
+    $routes->post('/paket/dokumen/upload', 'PaketWorkflowController::dokumenUpload', $writeAny);
+    $routes->post('/paket/dokumen/delete/(:num)', 'PaketWorkflowController::dokumenDelete/$1', $writeAny);
+    $routes->get('/paket/dokumen/download/(:num)', 'PaketWorkflowController::dokumenDownload/$1');
 
     $routes->get('/(:any)', 'Home::root/$1');
 });

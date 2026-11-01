@@ -24,7 +24,6 @@ class PaketModel extends Model
         'status_paket',
         'admin_ukpbj_id',
         'status_verifikasi',
-        'catatan_verifikasi',
         'admin_distribusi_id',
         'kepala_ukpbj_id',
         'nama_pemenang',

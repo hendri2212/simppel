@@ -1,68 +1,223 @@
-# CodeIgniter 4 Application Starter
+# SIMPPLE - Sistem Informasi Manajemen Pengadaan Paket Lelang Elektronik
 
-## What is CodeIgniter?
+[![CodeIgniter Version](https://img.shields.io/badge/CodeIgniter-4.x-orange.svg)](https://codeigniter.com)
+[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D8.1-blue.svg)](https://php.net)
+[![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com)
+[![License](https://img.shields.io/badge/License-Proprietary-red.svg)]()
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+**SIMPPLE** (Sistem Informasi Manajemen Pengadaan / Pengajuan Paket Lelang Elektronik) adalah aplikasi berbasis web yang dirancang untuk mengelola dan memfasilitasi proses pengadaan barang dan jasa pemerintah (khususnya tender dan seleksi) pada tingkat instansi/Satuan Kerja Perangkat Daerah (SKPD) dan Unit Kerja Pengadaan Barang/Jasa (UKPBJ).
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+Aplikasi ini mencakup siklus persiapan pengadaan, integrasi Rencana Umum Pengadaan (RUP) dengan INAPROC / SiRUP LKPP, pembuatan dan pengajuan paket pengadaan, validasi kelengkapan berkas persyaratan lelang, hingga penugasan Pokja Pemilihan.
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+---
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## 📌 Fitur Utama
 
-## Installation & updates
+### 1. Manajemen Akun & Kontrol Akses Berbasis Peran (RBAC)
+- **9 Peran Pengguna (Roles):**
+  - `ADMINISTRATOR`: Akses penuh terhadap seluruh sistem, konfigurasi, dan manajemen pengguna.
+  - `ADMIN PPK`: Pengelola administrasi PPK pada SKPD terkait.
+  - `PPK` (Pejabat Pembuat Komitmen): Penyusun dan pemilik paket pengadaan serta berkas syarat.
+  - `ADMIN ULP`: Administrator Unit Layanan Pengadaan / UKPBJ.
+  - `DISTRIBUSI`: Tim distribusi berkas dan disposisi paket.
+  - `KEPALA ULP`: Pimpinan UKPBJ untuk pemantauan dan persetujuan.
+  - `POKJA`: Kelompok Kerja Pengadaan untuk penanganan paket tender.
+  - `ADMIN AGENCY`: Administrator perwakilan SKPD/instansi.
+  - `MONEV`: Petugas Monitoring dan Evaluasi pengadaan.
+- **Scoping Data Bertingkat (`ProcurementScope`):**
+  - Role pusat (Administrator, ULP, Pokja, Monev) memiliki visibilitas lintas SKPD secara menyeluruh.
+  - Role daerah/penyusun (PPK, Admin PPK, Admin Agency) dibatasi secara otomatis hanya dapat melihat dan mengelola data milik SKPD/PPK yang terafiliasi dengan akun mereka.
+- **Proteksi Autentikasi & Keamanan:**
+  - Filter akses ketat (`AuthFilter`, `RoleFilter`, `GuestFilter`, `CsrfHeader`).
+  - Fitur reset password pengguna oleh Administrator.
+  - Proteksi CSRF (Cross-Site Request Forgery) pada seluruh operasi mutasi (POST).
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+### 2. Rencana Umum Pengadaan (RUP)
+- Pencatatan dan manajemen paket perencanaan RUP per tahun anggaran.
+- **Integrasi INAPROC API:** Sinkronisasi dan pengambilan data paket RUP langsung dari API INAPROC (SiRUP LKPP).
+- Pencarian dan filter dinamis data RUP berdasarkan SKPD, jenis pengadaan, metode pemilihan, dan pagu anggaran.
+- Detail informasi paket perencanaan beserta riwayat data.
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+### 3. Manajemen Paket Pengadaan (Tender & Seleksi)
+- Pembuatan dan pembaruan paket lelang/seleksi berbasis RUP.
+- **Penomoran Atomik Aman:** Mekanisme locking database (`simpple_no_paket`) saat pembuatan nomor paket untuk mencegah tabrakan (race condition) nomor registrasi.
+- **Alur Validasi & Pengajuan Paket:** Validasi berkas persyaratan wajib sebelum paket dapat diajukan ke UKPBJ.
+- Pemetaan penugasan tim Pokja terhadap paket terkait (`paket_pokja`).
 
-## Setup
+### 4. Manajemen Dokumen Persyaratan Paket
+- Upload berkas persyaratan tender (KAK, HPS, Rancangan Kontrak, Gambar Teknis, dll.).
+- **Validasi Keamanan File Ketat:**
+  - Deteksi MIME type berbasis inspeksi konten asli file (bukan hanya ekstensi nama file).
+  - Whitelist format yang diizinkan: `PDF`, `DOC/DOCX`, `XLS/XLSX/XLSM`, `JPG/PNG`, dan `ZIP`.
+  - Pembatasan ukuran unggahan berkas (maksimal 20 MB per file).
+- Antarmuka unduh dan hapus dokumen secara aman.
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+### 5. Antarmuka Modern & Dasbor Analitik
+- Antarmuka berbasis template premium **SmartAdmin v5** dengan dukungan *Dark Mode* dan *Light Mode*.
+- Visualisasi data statistik dan grafik menggunakan **ApexCharts** dan **Peity Charts**.
+- Navigasi sidebar terorganisir dengan pencarian menu cepat (*quick filter*).
 
-## Important Change with index.php
+---
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## 🛠️ Tech Stack
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+- **Backend:** [PHP](https://www.php.net/) ^8.1, [CodeIgniter 4](https://codeigniter.com/)
+- **Database:** [MySQL](https://www.mysql.com/) 8.0+ / [MariaDB](https://mariadb.org/) 10.4+
+- **Frontend & UI:** [Bootstrap 5.3](https://getbootstrap.com/), SmartAdmin v5, Sass, jQuery
+- **Asset Pipeline:** [Gulp](https://gulpjs.com/) v4, PostCSS/Autoprefixer, CleanCSS, Uglify
+- **Paket & Dependency:** [Composer](https://getcomposer.org/), [NPM](https://www.npmjs.com/) / [Bun](https://bun.sh/)
 
-**Please** read the user guide for a better explanation of how CI4 works!
+---
 
-## Repository Management
+## 📋 Kebutuhan Sistem (Prerequisites)
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+Pastikan lingkungan server Anda memenuhi spesifikasi berikut:
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+1. **PHP >= 8.1** dengan ekstensi aktif:
+   - `intl`
+   - `mbstring`
+   - `json`
+   - `mysqlnd`
+   - `curl`
+   - `fileinfo`
+   - `gd` (opsional untuk pemrosesan grafis)
+2. **Database:** MySQL 8.0+ atau MariaDB 10.4+
+3. **Web Server:** Apache (dengan `mod_rewrite`), Nginx, atau PHP Built-in Server untuk pengembangan.
+4. **Composer:** Versi 2.x
+5. **Node.js & NPM** (Node >= 18) atau **Bun** (untuk kompilasi aset frontend)
 
-## Server Requirements
+---
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+## 🚀 Panduan Instalasi & Menjalankan Proyek
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+### 1. Kloning Repositori
+```bash
+git clone <url-repository> simpple
+cd simpple
+```
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+### 2. Instalasi Dependensi Backend (Composer)
+```bash
+composer install
+```
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+### 3. Instalasi & Kompilasi Aset Frontend
+Gunakan NPM atau Bun untuk mengunduh package frontend dan melakukan build:
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+```bash
+# Menggunakan NPM
+npm install
+npm run build
+
+# Atau menggunakan Bun
+bun install
+bun run build
+```
+
+Untuk mode pengembangan frontend dengan file watching & live reload:
+```bash
+npm run dev
+```
+
+### 4. Konfigurasi Environment (`.env`)
+Salin file konfigurasi contoh `env` ke `.env`:
+
+```bash
+cp env .env
+```
+
+Buka file `.env` dan sesuaikan pengaturan aplikasi serta koneksi database:
+```ini
+CI_ENVIRONMENT = development
+
+app.baseURL = 'http://localhost:8080/'
+
+database.default.hostname = localhost
+database.default.database = simppel
+database.default.username = root
+database.default.password = root
+database.default.DBDriver = MySQLi
+database.default.port = 3306
+```
+
+### 5. Jalankan Migrasi & Seeder Database
+Buat database terlebih dahulu di MySQL/MariaDB (misal: `simppel`), lalu jalankan migrasi tabel dan pengisian master data:
+
+```bash
+# Jalankan migrasi seluruh tabel
+php spark migrate
+
+# Jalankan seeder master data (SKPD, PPK, Role, Pengadaan, User, RUP, Paket)
+php spark db:seed DatabaseSeeder
+```
+
+### 6. Menjalankan Server Lokal
+Jalankan server pengembangan bawaan CodeIgniter:
+
+```bash
+php spark serve
+```
+Akses aplikasi melalui peramban web di: `http://localhost:8080`
+
+---
+
+## 🔑 Akun Uji Coba (Login)
+
+Setelah menjalankan seeder `DatabaseSeeder`, Anda dapat masuk menggunakan akun pengujian berikut:
+
+| Peran (Role) | Username | Password | Keterangan |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin` *(atau `admin@simpple.com`)* | `admin123` | Akses penuh seluruh modul & manajemen akun |
+| **Admin ULP** | `ukpbj_adm_lili` | `12345678` | Akun verifikasi & penanganan ULP / UKPBJ |
+| **PPK** | `test` | `12345678` | Akun Pejabat Pembuat Komitmen (buat paket & RUP) |
+| *Akun Lainnya* | *(Lihat daftar di `UserSeeder.php`)* | `12345678` | Akun simulasi SKPD dan peran lainnya |
+
+> [!IMPORTANT]
+> Segera ubah password default saat menerapkan aplikasi di lingkungan produksi (*production*).
+
+---
+
+## 📁 Struktur Direktori Utama
+
+```text
+simpple/
+├── app/
+│   ├── Config/              # Konfigurasi aplikasi, database, rute, dan filter
+│   │   ├── Routes.php       # Definisi rute URL dan proteksi middleware
+│   │   └── Filters.php      # Registrasi alias filter keamanan
+│   ├── Controllers/         # Controller utama aplikasi
+│   │   ├── Auth.php         # Alur autentikasi (login, register, logout)
+│   │   ├── AccountController.php # Manajemen pengguna khusus administrator
+│   │   ├── PaketController.php   # Manajemen paket tender & dokumen syarat
+│   │   ├── RupController.php     # Manajemen RUP & integrasi INAPROC
+│   │   └── Traits/
+│   │       └── ProcurementScope.php # Logika scoping data per SKPD/PPK
+│   ├── Database/
+│   │   ├── Migrations/      # Skema tabel database
+│   │   └── Seeds/           # Seeder master data, roles, dan user
+│   ├── Filters/             # Filter autentikasi, otorisasi peran, & CSRF
+│   ├── Models/              # Model data CodeIgniter
+│   └── Views/               # File tampilan Blade/PHP (SmartAdmin UI)
+│       ├── auth/            # Halaman login, register, lockscreen
+│       └── partials/        # Komponen layout (header, sidebar, nav, logo)
+├── public/                  # Document root web server (index.php, css, js, icons)
+├── writable/                # File cache, logs, session, dan dokumen upload
+├── gulpfile.js              # Task runner otomatisasi kompilasi Sass & JS
+├── package.json             # Dependensi frontend (SmartAdmin, Bootstrap, ApexCharts)
+├── composer.json            # Dependensi backend PHP
+└── spark                    # CLI tool CodeIgniter 4
+```
+
+---
+
+## 🛡️ Catatan Deployment Produksi
+
+1. **Document Root Server:** Arahkan konfigurasi virtual host web server (Nginx/Apache) ke direktori `public/`, **bukan** ke root folder proyek. Hal ini penting untuk mencegah tereksposnya file framework, konfigurasi `.env`, dan berkas aplikasi.
+2. **Izin Akses Folder:** Pastikan direktori `writable/` memiliki izin baca dan tulis (*read/write permissions*) bagi user web server (misal `www-data` atau `nginx`).
+3. **Environment Mode:** Ubah `CI_ENVIRONMENT` menjadi `production` di file `.env` untuk menyembunyikan stack trace error debug dari publik.
+
+---
+
+## 📄 Lisensi
+
+Aplikasi ini dikembangkan untuk kebutuhan manajemen pengadaan barang/jasa instansi pemerintah. Seluruh hak cipta dilindungi undang-undang.
