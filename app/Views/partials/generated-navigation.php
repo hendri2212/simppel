@@ -191,68 +191,7 @@
 
     <li class="nav-title"><span>Design</span></li>
 
-    <li class="nav-item">
-        <a href="#" title="UI Components" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#layers"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>UI Components</span>
-        </a>
 
-        <ul>
-
-            <li>
-                <a href="/ui-breadcrumbs">
-                    <span class="nav-link-text" data-i18n>Breadcrumbs</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-dropdowns">
-                    <span class="nav-link-text" data-i18n>Dropdowns</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-collapse">
-                    <span class="nav-link-text" data-i18n>Collapse</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-tabs-pills">
-                    <span class="nav-link-text" data-i18n>Tabs & Pills</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-popovers">
-                    <span class="nav-link-text" data-i18n>Popovers</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-toasts">
-                    <span class="nav-link-text" data-i18n>Toasts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-progressbars">
-                    <span class="nav-link-text" data-i18n>Progress Bars</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-spinners">
-                    <span class="nav-link-text" data-i18n>Spinners</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-panels">
-                    <span class="nav-link-text" data-i18n>Panels</span>
-                </a>
-            </li>
-            <li>
-                <a href="/ui-list-filter">
-                    <span class="nav-link-text" data-i18n>List Filter</span>
-                </a>
-            </li>
-        </ul>
-    </li>
 
     <li class="nav-item">
         <a href="#" title="System Utilities" data-filter-tags>
@@ -280,16 +219,8 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/icons-system">
-                    <span class="nav-link-text" data-i18n>System Icons</span>
-                </a>
-            </li>
-            <li>
-                <a href="/icons-fontawesome">
-                    <span class="nav-link-text" data-i18n>FontAwesome 5.3</span>
-                </a>
-            </li>
+
+
             <li>
                 <a href="/icons-smartadmin">
                     <span class="nav-link-text" data-i18n>SmartAdmin Icons 1.0</span>
@@ -334,21 +265,13 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/smarttables-responsive">
-                    <span class="nav-link-text" data-i18n>Responsive Settings</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/smarttables-importexport-data">
                     <span class="nav-link-text" data-i18n>Import & Export Data</span>
                 </a>
             </li>
-            <li>
-                <a href="/smarttables-json-source">
-                    <span class="nav-link-text" data-i18n>JSON Data Source</span>
-                </a>
-            </li>
+
             <li>
                 <a href="/smarttables-server-side">
                     <span class="nav-link-text" data-i18n>Server-Side Mode</span>
@@ -366,11 +289,7 @@
         </a>
 
         <ul>
-            <li>
-                <a href="/apex-area">
-                    <span class="nav-link-text" data-i18n>Area Charts</span>
-                </a>
-            </li>
+
 
 
             <li>
@@ -385,11 +304,7 @@
             </li>
 
 
-            <li>
-                <a href="/apex-mixed-combo">
-                    <span class="nav-link-text" data-i18n>Mixed/Combo Charts</span>
-                </a>
-            </li>
+
 
             <li>
                 <a href="/apex-polar-area">
@@ -397,16 +312,7 @@
                 </a>
             </li>
 
-            <li>
-                <a href="/apex-radialbars-circle">
-                    <span class="nav-link-text" data-i18n>RadialBars/Circle Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-range-area">
-                    <span class="nav-link-text" data-i18n>Range Area Charts</span>
-                </a>
-            </li>
+
 
 
         </ul>
