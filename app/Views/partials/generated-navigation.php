@@ -17,16 +17,7 @@
                     <span class="nav-link-text" data-i18n>Control Center</span>
                 </a>
             </li>
-            <li>
-                <a href="/dashboard-subscription">
-                    <span class="nav-link-text" data-i18n>Subscription & Billing</span>
-                </a>
-            </li>
-            <li>
-                <a href="/dashboard-marketing">
-                    <span class="nav-link-text" data-i18n>Marketing & Sales</span>
-                </a>
-            </li>
+
         </ul>
     </li>
 
@@ -221,12 +212,5 @@
         </ul>
     </li>
 
-    <li>
-        <a href="/fullcalendar">
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#calendar"></use>
-            </svg>
-            <span class="nav-link-text">Full Calendar</span>
-        </a>
-    </li>
+
 </ul>
