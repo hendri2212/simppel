@@ -178,26 +178,6 @@
                     <span class="nav-link-text" data-i18n>Color Palette</span>
                 </a>
             </li>
-            <li>
-                <a href="/smarttables-server-side">
-                    <span class="nav-link-text" data-i18n>Server-Side Mode</span>
-                </a>
-            </li>
-            <li>
-                <a href="/smarttables-importexport-data">
-                    <span class="nav-link-text" data-i18n>Import & Export Data</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-candlestick">
-                    <span class="nav-link-text" data-i18n>Candlestick Charts</span>
-                </a>
-            </li>
-            <li>
-                <a href="/apex-polar-area">
-                    <span class="nav-link-text" data-i18n>Polar Area Charts</span>
-                </a>
-            </li>
         </ul>
     </li>
 
