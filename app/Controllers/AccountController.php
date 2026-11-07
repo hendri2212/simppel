@@ -239,9 +239,15 @@ class AccountController extends BaseController
         }
 
         if ($data['password'] !== '') {
-            $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+            $data['password']            = password_hash($data['password'], PASSWORD_BCRYPT);
+            $data['remember_token']      = null;
+            $data['remember_expires_at'] = null;
         } else {
             unset($data['password']);
+            if ($data['is_active'] !== 1) {
+                $data['remember_token']      = null;
+                $data['remember_expires_at'] = null;
+            }
         }
 
         try {
@@ -285,7 +291,11 @@ class AccountController extends BaseController
         $tempPassword = $this->generatePassword();
 
         try {
-            $this->userModel->update($id, ['password' => password_hash($tempPassword, PASSWORD_BCRYPT)]);
+            $this->userModel->update($id, [
+                'password'            => password_hash($tempPassword, PASSWORD_BCRYPT),
+                'remember_token'      => null,
+                'remember_expires_at' => null,
+            ]);
 
             $userName = $user['full_name'] ?: $user['username'];
 

@@ -23,6 +23,8 @@ class UserModel extends Model
         'nip',
         'whatsapp_number',
         'is_active',
+        'remember_token',
+        'remember_expires_at',
     ];
 
     protected $useTimestamps = true;
@@ -43,6 +45,19 @@ class UserModel extends Model
                 ->where('users.username', $identifier)
                 ->orWhere('users.email', $identifier)
             ->groupEnd()
+            ->first();
+    }
+
+    /**
+     * Get user by ID along with role, skpd, and ppk details
+     */
+    public function getUserWithRoleById(int $userId)
+    {
+        return $this->select('users.*, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, ppk.name as ppk_name')
+            ->join('roles', 'roles.id = users.role_id', 'left')
+            ->join('skpd', 'skpd.id = users.skpd_id', 'left')
+            ->join('ppk', 'ppk.id = users.ppk_id', 'left')
+            ->where('users.id', $userId)
             ->first();
     }
 

@@ -68,6 +68,17 @@ class CreateUsersTable extends Migration
                 'default'    => 1,
                 'comment'    => '1: Active, 0: Inactive',
             ],
+            'remember_token' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 64,
+                'null'       => true,
+                'default'    => null,
+            ],
+            'remember_expires_at' => [
+                'type'    => 'DATETIME',
+                'null'    => true,
+                'default' => null,
+            ],
             'created_at' => [
                 'type' => 'DATETIME',
                 'null' => true,
