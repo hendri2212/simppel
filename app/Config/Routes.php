@@ -50,8 +50,6 @@ $routes->get('/register', 'Auth::register', ['filter' => 'guest']);
 $routes->get('/auth-register', 'Auth::register', ['filter' => 'guest']);
 $routes->get('/forgetpassword', 'Auth::forgetPassword', ['filter' => 'guest']);
 $routes->get('/auth-forgetpassword', 'Auth::forgetPassword', ['filter' => 'guest']);
-$routes->get('/lockscreen', 'Auth::lockscreen');
-$routes->get('/auth-lockscreen', 'Auth::lockscreen');
 $routes->get('/twofactor', 'Auth::twoFactor');
 $routes->get('/auth-twofactor', 'Auth::twoFactor');
 
@@ -94,6 +92,11 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 
     $routes->get('/', 'Home::index');
+    // Profil Pengguna & Pengaturan Akun Pribadi
+    $routes->get('/profile', 'ProfileController::index');
+    $routes->post('/profile/update', 'ProfileController::update', ['filter' => ['auth', 'csrf']]);
+    $routes->post('/profile/update-password', 'ProfileController::updatePassword', ['filter' => ['auth', 'csrf']]);
+
     // Dashboard Control Center (data grafik dibatasi sesuai cakupan role)
     $routes->get('/dashboard-control-center', 'DashboardController::index');
     $routes->get('/dashboard-control-center/data', 'DashboardController::data');

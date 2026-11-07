@@ -352,7 +352,7 @@
                     
                     <div class="d-flex align-items-center gap-3 w-100 pe-4 flex-wrap flex-sm-nowrap">
                         <div class="position-relative flex-shrink-0">
-                            <img id="detailModalAvatar" src="/img/demo/avatars/avatar-admin.png" alt="Avatar" class="rounded-circle border border-3 border-white shadow bg-white" style="width: 76px; height: 76px; object-fit: cover;">
+                            <img id="detailModalAvatar" src="/img/avatar-default.png" alt="Avatar" class="rounded-circle border border-3 border-white shadow bg-white" style="width: 76px; height: 76px; object-fit: cover;">
                             <span id="detailModalStatusIndicator" class="position-absolute bottom-0 end-0 border border-2 border-white rounded-circle bg-success" style="width: 18px; height: 18px;" title="Status Pengguna"></span>
                         </div>
                         <div class="flex-grow-1" style="min-width: 0;">
@@ -1214,7 +1214,7 @@
                     document.getElementById('detailModalId').textContent = '#' + (u.id || '-');
                     document.getElementById('detailModalNip').textContent = u.nip || '-';
                     document.getElementById('detailModalCreatedAt').textContent = u.created_at || '-';
-                    document.getElementById('detailModalAvatar').src = u.avatar || '/img/demo/avatars/avatar-admin.png';
+                    document.getElementById('detailModalAvatar').src = u.avatar || '/img/avatar-default.png';
 
                     // Role & Badge
                     const roleBadge = document.getElementById('detailModalRoleBadge');

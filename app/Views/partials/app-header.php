@@ -52,9 +52,12 @@
     </button>
 
 
+    <?php
+    $navUserAvatar = session('avatar') ? '/uploads/avatars/' . esc(session('avatar')) : '/img/avatar-default.png';
+    ?>
     <!-- Profile -->
-    <button type="button" data-bs-toggle="dropdown" title="drlantern@getwebora.com" class="btn-system bg-transparent d-flex flex-shrink-0 align-items-center justify-content-center" aria-label="Open Profile Dropdown">
-        <img src="/img/demo/avatars/avatar-admin.png" class="profile-image profile-image-md rounded-circle" alt="Sunny A.">
+    <button type="button" data-bs-toggle="dropdown" title="<?= esc(session('email') ?? 'admin@simpple.com') ?>" class="btn-system bg-transparent d-flex flex-shrink-0 align-items-center justify-content-center" aria-label="Open Profile Dropdown">
+        <img src="<?= $navUserAvatar ?>" class="profile-image profile-image-md rounded-circle object-fit-cover" alt="<?= esc(session('full_name') ?? 'User') ?>" style="width: 32px; height: 32px; object-fit: cover;">
     </button>
 
     <!-- Profile dropdown -->
@@ -62,7 +65,7 @@
         <div class="notification-header rounded-top mb-2">
             <div class="d-flex flex-row align-items-center mt-1 mb-1 color-white">
                 <span class="status status-success d-inline-block me-2">
-                    <img src="/img/demo/avatars/avatar-admin.png" class="profile-image rounded-circle" alt="Sunny A.">
+                    <img src="<?= $navUserAvatar ?>" class="profile-image rounded-circle" alt="<?= esc(session('full_name') ?? 'User') ?>" style="width: 40px; height: 40px; object-fit: cover;">
                 </span>
                 <div class="info-card-text">
                     <div class="fs-lg text-truncate text-truncate-lg"><?= esc(session('full_name') ?? 'Administrator') ?></div>
@@ -73,6 +76,9 @@
 
         <div class="dropdown-divider m-0"></div>
 
+        <a href="/profile" class="dropdown-item">
+            <span data-i18n="drpdwn.user-profile">Profil Saya</span>
+        </a>
         <a href="#" class="dropdown-item" data-action="app-reset" role="button">
             <span data-i18n="drpdwn.reset_layout">Reset Layout</span>
         </a>

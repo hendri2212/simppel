@@ -22,6 +22,7 @@ class UserModel extends Model
         'ppk_id',
         'nip',
         'whatsapp_number',
+        'avatar',
         'is_active',
         'remember_token',
         'remember_expires_at',
@@ -66,7 +67,7 @@ class UserModel extends Model
      */
     public function getUsersWithDetails()
     {
-        return $this->select('users.id, users.full_name, users.email, users.username, users.role_id, users.skpd_id, users.ppk_id, users.nip, users.whatsapp_number, users.is_active, users.created_at, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, skpd.code as skpd_code, ppk.name as ppk_name')
+        return $this->select('users.id, users.full_name, users.email, users.username, users.role_id, users.skpd_id, users.ppk_id, users.nip, users.whatsapp_number, users.avatar, users.is_active, users.created_at, roles.name as role_name, skpd.name as skpd_name, skpd.abbreviation as skpd_abbr, skpd.code as skpd_code, ppk.name as ppk_name')
             ->join('roles', 'roles.id = users.role_id', 'left')
             ->join('skpd', 'skpd.id = users.skpd_id', 'left')
             ->join('ppk', 'ppk.id = users.ppk_id', 'left')

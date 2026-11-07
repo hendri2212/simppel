@@ -94,7 +94,7 @@ class AccountController extends BaseController
                     'status'            => $isActive ? 'Active' : 'Inactive',
                     'is_active'         => $isActive ? 1 : 0,
                     'status_badge'      => $isActive ? 'bg-success' : 'bg-secondary',
-                    'avatar'            => '/img/demo/avatars/avatar-admin.png',
+                    'avatar'            => '/img/avatar-default.png',
                     'created_at'        => ! empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
                 ];
             }

@@ -60,6 +60,10 @@ writable/session/*
 writable/uploads/*
 !writable/uploads/index.html
 
+# User Uploaded Avatars
+public/uploads/avatars/*
+!public/uploads/avatars/.gitkeep
+
 writable/debugbar/*
 !writable/debugbar/.gitkeep
 

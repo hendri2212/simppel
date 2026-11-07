@@ -157,29 +157,4 @@
     </li>
     <?php endif; ?>
 
-    <li class="nav-title"><span>Layouts</span></li>
-
-    <li class="nav-item">
-        <a href="#" title="Access Control" data-filter-tags>
-            <svg class="sa-icon">
-                <use href="/icons/sprite.svg#slash"></use>
-            </svg>
-            <span class="nav-link-text" data-i18n>Access Control</span>
-        </a>
-
-        <ul>
-            <li>
-                <a href="/profile">
-                    <span class="nav-link-text" data-i18n>User Profile</span>
-                </a>
-            </li>
-            <li>
-                <a href="/utilities-colorpalette">
-                    <span class="nav-link-text" data-i18n>Color Palette</span>
-                </a>
-            </li>
-        </ul>
-    </li>
-
-
 </ul>

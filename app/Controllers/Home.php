@@ -24,9 +24,9 @@ class Home extends BaseController
             throw PageNotFoundException::forPageNotFound();
         }
 
-        // Blokir akses langsung ke folder parsial/auth/errors/e-templates
+        // Blokir akses langsung ke folder parsial/auth/errors
         $firstSegment   = explode('/', $path)[0];
-        $blockedFolders = ['partials', 'auth', 'errors', 'e-templates'];
+        $blockedFolders = ['partials', 'auth', 'errors'];
         if (in_array($firstSegment, $blockedFolders, true)) {
             throw PageNotFoundException::forPageNotFound();
         }

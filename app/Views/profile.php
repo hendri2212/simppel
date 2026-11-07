@@ -1,8 +1,7 @@
 <?= $this->include('partials/app-html') ?>
 
 <head>
-    <?php echo view("partials/app-meta-title", array("pageTitle" => "Profile")) ?>
-
+    <?php echo view("partials/app-meta-title", array("pageTitle" => $pageTitle ?? "Profil Pengguna")) ?>
     <?= $this->include('partials/app-head-css') ?>
 </head>
 
@@ -11,247 +10,78 @@
     <div class="app-wrap">
 
         <?= $this->include('partials/app-header') ?>
-
         <?= $this->include('partials/app-sidebar') ?>
 
         <main class="app-body">
             <div class="app-content">
-
                 <div class="content-wrapper">
 
                     <div class="main-content layout-trimmed profile-page position-relative">
 
-                        <!-- Edit Profile Modal -->
-                        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="editProfileModalLabel">Edit Profile</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="needs-validation" novalidate="">
-                                            <div class="row mb-g">
-                                                <div class="col-md-12">
-                                                    <h6 class="mb-3 text-muted">Personal Information</h6>
-                                                    <div class="mb-3">
-                                                        <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" id="fullName" value="John Doe" required="">
-                                                        <div class="invalid-feedback"> Please provide your full name. </div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="profession" class="form-label">Profession <span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" id="profession" value="Senior Software Engineer at TechCorp" required="">
-                                                        <div class="invalid-feedback"> Please provide your profession. </div>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="skills" class="form-label">Skills (comma separated) <span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" id="skills" value="JavaScript, React, Node.js, UI/UX" required="">
-                                                        <div class="invalid-feedback"> Please provide at least one skill. </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <h6 class="mb-3 text-muted">Contact Information</h6>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                                    <input type="email" class="form-control" id="email" value="john.doe@example.com" required="">
-                                                    <div class="invalid-feedback"> Please provide a valid email address. </div>
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="phone" class="form-label">Phone <span class="text-danger">*</span></label>
-                                                    <input type="tel" class="form-control" id="phone" value="+1 (555) 123-4567" required="">
-                                                    <div class="invalid-feedback"> Please provide a phone number. </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-g">
-                                                <label for="location" class="form-label">Location <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="location" value="San Francisco, CA" required="">
-                                                <div class="invalid-feedback"> Please provide your location. </div>
-                                            </div>
-                                            <h6 class="mb-3 text-muted">About Me</h6>
-                                            <div class="mb-3 mb-g">
-                                                <label for="aboutMe" class="form-label">Bio <span class="text-danger">*</span></label>
-                                                <textarea class="form-control" id="aboutMe" rows="4" required="">Experienced Software Engineer with a demonstrated history of working in the computer software industry. Skilled in JavaScript, React.js, Node.js, and UI/UX Design. Strong engineering professional with a Bachelor's degree focused in Computer Science.</textarea>
-                                                <div class="invalid-feedback"> Please provide a bio. </div>
-                                            </div>
-                                            <h6 class="mb-3 text-muted">Social Media</h6>
-                                            <div class="row">
-                                                <div class="col-md-4 mb-3">
-                                                    <label for="linkedin" class="form-label">LinkedIn</label>
-                                                    <input type="url" class="form-control" id="linkedin" placeholder="LinkedIn profile URL">
-                                                </div>
-                                                <div class="col-md-4 mb-3">
-                                                    <label for="github" class="form-label">GitHub</label>
-                                                    <input type="url" class="form-control" id="github" placeholder="GitHub profile URL">
-                                                </div>
-                                                <div class="col-md-4 mb-3">
-                                                    <label for="twitter" class="form-label">Twitter</label>
-                                                    <input type="url" class="form-control" id="twitter" placeholder="Twitter profile URL">
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="btn btn-primary" id="submitProfileForm">Save Changes</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Add News Modal -->
-                        <div class="modal fade" id="addNewsModal" tabindex="-1" aria-labelledby="addNewsModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="addNewsModalLabel">Create News Update</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="needs-validation" novalidate>
-                                            <div class="mb-3">
-                                                <label for="newsTitle" class="form-label">Title <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="newsTitle" placeholder="Add a title for your news" required>
-                                                <div class="invalid-feedback">
-                                                    Please provide a title for your news update.
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="newsContent" class="form-label">Content <span class="text-danger">*</span></label>
-                                                <textarea class="form-control" id="newsContent" rows="4" placeholder="Write your news update..." required></textarea>
-                                                <div class="invalid-feedback">
-                                                    Please provide content for your news update.
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="newsImage" class="form-label">Image (Optional)</label>
-                                                <input type="file" class="form-control" id="newsImage" accept="image/*">
-                                                <div class="form-text">Recommended image size: 1200x630 pixels</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Visibility <span class="text-danger">*</span></label>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="newsVisibility" id="newsPublic" checked required>
-                                                    <label class="form-check-label" for="newsPublic">
-                                                        Public - Anyone can see this news update
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="newsVisibility" id="newsConnections" required>
-                                                    <label class="form-check-label" for="newsConnections">
-                                                        Connections only - Only your connections can see this news update
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="btn btn-primary" id="submitNewsForm">Post Update</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Add Project Modal -->
-                        <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="addProjectModalLabel">Add New Project</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form class="needs-validation" novalidate>
-                                            <div class="mb-3">
-                                                <label for="projectTitle" class="form-label">Project Title <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="projectTitle" placeholder="Enter project title" required>
-                                                <div class="invalid-feedback">
-                                                    Please provide a project title.
-                                                </div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="projectType" class="form-label">Project Type <span class="text-danger">*</span></label>
-                                                    <select class="form-select" id="projectType" required>
-                                                        <option value="">Select type</option>
-                                                        <option value="website">Website</option>
-                                                        <option value="mobile">Mobile App</option>
-                                                        <option value="desktop">Desktop App</option>
-                                                        <option value="library">Library/Framework</option>
-                                                        <option value="other">Other</option>
-                                                    </select>
-                                                    <div class="invalid-feedback">
-                                                        Please select a project type.
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="projectStatus" class="form-label">Status <span class="text-danger">*</span></label>
-                                                    <select class="form-select" id="projectStatus" required>
-                                                        <option value="">Select status</option>
-                                                        <option value="ongoing">Ongoing</option>
-                                                        <option value="completed">Completed</option>
-                                                        <option value="planned">Planned</option>
-                                                    </select>
-                                                    <div class="invalid-feedback">
-                                                        Please select a project status.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="projectDescription" class="form-label">Description <span class="text-danger">*</span></label>
-                                                <textarea class="form-control" id="projectDescription" rows="3" placeholder="Describe your project" required></textarea>
-                                                <div class="invalid-feedback">
-                                                    Please provide a project description.
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="projectTechnologies" class="form-label">Technologies Used <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" id="projectTechnologies" placeholder="E.g., React, Node.js, MongoDB" required>
-                                                <div class="invalid-feedback">
-                                                    Please list the technologies used.
-                                                </div>
-                                                <div class="form-text">Separate technologies with commas</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label for="projectImage" class="form-label">Featured Image</label>
-                                                <input type="file" class="form-control" id="projectImage" accept="image/*">
-                                                <div class="form-text">Recommended image size: 1200x630 pixels</div>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="projectLink" class="form-label">Project URL (Optional)</label>
-                                                    <input type="url" class="form-control" id="projectLink" placeholder="https://example.com">
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="projectRepo" class="form-label">Repository URL (Optional)</label>
-                                                    <input type="url" class="form-control" id="projectRepo" placeholder="https://github.com/example">
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-default" data-bs-dismiss="modal">Cancel</button>
-                                        <button type="button" class="btn btn-primary" id="submitProjectForm">Save Project</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <!-- Profile Header Background -->
-                        <div class="profile-page-header-underlay bg-info-gradient bg-info-500"></div>
+                        <div class="profile-page-header-underlay bg-primary-gradient bg-primary-600"></div>
 
-                        <!-- Main Profile Content -->
+                        <!-- Main Profile Container -->
                         <div class="container-xl position-relative">
-                            <!-- Profile Header Section -->
+
+                            <!-- Flash Notification -->
+                            <?php if (session()->getFlashdata('success')): ?>
+                                <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <svg class="sa-icon me-2 fs-lg"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                        <div><?= session()->getFlashdata('success') ?></div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (session()->getFlashdata('error')): ?>
+                                <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-4" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <svg class="sa-icon me-2 fs-lg"><use href="/icons/sprite.svg#alert-circle"></use></svg>
+                                        <div><?= session()->getFlashdata('error') ?></div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            <?php endif; ?>
+
+                            <div id="ajaxAlertContainer"></div>
+
+                            <?php
+                            $userAvatarUrl = ! empty($user['avatar'])
+                                ? base_url('uploads/avatars/' . esc($user['avatar']))
+                                : base_url('img/avatar-default.png');
+                            
+                            $roleBadges = [
+                                'ADMINISTRATOR' => 'bg-danger-subtle text-danger border border-danger-subtle',
+                                'ADMIN PPK'     => 'bg-primary-subtle text-primary border border-primary-subtle',
+                                'PPK'           => 'bg-info-subtle text-info border border-info-subtle',
+                                'ADMIN ULP'     => 'bg-success-subtle text-success border border-success-subtle',
+                                'DISTRIBUSI'    => 'bg-warning-subtle text-warning border border-warning-subtle',
+                                'KEPALA ULP'    => 'bg-purple-subtle text-purple border border-purple-subtle',
+                                'POKJA'         => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
+                                'MONEV'         => 'bg-dark-subtle text-dark border border-dark-subtle',
+                            ];
+                            $roleBadgeClass = $roleBadges[strtoupper($user['role_name'] ?? '')] ?? 'bg-light text-dark border';
+                            ?>
+
+                            <!-- Profile Header Card -->
                             <div class="profile-page-header rounded-3 body-bg shadow-3 mb-4">
                                 <div class="d-flex flex-column flex-md-row align-items-center position-relative p-4">
+                                    
                                     <!-- Profile Avatar -->
                                     <div class="profile-page-header-avatar mb-3 mb-md-0">
                                         <div class="position-relative">
-                                            <img src="/img/demo/avatars/avatar-admin-xl.png" class="rounded-circle border border-3 border-white shadow-2" alt="John Doe" width="160" height="160">
-                                            <button class="btn btn-icon position-absolute bottom-0 end-0 bg-white rounded-circle shadow-2" type="button" title="Edit Profile">
+                                            <img id="headerAvatarPreview" 
+                                                 src="<?= $userAvatarUrl ?>" 
+                                                 class="rounded-circle border border-4 border-white shadow-2 object-fit-cover" 
+                                                 alt="<?= esc($user['full_name']) ?>" 
+                                                 width="140" height="140"
+                                                 style="object-fit: cover;">
+                                            <button class="btn btn-icon position-absolute bottom-0 end-0 bg-white rounded-circle shadow-2 text-primary" 
+                                                    type="button" 
+                                                    id="btnTriggerAvatarUpload" 
+                                                    title="Ganti Foto Profil">
                                                 <svg class="sa-icon">
                                                     <use href="/icons/sprite.svg#camera"></use>
                                                 </svg>
@@ -261,162 +91,543 @@
 
                                     <!-- Profile Info -->
                                     <div class="profile-page-header-info ms-md-4 text-center text-md-start">
-                                        <h1 class="fs-xxl fw-700 mb-2">John Doe</h1>
-                                        <p class="text-muted mb-2">Senior Software Engineer at TechCorp</p>
-                                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
-                                            <span class="badge bg-primary-100 text-primary">JavaScript</span>
-                                            <span class="badge bg-primary-100 text-primary">React</span>
-                                            <span class="badge bg-primary-100 text-primary">Node.js</span>
-                                            <span class="badge bg-primary-100 text-primary">UI/UX</span>
+                                        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-1">
+                                            <h1 class="fs-xxl fw-700 mb-0" id="headerFullName"><?= esc($user['full_name']) ?></h1>
+                                            <span class="badge <?= $roleBadgeClass ?> fw-600 px-2 py-1 fs-xs">
+                                                <?= esc($user['role_name'] ?? 'USER') ?>
+                                            </span>
+                                        </div>
+
+                                        <p class="text-muted mb-2 fs-sm">
+                                            <span class="fw-500">@<?= esc($user['username']) ?></span>
+                                            <?php if (! empty($user['nip'])): ?>
+                                                <span class="mx-1">•</span> NIP: <span id="headerNipText"><?= esc($user['nip']) ?></span>
+                                            <?php endif; ?>
+                                        </p>
+
+                                        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start fs-xs">
+                                            <?php if (! empty($user['skpd_name'])): ?>
+                                                <span class="badge bg-light text-secondary border">
+                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#home"></use></svg>
+                                                    <?= esc($user['skpd_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <?php if (! empty($user['ppk_name'])): ?>
+                                                <span class="badge bg-light text-secondary border">
+                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#briefcase"></use></svg>
+                                                    <?= esc($user['ppk_name']) ?>
+                                                </span>
+                                            <?php endif; ?>
+
+                                            <span class="badge bg-light text-secondary border">
+                                                <svg class="sa-icon me-1"><use href="/icons/sprite.svg#mail"></use></svg>
+                                                <span id="headerEmailText"><?= esc($user['email']) ?></span>
+                                            </span>
+
+                                            <?php if (! empty($user['whatsapp_number'])): ?>
+                                                <span class="badge bg-light text-success border">
+                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#phone"></use></svg>
+                                                    <span id="headerWaText"><?= esc($user['whatsapp_number']) ?></span>
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
-                                    <!-- Profile Actions -->
-                                    <div class="profile-page-header-actions ms-md-auto mt-3 mt-md-0 d-flex">
-                                        <a href="#" class="btn btn-outline-default me-2 d-flex" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                                            <svg class="sa-icon me-2 inline-text">
-                                                <use href="/icons/sprite.svg#edit-3"></use>
-                                            </svg> Edit Profile
-                                        </a>
-                                        <a href="javascript:void(0)" class="btn btn-outline-default d-flex">
-                                            <svg class="sa-icon me-2 inline-block">
-                                                <use href="/icons/sprite.svg#share-2"></use>
-                                            </svg> Share
-                                        </a>
+                                    <!-- Quick Actions -->
+                                    <div class="profile-page-header-actions ms-md-auto mt-3 mt-md-0 d-flex gap-2">
+                                        <button type="button" class="btn btn-outline-primary d-flex align-items-center" onclick="activateTab('tab-edit-profile')">
+                                            <svg class="sa-icon me-1 inline-text"><use href="/icons/sprite.svg#edit-3"></use></svg>
+                                            Edit Profil
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary d-flex align-items-center" onclick="activateTab('tab-security')">
+                                            <svg class="sa-icon me-1 inline-text"><use href="/icons/sprite.svg#shield"></use></svg>
+                                            Ganti Password
+                                        </button>
                                     </div>
                                 </div>
 
-                                <!-- Profile Navigation -->
+                                <!-- Tab Navigation -->
                                 <div class="profile-page-nav border-top">
-                                    <ul class="nav nav-tabs-clean">
-                                        <li class="nav-item">
-                                            <a class="nav-link active" href="#profile-about" data-bs-toggle="tab">
-                                                <svg class="sa-icon me-2">
-                                                    <use href="/icons/sprite.svg#user"></use>
-                                                </svg>
-                                                About
+                                    <ul class="nav nav-tabs-clean" id="profileTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link active" id="tab-overview-link" data-bs-toggle="tab" href="#tab-overview" role="tab">
+                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#user"></use></svg>
+                                                Ringkasan Akun
                                             </a>
                                         </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="#profile-news" data-bs-toggle="tab">
-                                                <svg class="sa-icon me-2">
-                                                    <use href="/icons/sprite.svg#rss"></use>
-                                                </svg>
-                                                News
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="tab-edit-profile-link" data-bs-toggle="tab" href="#tab-edit-profile" role="tab">
+                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#edit"></use></svg>
+                                                Data Pribadi & Kepegawaian
                                             </a>
                                         </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="#profile-projects" data-bs-toggle="tab">
-                                                <svg class="sa-icon me-2">
-                                                    <use href="/icons/sprite.svg#folder"></use>
-                                                </svg>
-                                                Projects
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="tab-security-link" data-bs-toggle="tab" href="#tab-security" role="tab">
+                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                Keamanan & Password
                                             </a>
                                         </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="#profile-contact" data-bs-toggle="tab">
-                                                <svg class="sa-icon me-2">
-                                                    <use href="/icons/sprite.svg#mail"></use>
-                                                </svg>
-                                                Contact
+                                        <?php if (! empty($skpdDetail)): ?>
+                                        <li class="nav-item" role="presentation">
+                                            <a class="nav-link" id="tab-skpd-link" data-bs-toggle="tab" href="#tab-skpd" role="tab">
+                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#layers"></use></svg>
+                                                Instansi & SKPD
                                             </a>
                                         </li>
+                                        <?php endif; ?>
                                     </ul>
                                 </div>
                             </div>
 
-                            <!-- Profile Content -->
-                            <div class="tab-content">
-                                <!-- About Tab -->
-                                <div class="tab-pane fade show active" id="profile-about">
+                            <!-- Tab Contents -->
+                            <div class="tab-content" id="profileTabContents">
+
+                                <!-- TAB 1: RINGKASAN AKUN -->
+                                <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
                                     <div class="row">
+                                        
+                                        <!-- Kolom Kiri: Kartu Identitas -->
                                         <div class="col-lg-8">
-                                            <!-- About Me Section -->
                                             <div class="panel mb-4">
                                                 <div class="panel-hdr">
-                                                    <h2>About Me</h2>
+                                                    <h2><span class="fw-300">Identitas</span> Pengguna</h2>
                                                 </div>
                                                 <div class="panel-container">
                                                     <div class="panel-content">
-                                                        <!-- View Mode -->
-                                                        <div class="profile-view-mode">
-                                                            <p class="mb-4">Experienced Software Engineer with a demonstrated history of working in the computer software industry. Skilled in JavaScript, React.js, Node.js, and UI/UX Design. Strong engineering professional with a Bachelor's degree focused in Computer Science.</p>
-
-                                                            <h5 class="mb-3">Contact Information</h5>
-                                                            <div class="d-flex flex-column gap-2">
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#mail"></use>
-                                                                    </svg>
-                                                                    john.doe@example.com
-                                                                </div>
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#phone"></use>
-                                                                    </svg>
-                                                                    +1 (555) 123-4567
-                                                                </div>
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#map-pin"></use>
-                                                                    </svg>
-                                                                    San Francisco, CA
+                                                        <div class="row g-3">
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Nama Lengkap</label>
+                                                                <div class="fs-md fw-500 text-dark"><?= esc($user['full_name']) ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Username (Login)</label>
+                                                                <div class="fs-md fw-500 text-dark">@<?= esc($user['username']) ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Nomor Induk Pegawai (NIP)</label>
+                                                                <div class="fs-md text-dark"><?= ! empty($user['nip']) ? esc($user['nip']) : '<span class="text-muted fst-italic">Belum diisi</span>' ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Peran / Hak Akses</label>
+                                                                <div>
+                                                                    <span class="badge <?= $roleBadgeClass ?> fs-xs px-2 py-1">
+                                                                        <?= esc($user['role_name'] ?? 'USER') ?>
+                                                                    </span>
                                                                 </div>
                                                             </div>
-                                                        </div>
-
-                                                        <!-- Edit Mode -->
-                                                        <div class="profile-edit-mode d-none">
-                                                            <form>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">About Me</label>
-                                                                    <textarea class="form-control" rows="4">Experienced Software Engineer with a demonstrated history of working in the computer software industry. Skilled in JavaScript, React.js, Node.js, and UI/UX Design. Strong engineering professional with a Bachelor's degree focused in Computer Science.</textarea>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Email Resmi</label>
+                                                                <div class="fs-md text-dark">
+                                                                    <a href="mailto:<?= esc($user['email']) ?>" class="text-decoration-none text-primary">
+                                                                        <?= esc($user['email']) ?>
+                                                                    </a>
                                                                 </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Email</label>
-                                                                    <input type="email" class="form-control" value="john.doe@example.com">
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">WhatsApp / No. Telepon</label>
+                                                                <div class="fs-md text-dark">
+                                                                    <?php if (! empty($user['whatsapp_number'])): ?>
+                                                                        <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $user['whatsapp_number']) ?>" target="_blank" class="text-decoration-none text-success">
+                                                                            <?= esc($user['whatsapp_number']) ?>
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        <span class="text-muted fst-italic">Belum diisi</span>
+                                                                    <?php endif; ?>
                                                                 </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Phone</label>
-                                                                    <input type="tel" class="form-control" value="+1 (555) 123-4567">
+                                                            </div>
+                                                            <div class="col-12"><hr class="my-2"></div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Satuan Kerja (SKPD)</label>
+                                                                <div class="fs-md fw-500 text-dark"><?= esc($user['skpd_name'] ?? '-') ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Bidang / Unit PPK</label>
+                                                                <div class="fs-md text-dark"><?= esc($user['ppk_name'] ?? '-') ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Status Akun</label>
+                                                                <div>
+                                                                    <?php if ((int)$user['is_active'] === 1): ?>
+                                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Aktif</span>
+                                                                    <?php else: ?>
+                                                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Nonaktif</span>
+                                                                    <?php endif; ?>
                                                                 </div>
-                                                                <div class="mb-3">
-                                                                    <label class="form-label">Location</label>
-                                                                    <input type="text" class="form-control" value="San Francisco, CA">
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Terdaftar Sejak</label>
+                                                                <div class="fs-sm text-muted">
+                                                                    <?= ! empty($user['created_at']) ? date('d F Y, H:i', strtotime($user['created_at'])) : '-' ?>
                                                                 </div>
-                                                                <div class="d-flex gap-2">
-                                                                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                                                                    <button type="button" class="btn btn-default" data-action="toggle" data-class="profile-edit-mode">Cancel</button>
-                                                                </div>
-                                                            </form>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Experience Section -->
+                                            <!-- Card Info Petunjuk Akun -->
+                                            <div class="panel mb-4">
+                                                <div class="panel-container">
+                                                    <div class="panel-content bg-subtlelight rounded">
+                                                        <div class="d-flex align-items-start">
+                                                            <div class="me-3 text-info">
+                                                                <svg class="sa-icon fs-xl"><use href="/icons/sprite.svg#info"></use></svg>
+                                                            </div>
+                                                            <div class="fs-sm">
+                                                                <div class="fw-600 text-dark mb-1">Kebijakan Data Pengguna & Keamanan Akun</div>
+                                                                <p class="text-muted mb-0">
+                                                                    Untuk menjaga integritas alur pengadaan barang dan jasa pada SIMPPEL, perubahan <strong>Username</strong>, <strong>Role</strong>, serta <strong>SKPD / Unit Kerja</strong> hanya dapat dilakukan oleh <em>Administrator Sistem</em>. Anda dapat memperbarui Nama Lengkap, NIP, Kontak WhatsApp, Email, Foto Profil, dan Password mandiri melalui tab yang tersedia.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Kolom Kanan: Ringkasan Status & Statistik -->
+                                        <div class="col-lg-4">
+                                            
+                                            <!-- Widget Statistik Paket -->
                                             <div class="panel mb-4">
                                                 <div class="panel-hdr">
-                                                    <h2>Experience</h2>
+                                                    <h2><span class="fw-300">Ringkasan</span> Tugas & Aktivitas</h2>
                                                 </div>
                                                 <div class="panel-container">
                                                     <div class="panel-content">
-                                                        <div class="timeline">
-                                                            <div class="timeline-item">
-                                                                <div class="timeline-marker bg-primary-500"></div>
-                                                                <div class="timeline-content">
-                                                                    <h5 class="mb-2">Senior Software Engineer</h5>
-                                                                    <p class="text-muted mb-2">TechCorp • 2020 - Present</p>
-                                                                    <p>Lead developer for enterprise web applications using React and Node.js.</p>
+                                                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                                            <div class="p-3 bg-primary-subtle text-primary rounded-3 me-3">
+                                                                <svg class="sa-icon fs-lg"><use href="/icons/sprite.svg#folder"></use></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fs-xs text-muted text-uppercase fw-600">Total Paket Terkait</div>
+                                                                <div class="fs-xl fw-700 text-dark"><?= number_format($stats['total_paket'] ?? 0) ?></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                                            <div class="p-3 bg-warning-subtle text-warning rounded-3 me-3">
+                                                                <svg class="sa-icon fs-lg"><use href="/icons/sprite.svg#clock"></use></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fs-xs text-muted text-uppercase fw-600">Paket Dalam Proses</div>
+                                                                <div class="fs-xl fw-700 text-dark"><?= number_format($stats['paket_proses'] ?? 0) ?></div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="p-3 bg-success-subtle text-success rounded-3 me-3">
+                                                                <svg class="sa-icon fs-lg"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                            </div>
+                                                            <div>
+                                                                <div class="fs-xs text-muted text-uppercase fw-600">Paket Selesai</div>
+                                                                <div class="fs-xl fw-700 text-dark"><?= number_format($stats['paket_selesai'] ?? 0) ?></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Shortcut Aksi -->
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Menu</span> Pintas</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content d-grid gap-2">
+                                                        <a href="/dashboard-control-center" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
+                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#grid"></use></svg> Dashboard Pengadaan</span>
+                                                            <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
+                                                        </a>
+                                                        <a href="/paket" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
+                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#box"></use></svg> Daftar Paket Pekerjaan</span>
+                                                            <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
+                                                        </a>
+                                                        <a href="/monev" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
+                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#trending-up"></use></svg> e-Monev & Laporan</span>
+                                                            <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB 2: DATA PRIBADI & KEPEGAWAIAN (FORM EDIT) -->
+                                <div class="tab-pane fade" id="tab-edit-profile" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Perbarui</span> Data Pribadi</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content">
+                                                        <form id="formUpdateProfile" action="/profile/update" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+                                                            <?= csrf_field() ?>
+
+                                                            <!-- Hidden Avatar File Input -->
+                                                            <input type="file" id="avatarFileInput" name="avatar" class="d-none" accept="image/png, image/jpeg, image/jpg, image/webp">
+
+                                                            <!-- Avatar Upload Box -->
+                                                            <div class="d-flex align-items-center p-3 mb-4 rounded border bg-light">
+                                                                <img id="formAvatarPreview" 
+                                                                     src="<?= $userAvatarUrl ?>" 
+                                                                     class="rounded-circle border border-3 border-white shadow-1 me-3 object-fit-cover" 
+                                                                     alt="Avatar Preview" 
+                                                                     width="72" height="72"
+                                                                     style="object-fit: cover;">
+                                                                <div>
+                                                                    <div class="fw-600 text-dark mb-1">Foto Profil Pengguna</div>
+                                                                    <div class="fs-xs text-muted mb-2">Format: JPG, JPEG, PNG, atau WEBP. Ukuran file maksimal 2 MB.</div>
+                                                                    <div class="d-flex gap-2">
+                                                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('avatarFileInput').click();">
+                                                                            <svg class="sa-icon me-1"><use href="/icons/sprite.svg#upload"></use></svg> Unggah Foto Baru
+                                                                        </button>
+                                                                        <span id="selectedFileName" class="fs-xs text-muted align-self-center fst-italic"></span>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="timeline-item">
-                                                                <div class="timeline-marker bg-success-500"></div>
-                                                                <div class="timeline-content">
-                                                                    <h5 class="mb-2">Software Engineer</h5>
-                                                                    <p class="text-muted mb-2">InnovateTech • 2018 - 2020</p>
-                                                                    <p>Developed and maintained multiple client-facing applications.</p>
+
+                                                            <!-- Row 1: Nama Lengkap & Username (Readonly) -->
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-md-7">
+                                                                    <label for="inputFullName" class="form-label fw-500">Nama Lengkap <span class="text-danger">*</span></label>
+                                                                    <input type="text" class="form-control" id="inputFullName" name="full_name" value="<?= esc($user['full_name']) ?>" required maxlength="150">
+                                                                    <div class="invalid-feedback">Nama lengkap wajib diisi (minimal 3 karakter).</div>
                                                                 </div>
+                                                                <div class="col-md-5">
+                                                                    <label for="inputUsername" class="form-label fw-500">Username</label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text bg-light text-muted">@</span>
+                                                                        <input type="text" class="form-control bg-light" id="inputUsername" value="<?= esc($user['username']) ?>" disabled readonly>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Row 2: NIP & Email -->
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-md-6">
+                                                                    <label for="inputNip" class="form-label fw-500">Nomor Induk Pegawai (NIP)</label>
+                                                                    <input type="text" class="form-control" id="inputNip" name="nip" value="<?= esc($user['nip'] ?? '') ?>" placeholder="Misal: 198501012010011001" maxlength="30">
+                                                                    <div class="form-text text-muted fs-xs">Nomor Induk Pegawai resmi instansi pemerintah.</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label for="inputEmail" class="form-label fw-500">Email Resmi <span class="text-danger">*</span></label>
+                                                                    <input type="email" class="form-control" id="inputEmail" name="email" value="<?= esc($user['email']) ?>" required maxlength="150">
+                                                                    <div class="invalid-feedback">Silakan masukkan alamat email yang valid.</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Row 3: WhatsApp Number -->
+                                                            <div class="row g-3 mb-4">
+                                                                <div class="col-md-6">
+                                                                    <label for="inputWhatsapp" class="form-label fw-500">Nomor WhatsApp / Kontak</label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text bg-light text-success">
+                                                                            <svg class="sa-icon"><use href="/icons/sprite.svg#phone"></use></svg>
+                                                                        </span>
+                                                                        <input type="tel" class="form-control" id="inputWhatsapp" name="whatsapp_number" value="<?= esc($user['whatsapp_number'] ?? '') ?>" placeholder="08xxxxxxxxxx" maxlength="20">
+                                                                    </div>
+                                                                    <div class="form-text text-muted fs-xs">Digunakan untuk notifikasi verifikasi berkas atau penugasan pokja.</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label fw-500">Peran / Role</label>
+                                                                    <input type="text" class="form-control bg-light" value="<?= esc($user['role_name'] ?? 'USER') ?>" disabled readonly>
+                                                                    <div class="form-text text-muted fs-xs">Peran ditetapkan oleh Administrator SIMPPEL.</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                                                                <button type="reset" class="btn btn-default" onclick="resetProfileForm()">Batal</button>
+                                                                <button type="submit" class="btn btn-primary d-flex align-items-center" id="btnSaveProfile">
+                                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#save"></use></svg>
+                                                                    Simpan Perubahan
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-4">
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Catatan</span> Pengisian</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content fs-sm text-muted">
+                                                        <ul class="ps-3 mb-0">
+                                                            <li class="mb-2">Pastikan nomor <strong>WhatsApp</strong> aktif untuk menerima pesan koordinasi pengadaan barang dan jasa.</li>
+                                                            <li class="mb-2">Gunakan <strong>Email resmi</strong> agar link reset password dan notifikasi berkas dapat diterima dengan aman.</li>
+                                                            <li class="mb-2">Foto profil yang jelas mempermudah rekan kerja dan Pokja Pemilihan mengenali akun Anda di dalam sistem.</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB 3: KEAMANAN & GANTI PASSWORD -->
+                                <div class="tab-pane fade" id="tab-security" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-7">
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Ganti</span> Password Akun</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content">
+                                                        <form id="formUpdatePassword" action="/profile/update-password" method="POST" class="needs-validation" novalidate>
+                                                            <?= csrf_field() ?>
+
+                                                            <div class="mb-3">
+                                                                <label for="currentPassword" class="form-label fw-500">Password Saat Ini <span class="text-danger">*</span></label>
+                                                                <div class="input-group">
+                                                                    <input type="password" class="form-control" id="currentPassword" name="current_password" required autocomplete="current-password">
+                                                                    <button class="btn btn-outline-default toggle-password" type="button" data-target="currentPassword">
+                                                                        <svg class="sa-icon"><use href="/icons/sprite.svg#eye"></use></svg>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="invalid-feedback">Password saat ini wajib diisi.</div>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label for="newPassword" class="form-label fw-500">Password Baru <span class="text-danger">*</span></label>
+                                                                <div class="input-group">
+                                                                    <input type="password" class="form-control" id="newPassword" name="new_password" required minlength="8" autocomplete="new-password">
+                                                                    <button class="btn btn-outline-default toggle-password" type="button" data-target="newPassword">
+                                                                        <svg class="sa-icon"><use href="/icons/sprite.svg#eye"></use></svg>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="form-text text-muted fs-xs">Minimal 8 karakter kombinasi huruf, angka, atau simbol.</div>
+                                                                <div class="invalid-feedback">Password baru minimal 8 karakter.</div>
+                                                            </div>
+
+                                                            <div class="mb-4">
+                                                                <label for="confirmPassword" class="form-label fw-500">Konfirmasi Password Baru <span class="text-danger">*</span></label>
+                                                                <div class="input-group">
+                                                                    <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required autocomplete="new-password">
+                                                                    <button class="btn btn-outline-default toggle-password" type="button" data-target="confirmPassword">
+                                                                        <svg class="sa-icon"><use href="/icons/sprite.svg#eye"></use></svg>
+                                                                    </button>
+                                                                </div>
+                                                                <div class="invalid-feedback" id="confirmPasswordFeedback">Konfirmasi password wajib diisi dan harus cocok dengan password baru.</div>
+                                                            </div>
+
+                                                            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                                                                <button type="reset" class="btn btn-default">Reset</button>
+                                                                <button type="submit" class="btn btn-primary d-flex align-items-center" id="btnSavePassword">
+                                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#shield"></use></svg>
+                                                                    Perbarui Password
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-5">
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Tips</span> Keamanan Akun</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content">
+                                                        <div class="d-flex align-items-start mb-3">
+                                                            <div class="badge bg-primary-subtle text-primary p-2 me-3 rounded">
+                                                                <svg class="sa-icon fs-sm"><use href="/icons/sprite.svg#key"></use></svg>
+                                                            </div>
+                                                            <div class="fs-xs">
+                                                                <span class="fw-600 text-dark">Gunakan Sandi Kuat</span>
+                                                                <p class="text-muted mb-0">Kombinasikan huruf kapital, huruf kecil, angka, dan karakter khusus.</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-start mb-3">
+                                                            <div class="badge bg-warning-subtle text-warning p-2 me-3 rounded">
+                                                                <svg class="sa-icon fs-sm"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                            </div>
+                                                            <div class="fs-xs">
+                                                                <span class="fw-600 text-dark">Jangan Bagikan Password</span>
+                                                                <p class="text-muted mb-0">Akun SIMPPEL terhubung dengan tanggung jawab resmi penandatanganan dan verifikasi pengadaan.</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-start">
+                                                            <div class="badge bg-success-subtle text-success p-2 me-3 rounded">
+                                                                <svg class="sa-icon fs-sm"><use href="/icons/sprite.svg#shield-check"></use></svg>
+                                                            </div>
+                                                            <div class="fs-xs">
+                                                                <span class="fw-600 text-dark">Perbarui Secara Berkala</span>
+                                                                <p class="text-muted mb-0">Disarankan mengganti password secara berkala setiap 3-6 bulan.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB 4: INSTANSI & SKPD (JIKA TERHUBUNG) -->
+                                <?php if (! empty($skpdDetail)): ?>
+                                <div class="tab-pane fade" id="tab-skpd" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-lg-8">
+                                            <div class="panel mb-4">
+                                                <div class="panel-hdr">
+                                                    <h2><span class="fw-300">Profil</span> Satuan Kerja Perangkat Daerah (SKPD)</h2>
+                                                </div>
+                                                <div class="panel-container">
+                                                    <div class="panel-content">
+                                                        <div class="row g-3">
+                                                            <div class="col-sm-8">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Nama SKPD</label>
+                                                                <div class="fs-lg fw-600 text-dark"><?= esc($skpdDetail['name']) ?></div>
+                                                            </div>
+                                                            <div class="col-sm-4">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Kode / Singkatan</label>
+                                                                <div>
+                                                                    <span class="badge bg-primary fs-xs"><?= esc($skpdDetail['abbreviation'] ?? '-') ?></span>
+                                                                    <?php if (! empty($skpdDetail['code'])): ?>
+                                                                        <span class="badge bg-light text-dark border fs-xs ms-1"><?= esc($skpdDetail['code']) ?></span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Alamat Kantor</label>
+                                                                <div class="fs-md text-dark">
+                                                                    <?= ! empty($skpdDetail['address']) ? nl2br(esc($skpdDetail['address'])) : '<span class="text-muted fst-italic">Belum ada keterangan alamat</span>' ?>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Kontak Telepon SKPD</label>
+                                                                <div class="fs-md text-dark"><?= esc($skpdDetail['phone'] ?? '-') ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Email SKPD</label>
+                                                                <div class="fs-md text-dark"><?= esc($skpdDetail['email'] ?? '-') ?></div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Website</label>
+                                                                <div class="fs-md text-dark">
+                                                                    <?php if (! empty($skpdDetail['website'])): ?>
+                                                                        <a href="<?= esc($skpdDetail['website']) ?>" target="_blank" class="text-decoration-none">
+                                                                            <?= esc($skpdDetail['website']) ?>
+                                                                        </a>
+                                                                    <?php else: ?>
+                                                                        -
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-sm-6">
+                                                                <label class="text-muted fs-xs text-uppercase fw-600 mb-1">Unit Kerja / Bidang (PPK)</label>
+                                                                <div class="fs-md fw-500 text-dark"><?= esc($user['ppk_name'] ?? 'Seluruh Bidang (SKPD)') ?></div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -425,648 +636,37 @@
                                         </div>
 
                                         <div class="col-lg-4">
-                                            <!-- Skills Section -->
                                             <div class="panel mb-4">
                                                 <div class="panel-hdr">
-                                                    <h2>Skills</h2>
+                                                    <h2><span class="fw-300">Informasi</span> Relasi</h2>
                                                 </div>
                                                 <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-wrap gap-2">
-                                                            <span class="badge bg-primary">JavaScript</span>
-                                                            <span class="badge bg-primary">React.js</span>
-                                                            <span class="badge bg-primary">Node.js</span>
-                                                            <span class="badge bg-primary">TypeScript</span>
-                                                            <span class="badge bg-primary">HTML5</span>
-                                                            <span class="badge bg-primary">CSS3</span>
-                                                            <span class="badge bg-primary">Git</span>
-                                                            <span class="badge bg-primary">AWS</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Education Section -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>Education</h2>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="timeline">
-                                                            <div class="timeline-item">
-                                                                <div class="timeline-marker bg-fusion-500"></div>
-                                                                <div class="timeline-content">
-                                                                    <h5 class="mb-2">BS in Computer Science</h5>
-                                                                    <p class="text-muted mb-2">University of Technology • 2014 - 2018</p>
-                                                                    <p>Major in Software Engineering</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <div class="panel-content fs-sm text-muted">
+                                                        <p class="mb-2">
+                                                            Data RUP dan Paket Pengadaan yang diajukan oleh akun ini secara otomatis terhubung dengan SKPD <strong><?= esc($skpdDetail['name']) ?></strong>.
+                                                        </p>
+                                                        <p class="mb-0">
+                                                            Jika terjadi perpindahan mutasi atau pergantian unit penugasan, silakan hubungi <em>Administrator SIMPPEL</em> untuk penyesuaian relasi SKPD & PPK.
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <?php endif; ?>
 
-                                <!-- News Tab -->
-                                <div class="tab-pane fade" id="profile-news" role="tabpanel">
-                                    <div class="row">
-                                        <div class="col-lg-8">
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr d-flex justify-content-between align-items-center pe-3">
-                                                    <h2>Latest Updates</h2>
-                                                    <button class="btn btn-outline-default btn-xs px-2" type="button" data-bs-toggle="modal" data-bs-target="#addNewsModal">
-                                                        Add News
-                                                    </button>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <!-- News Items -->
-                                                        <div class="d-flex flex-column gap-4">
-                                                            <!-- News Item 1 -->
-                                                            <div class="border-bottom pb-4">
-                                                                <div class="d-flex align-items-center mb-3">
-                                                                    <img src="/img/demo/avatars/avatar-admin.png" class="profile-image profile-image-md rounded-circle me-2" alt="John Doe">
-                                                                    <div>
-                                                                        <h6 class="mb-0">John Doe</h6>
-                                                                        <small class="text-muted">Posted 2 days ago</small>
-                                                                    </div>
-                                                                </div>
-                                                                <p class="mb-3">Excited to announce that our latest project has been successfully launched! 🚀</p>
-                                                                <img src="/img/demo/peace-full.jpg" class="img-fluid rounded mb-3" alt="Project Launch">
-                                                                <div class="d-flex gap-2 mb-3">
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#heart"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#message-square"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#share-2"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                                <!-- Comments Section -->
-                                                                <div class="comments-section mt-3">
-                                                                    <div class="d-flex gap-2 mb-4 align-items-center">
-                                                                        <img src="/img/demo/avatars/avatar-admin.png" class="profile-image profile-image-md rounded-circle me-2" alt="John Doe">
-                                                                        <div class="flex-grow-1">
-                                                                            <div class="comment-input-wrapper position-relative">
-                                                                                <input type="text" class="form-control rounded-pill" placeholder="Add a comment...">
-                                                                                <div class="comment-actions position-absolute end-0 top-50 translate-middle-y me-2 d-none">
-                                                                                    <button type="button" class="btn btn-icon btn-sm">
-                                                                                        <svg class="sa-icon">
-                                                                                            <use href="/icons/sprite.svg#image"></use>
-                                                                                        </svg>
-                                                                                    </button>
-                                                                                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3">Post</button>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <!-- Most relevant dropdown -->
-                                                                    <div class="dropdown mb-3">
-                                                                        <button class="btn btn-link dropdown-toggle p-0 text-muted" type="button" data-bs-toggle="dropdown"> Most relevant </button>
-                                                                        <ul class="dropdown-menu">
-                                                                            <li><a class="dropdown-item active" href="#">Most relevant</a></li>
-                                                                            <li><a class="dropdown-item" href="#">Most recent</a></li>
-                                                                        </ul>
-                                                                    </div>
-                                                                    <!-- Comments List -->
-                                                                    <div class="comments-list">
-                                                                        <!-- Comment 1 -->
-                                                                        <div class="comment-thread mb-4">
-                                                                            <div class="d-flex gap-2">
-                                                                                <img src="/img/demo/avatars/avatar-g.png" class="profile-image profile-image-md rounded-circle me-2 mt-3" width="40" height="40" alt="Iftekhar Ahmed">
-                                                                                <div class="flex-grow-1">
-                                                                                    <div class="comment-content body-bg rounded-3 p-3 ps-0">
-                                                                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                                            <h6 class="mb-0 fw-bold">Iftekhar Ahmed</h6>
-                                                                                            <div class="dropdown">
-                                                                                                <button type="button" class="btn btn-icon btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
-                                                                                                    <svg class="sa-icon">
-                                                                                                        <use href="/icons/sprite.svg#more-horizontal"></use>
-                                                                                                    </svg>
-                                                                                                </button>
-                                                                                                <ul class="dropdown-menu">
-                                                                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
-                                                                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
-                                                                                                    <li><a class="dropdown-item" href="#">Report</a></li>
-                                                                                                </ul>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <p class="text-muted small mb-2">Marketing Professional • 3rd+</p>
-                                                                                        <p class="mb-2">Job well done!</p>
-                                                                                        <div class="d-flex align-items-center gap-2">
-                                                                                            <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                                                <svg class="sa-icon">
-                                                                                                    <use href="/icons/sprite.svg#thumbs-up"></use>
-                                                                                                </svg>
-                                                                                            </button>
-                                                                                            <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                                                <svg class="sa-icon">
-                                                                                                    <use href="/icons/sprite.svg#message-square"></use>
-                                                                                                </svg>
-                                                                                            </button>
-                                                                                            <span class="text-muted small">1 week ago</span>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    <!-- Nested Reply -->
-                                                                                    <div class="comment-thread mt-3">
-                                                                                        <div class="d-flex gap-2">
-                                                                                            <img src="/img/demo/avatars/avatar-h.png" class="profile-image profile-image-md rounded-circle me-2 mt-3" width="40" height="40" alt="SAFAYET DOZZA">
-                                                                                            <div class="flex-grow-1">
-                                                                                                <div class="comment-content body-bg rounded-3 p-3 ps-0">
-                                                                                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                                                        <h6 class="mb-0 fw-bold">SAFAYET DOZZA</h6>
-                                                                                                        <div class="dropdown">
-                                                                                                            <button type="button" class="btn btn-icon btn-sm" data-bs-toggle="dropdown">
-                                                                                                                <svg class="sa-icon">
-                                                                                                                    <use href="/icons/sprite.svg#more-horizontal"></use>
-                                                                                                                </svg>
-                                                                                                            </button>
-                                                                                                            <ul class="dropdown-menu">
-                                                                                                                <li><a class="dropdown-item" href="#">Edit</a></li>
-                                                                                                                <li><a class="dropdown-item" href="#">Delete</a></li>
-                                                                                                                <li><a class="dropdown-item" href="#">Report</a></li>
-                                                                                                            </ul>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    <p class="text-muted small mb-2">Merchandising Strategist • 3rd+</p>
-                                                                                                    <p class="mb-2">This is a really great project, loved it also!</p>
-                                                                                                    <div class="d-flex align-items-center gap-2">
-                                                                                                        <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                                                            <svg class="sa-icon">
-                                                                                                                <use href="/icons/sprite.svg#thumbs-up"></use>
-                                                                                                            </svg>
-                                                                                                        </button>
-                                                                                                        <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                                                            <svg class="sa-icon">
-                                                                                                                <use href="/icons/sprite.svg#message-square"></use>
-                                                                                                            </svg>
-                                                                                                        </button>
-                                                                                                        <span class="text-muted small">1 week ago</span>
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <!-- Load more replies button -->
-                                                                                        <button type="button" class="btn btn-link text-muted mt-2 p-0">Load more replies</button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <!-- Load more comments button -->
-                                                                        <button type="button" class="btn btn-light rounded-pill w-100">Load more comments</button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <!-- News Item 2 -->
-                                                            <div class="border-bottom pb-4">
-                                                                <div class="d-flex align-items-center mb-3">
-                                                                    <img src="/img/demo/avatars/avatar-admin.png" class="profile-image profile-image-md rounded-circle me-2" alt="John Doe">
-                                                                    <div>
-                                                                        <h6 class="mb-0">John Doe</h6>
-                                                                        <small class="text-muted">Posted 1 week ago</small>
-                                                                    </div>
-                                                                </div>
-                                                                <p class="mb-3">Just completed a certification in Advanced React Development! 📚</p>
-                                                                <div class="d-flex gap-2 mb-3">
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#heart"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#message-square"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-icon btn-default rounded-circle">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#share-2"></use>
-                                                                        </svg>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4">
-                                            <!-- Profile Views -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>Profile Views</h2>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-column gap-3">
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-c.png" class="rounded-circle me-3" width="48" height="48" alt="Emily Chen">
-                                                                <div>
-                                                                    <h6 class="mb-0">Emily Chen</h6>
-                                                                    <small class="text-muted">Senior UX Designer</small>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-b.png" class="rounded-circle me-3" width="48" height="48" alt="Michael Smith">
-                                                                <div>
-                                                                    <h6 class="mb-0">Michael Smith</h6>
-                                                                    <small class="text-muted">Tech Lead at Google</small>
-                                                                </div>
-                                                            </div>
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-d.png" class="rounded-circle me-3" width="48" height="48" alt="Lisa Wong">
-                                                                <div>
-                                                                    <h6 class="mb-0">Lisa Wong</h6>
-                                                                    <small class="text-muted">Product Manager</small>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- People You Might Know -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>People You Might Know</h2>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-column gap-3">
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-e.png" class="rounded-circle me-3" width="48" height="48" alt="David Kim">
-                                                                <div class="flex-grow-1">
-                                                                    <h6 class="mb-0">David Kim</h6>
-                                                                    <small class="text-muted">Frontend Developer at Meta</small>
-                                                                </div>
-                                                                <button type="button" class="btn btn-xs btn-primary d-flex"> Connect </button>
-                                                            </div>
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-f.png" class="rounded-circle me-3" width="48" height="48" alt="Rachel Green">
-                                                                <div class="flex-grow-1">
-                                                                    <h6 class="mb-0">Rachel Green</h6>
-                                                                    <small class="text-muted">UI Designer at Apple</small>
-                                                                </div>
-                                                                <button type="button" class="btn btn-xs btn-primary d-flex"> Connect </button>
-                                                            </div>
-                                                            <div class="d-flex align-items-center">
-                                                                <img src="/img/demo/avatars/avatar-g.png" class="rounded-circle me-3" width="48" height="48" alt="Tom Wilson">
-                                                                <div class="flex-grow-1">
-                                                                    <h6 class="mb-0">Tom Wilson</h6>
-                                                                    <small class="text-muted">Backend Developer at Amazon</small>
-                                                                </div>
-                                                                <button type="button" class="btn btn-xs btn-primary d-flex"> Connect </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Projects Tab -->
-                                <div class="tab-pane fade" id="profile-projects">
-                                    <div class="row">
-                                        <!-- Project Carousel -->
-                                        <div class="col-12 mb-4">
-                                            <div class="panel">
-                                                <div class="panel-hdr d-flex justify-content-between align-items-center pe-3">
-                                                    <h2>Featured Projects</h2>
-                                                    <button type="button" class="btn btn-outline-default btn-xs px-2" data-bs-toggle="modal" data-bs-target="#addProjectModal">
-                                                        Add Project
-                                                    </button>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div id="projectCarousel" class="carousel slide" data-bs-ride="carousel">
-                                                            <div class="carousel-indicators">
-                                                                <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="0" class="active"></button>
-                                                                <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="1"></button>
-                                                                <button type="button" data-bs-target="#projectCarousel" data-bs-slide-to="2"></button>
-                                                            </div>
-                                                            <div class="carousel-inner">
-                                                                <div class="carousel-item active">
-                                                                    <img src="/img/profile/project-3.png" class="d-block w-100" alt="Project 1">
-                                                                    <div class="carousel-caption">
-                                                                        <h5>E-Commerce Platform</h5>
-                                                                        <p>A modern shopping experience built with React and Node.js</p>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="carousel-item">
-                                                                    <img src="/img/profile/project-1.png" class="d-block w-100" alt="Project 2">
-                                                                    <div class="carousel-caption">
-                                                                        <h5>Task Management App</h5>
-                                                                        <p>Streamline your workflow with our intuitive task manager</p>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="carousel-item">
-                                                                    <img src="/img/profile/project-4.png" class="d-block w-100" alt="Project 3">
-                                                                    <div class="carousel-caption">
-                                                                        <h5>Social Media Dashboard</h5>
-                                                                        <p>Analytics and management tools for social media professionals</p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <button type="button" class="carousel-control-prev" type="button" data-bs-target="#projectCarousel" data-bs-slide="prev">
-                                                                <span class="carousel-control-prev-icon"></span>
-                                                                <span class="visually-hidden">Previous</span>
-                                                            </button>
-                                                            <button type="button" class="carousel-control-next" type="button" data-bs-target="#projectCarousel" data-bs-slide="next">
-                                                                <span class="carousel-control-next-icon"></span>
-                                                                <span class="visually-hidden">Next</span>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Project Grid -->
-                                        <div class="col-md-6 col-xl-4 mb-4">
-                                            <div class="panel h-100">
-                                                <div class="panel-container">
-                                                    <div class="panel-content p-0">
-                                                        <div class="position-relative">
-                                                            <div class="w-100 height-sm bg-placeholder rounded-top overflow-hidden" style="--body-bg: #b19e97; --gp-color-1: #6d5c53;"></div>
-                                                            <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white">
-                                                                <h5 class="mb-1">E-Commerce Platform</h5>
-                                                                <p class="mb-0 small">React • Node.js • MongoDB</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="p-3">
-                                                            <p class="mb-3">A full-featured e-commerce platform with real-time inventory management and analytics.</p>
-                                                            <a href="#" class="btn btn-default btn-sm">View Project</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6 col-xl-4 mb-4">
-                                            <div class="panel h-100">
-                                                <div class="panel-container">
-                                                    <div class="panel-content p-0">
-                                                        <div class="position-relative">
-                                                            <div class="w-100 height-sm bg-placeholder rounded-top overflow-hidden" style="--body-bg: #262a33; --gp-color-1: #a3a5ad;"></div>
-                                                            <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white">
-                                                                <h5 class="mb-1">Task Management App</h5>
-                                                                <p class="mb-0 small">Vue.js • Express • PostgreSQL</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="p-3">
-                                                            <p class="mb-3">Intuitive task management application with team collaboration features.</p>
-                                                            <a href="#" class="btn btn-default btn-sm">View Project</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6 col-xl-4 mb-4">
-                                            <div class="panel h-100">
-                                                <div class="panel-container">
-                                                    <div class="panel-content p-0">
-                                                        <div class="position-relative">
-                                                            <div class="w-100 height-sm bg-placeholder rounded-top overflow-hidden" style="--body-bg: #18a2c2; --gp-color-1: #624492;"></div>
-                                                            <div class="position-absolute bottom-0 start-0 w-100 p-3 text-white">
-                                                                <h5 class="mb-1">Social Media Dashboard</h5>
-                                                                <p class="mb-0 small">Angular • Firebase • Chart.js</p>
-                                                            </div>
-                                                        </div>
-                                                        <div class="p-3">
-                                                            <p class="mb-3">Comprehensive social media analytics and management dashboard.</p>
-                                                            <a href="#" class="btn btn-default btn-sm">View Project</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contact Tab -->
-                                <div class="tab-pane fade" id="profile-contact">
-                                    <div class="row">
-                                        <div class="col-lg-8">
-                                            <!-- Contacts List -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>My Contacts</h2>
-                                                    <div class="panel-toolbar">
-                                                        <div class="input-group mt-3">
-                                                            <input type="text" class="form-control form-control-sm" placeholder="Search contacts...">
-                                                            <button type="button" class="btn btn-outline-default btn-sm">
-                                                                <svg class="sa-icon">
-                                                                    <use href="/icons/sprite.svg#search"></use>
-                                                                </svg>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-column gap-4">
-                                                            <!-- Contact Categories -->
-                                                            <div class="d-flex gap-2 border-bottom pb-3">
-                                                                <button type="button" class="btn btn-sm btn-light active">All</button>
-                                                                <button type="button" class="btn btn-sm btn-light">Favorites</button>
-                                                                <button type="button" class="btn btn-sm btn-light">Recent</button>
-                                                            </div>
-
-                                                            <!-- Contact List -->
-                                                            <div class="list-group">
-                                                                <div class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-                                                                    <img src="/img/demo/avatars/avatar-d.png" class="rounded-circle" width="48" height="48" alt="Sarah Johnson">
-                                                                    <div class="flex-grow-1">
-                                                                        <h6 class="mb-0">Sarah Johnson</h6>
-                                                                        <small class="text-muted">Senior UX Designer at Adobe</small>
-                                                                    </div>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#message-square"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#star"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#more-vertical"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-                                                                    <img src="/img/demo/avatars/avatar-e.png" class="rounded-circle" width="48" height="48" alt="Michael Smith">
-                                                                    <div class="flex-grow-1">
-                                                                        <h6 class="mb-0">Michael Smith</h6>
-                                                                        <small class="text-muted">Tech Lead at Google</small>
-                                                                    </div>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#message-square"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#star"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#more-vertical"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="list-group-item list-group-item-action d-flex align-items-center gap-3">
-                                                                    <img src="/img/demo/avatars/avatar-f.png" class="rounded-circle" width="48" height="48" alt="Emily Chen">
-                                                                    <div class="flex-grow-1">
-                                                                        <h6 class="mb-0">Emily Chen</h6>
-                                                                        <small class="text-muted">Product Manager at Microsoft</small>
-                                                                    </div>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#message-square"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#star"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                        <button type="button" class="btn btn-icon btn-light">
-                                                                            <svg class="sa-icon">
-                                                                                <use href="/icons/sprite.svg#more-vertical"></use>
-                                                                            </svg>
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-4">
-                                            <!-- Contact Information -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>Contact Information</h2>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-column gap-4">
-                                                            <div>
-                                                                <h6 class="mb-2">Email</h6>
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#mail"></use>
-                                                                    </svg>
-                                                                    john.doe@example.com
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <h6 class="mb-2">Phone</h6>
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#phone"></use>
-                                                                    </svg>
-                                                                    +1 (555) 123-4567
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <h6 class="mb-2">Location</h6>
-                                                                <div class="d-flex align-items-center">
-                                                                    <svg class="sa-icon me-2">
-                                                                        <use href="/icons/sprite.svg#map-pin"></use>
-                                                                    </svg>
-                                                                    San Francisco, CA
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <h6 class="mb-2">Social Media</h6>
-                                                                <div class="d-flex gap-2">
-                                                                    <a href="#" class="btn btn-icon btn-light">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#linkedin"></use>
-                                                                        </svg>
-                                                                    </a>
-                                                                    <a href="#" class="btn btn-icon btn-light">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#github"></use>
-                                                                        </svg>
-                                                                    </a>
-                                                                    <a href="#" class="btn btn-icon btn-light">
-                                                                        <svg class="sa-icon">
-                                                                            <use href="/icons/sprite.svg#twitter"></use>
-                                                                        </svg>
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Office Hours -->
-                                            <div class="panel mb-4">
-                                                <div class="panel-hdr">
-                                                    <h2>Office Hours</h2>
-                                                </div>
-                                                <div class="panel-container">
-                                                    <div class="panel-content">
-                                                        <div class="d-flex flex-column gap-2">
-                                                            <div class="d-flex justify-content-between">
-                                                                <span>Monday - Friday</span>
-                                                                <span>9:00 AM - 5:00 PM</span>
-                                                            </div>
-                                                            <div class="d-flex justify-content-between">
-                                                                <span>Saturday</span>
-                                                                <span>10:00 AM - 2:00 PM</span>
-                                                            </div>
-                                                            <div class="d-flex justify-content-between">
-                                                                <span>Sunday</span>
-                                                                <span>Closed</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
+
                         </div>
                     </div>
 
                 </div>
-
             </div>
 
             <?= $this->include('partials/app-footer') ?>
 
         </main>
-
 
         <?= $this->include('partials/app-settings') ?>
 

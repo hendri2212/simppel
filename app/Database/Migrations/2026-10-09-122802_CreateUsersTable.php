@@ -62,6 +62,12 @@ class CreateUsersTable extends Migration
                 'constraint' => 20,
                 'null'       => true,
             ],
+            'avatar' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 255,
+                'null'       => true,
+                'default'    => null,
+            ],
             'is_active' => [
                 'type'       => 'TINYINT',
                 'constraint' => 1,

@@ -127,6 +127,9 @@ class Auth extends BaseController
             'skpd_abbr'    => $user['skpd_abbr'] ?? null,
             'ppk_id'       => $user['ppk_id'] ?? null,
             'ppk_name'     => $user['ppk_name'] ?? null,
+            'whatsapp_number' => $user['whatsapp_number'] ?? null,
+            'nip'          => $user['nip'] ?? null,
+            'avatar'       => $user['avatar'] ?? null,
         ]);
     }
 
@@ -274,14 +277,6 @@ class Auth extends BaseController
         }
 
         return view('auth/forgetpassword');
-    }
-
-    /**
-     * Halaman Lock Screen
-     */
-    public function lockscreen()
-    {
-        return view('auth/lockscreen');
     }
 
     /**
