@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\Traits\ProcurementScope;
 use App\Libraries\PaketWorkflow;
+use App\Models\BaReviewModel;
 use App\Models\CatatanModel;
 use App\Models\PaketModel;
 use App\Models\PaketPokjaModel;
@@ -82,25 +83,38 @@ class PaketController extends BaseController
                 }
             }
 
-            // Catatan terakhir per paket (untuk ringkasan di detail paket)
+            // Catatan terakhir & BA Review terakhir per paket
             $lastNote = [];
+            $latestBaByPaket = [];
             if ($paketIds !== []) {
                 $notes = (new CatatanModel())->select('paket_id, isi_catatan')
                     ->whereIn('paket_id', $paketIds)->orderBy('id', 'ASC')->findAll();
                 foreach ($notes as $n) {
                     $lastNote[$n['paket_id']] = $n['isi_catatan'];
                 }
+
+                $baRows = (new BaReviewModel())
+                    ->whereIn('paket_id', $paketIds)
+                    ->orderBy('putaran', 'ASC')
+                    ->orderBy('id', 'ASC')
+                    ->findAll();
+                foreach ($baRows as $ba) {
+                    $latestBaByPaket[$ba['paket_id']] = $ba;
+                }
             }
 
             $actor = $this->actor();
 
-            $pakets = array_map(function ($item) use ($pokjaByPaket, $lastNote, $actor) {
+            $pakets = array_map(function ($item) use ($pokjaByPaket, $lastNote, $latestBaByPaket, $actor) {
                 $members  = $pokjaByPaket[$item['id']] ?? [];
                 $isMember = in_array((int) $actor['id'], array_map('intval', array_column($members, 'user_id')), true);
+                $latestBa = $latestBaByPaket[$item['id']] ?? null;
 
                 $item['pokja_members']    = $members;
                 $item['catatan_terakhir'] = $lastNote[$item['id']] ?? null;
-                $item['workflow_actions'] = array_values(PaketWorkflow::available($item, $actor, $isMember, count($members)));
+                $item['latest_ba']        = $latestBa;
+                $item['is_direct']        = PaketWorkflow::isDirectProcurement($item);
+                $item['workflow_actions'] = array_values(PaketWorkflow::available($item, $actor, $isMember, count($members), $latestBa));
                 $item['wf']               = PaketWorkflow::capabilities($item, $actor, $isMember);
 
                 return $this->formatPaketRow($item);
@@ -154,7 +168,7 @@ class PaketController extends BaseController
             $totalHps     += (float) ($p['nilai_hps'] ?? 0);
             $totalKontrak += (float) ($p['nilai_kontrak'] ?? 0);
             $draftCount   += $st === 1 ? 1 : 0;
-            $prosesCount  += ($st >= 2 && $st <= 12) ? 1 : 0;
+            $prosesCount  += (in_array($st, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17], true)) ? 1 : 0;
             $selesaiCount += $st === 14 ? 1 : 0;
             $tayangCount  += $st === 9 ? 1 : 0;
         }

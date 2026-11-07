@@ -11,8 +11,30 @@
             <div class="modal-body">
                 <p class="text-muted fs-sm" id="wfNoteDesc"></p>
                 <div class="alert alert-danger py-2 d-none" id="wfNoteAlert"></div>
-                <label class="form-label fw-semibold" for="wfNoteText">Catatan <span id="wfNoteOpt" class="text-muted fw-normal"></span></label>
-                <textarea class="form-control" id="wfNoteText" rows="4" maxlength="2000" placeholder="Tulis alasan pengembalian / catatan koreksi untuk PPK..."></textarea>
+
+                <!-- Input SK Pokja (khusus aksi distribusi) -->
+                <div class="d-none mb-3" id="wfDistribusiWrap">
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <label class="form-label fs-xs fw-semibold" for="wfNoSkPokja">Nomor SK Pokja <span class="text-muted">(opsional)</span></label>
+                            <input type="text" class="form-control form-control-sm" id="wfNoSkPokja" placeholder="Contoh: 027/01/SK-POKJA/2026" maxlength="100">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label fs-xs fw-semibold" for="wfTglSkPokja">Tanggal SK Pokja</label>
+                            <input type="date" class="form-control form-control-sm" id="wfTglSkPokja">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Upload Surat Penolakan Resmi (khusus aksi batal_tolak) -->
+                <div class="d-none mb-3" id="wfBatalTolakWrap">
+                    <label class="form-label fs-xs fw-semibold text-danger" for="wfSuratPenolakan">Surat Resmi Penolakan / Pembatalan <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control form-control-sm" id="wfSuratPenolakan" accept=".pdf,.jpg,.jpeg,.png">
+                    <small class="text-muted fs-nano">Wajib unggah surat dinas penolakan/pembatalan resmi (.pdf, .jpg, .png max 20MB).</small>
+                </div>
+
+                <label class="form-label fw-semibold" for="wfNoteText">Catatan / Alasan <span id="wfNoteOpt" class="text-muted fw-normal"></span></label>
+                <textarea class="form-control" id="wfNoteText" rows="4" maxlength="2000" placeholder="Tulis alasan pengembalian / catatan koreksi..."></textarea>
                 <div class="form-check mt-3 d-none" id="wfGagalWrap">
                     <input class="form-check-input" type="checkbox" id="wfGagal">
                     <label class="form-check-label" for="wfGagal">Nyatakan pengadaan gagal (tanpa pemenang)</label>
@@ -232,7 +254,12 @@
         }
 
         async function runAction(a, extra) {
-            const res = await postForm(`/paket/aksi/${a.action}/${a.id}`, extra);
+            let res;
+            if (extra instanceof FormData) {
+                res = await api(`/paket/aksi/${a.action}/${a.id}`, {method: 'POST', body: extra});
+            } else {
+                res = await postForm(`/paket/aksi/${a.action}/${a.id}`, extra);
+            }
             if (res.ok) {
                 window.location.reload();
             } else {
@@ -375,25 +402,43 @@
         }
 
         function triggerWorkflowAction(a) {
-            if (a.note === 'required' || a.action === 'selesai') {
+            if ($('wfDistribusiWrap')) $('wfDistribusiWrap').classList.add('d-none');
+            if ($('wfBatalTolakWrap')) $('wfBatalTolakWrap').classList.add('d-none');
+            if ($('wfGagalWrap')) $('wfGagalWrap').classList.add('d-none');
+            if ($('wfNoteAlert')) $('wfNoteAlert').classList.add('d-none');
+            if ($('wfNoteText')) $('wfNoteText').value = '';
+
+            if (a.action === 'batal_tolak') {
+                pending = a;
+                $('wfNoteTitle').textContent = a.label;
+                $('wfNoteDesc').textContent = a.confirm || 'Anda akan menolak hasil pemilihan penyedia dan membatalkan paket ini (Status Gagal). Masukkan alasan resmi dan unggah surat dinas penolakan/pembatalan.';
+                $('wfNoteOpt').textContent = '(wajib alasan & surat resmi)';
+                $('wfBatalTolakWrap').classList.remove('d-none');
+                if ($('wfSuratPenolakan')) $('wfSuratPenolakan').value = '';
+                noteModal.show();
+            } else if (a.action === 'distribusi') {
+                pending = a;
+                $('wfNoteTitle').textContent = a.label;
+                $('wfNoteDesc').textContent = a.confirm || 'Terbitkan SK Penugasan Pokja dan distribusikan paket ini ke personil Pokja terpilih.';
+                $('wfNoteOpt').textContent = '(opsional)';
+                $('wfDistribusiWrap').classList.remove('d-none');
+                if ($('wfNoSkPokja')) $('wfNoSkPokja').value = (a.paket && a.paket.no_sk_pokja) || '';
+                if ($('wfTglSkPokja')) $('wfTglSkPokja').value = (a.paket && a.paket.tgl_sk_pokja) || new Date().toISOString().split('T')[0];
+                noteModal.show();
+            } else if (a.note === 'required' || a.action === 'selesai' || a.action === 'ulang') {
                 pending = a;
                 $('wfNoteTitle').textContent = a.label;
                 $('wfNoteDesc').textContent = a.confirm;
-                $('wfNoteText').value = '';
-                $('wfNoteOpt').textContent = a.note === 'required' ? '(wajib)' : '(opsional)';
+                $('wfNoteOpt').textContent = (a.note === 'required' || a.action === 'ulang') ? '(wajib)' : '(opsional)';
                 $('wfGagal').checked = false;
                 $('wfGagalWrap').classList.toggle('d-none', a.action !== 'selesai');
-                $('wfNoteAlert').classList.add('d-none');
                 noteModal.show();
             } else if (['kembalikan', 'sarankaji', 'saranadd'].includes(a.action)) {
                 pending = a;
                 $('wfNoteTitle').textContent = a.label;
                 $('wfNoteDesc').textContent = a.confirm;
-                $('wfNoteText').value = '';
-                $('wfNoteOpt').textContent = '(kosongkan jika sudah menambah catatan di tab Catatan)';
+                $('wfNoteOpt').textContent = '(kosongkan jika sudah mencatat di tab BA Review / Catatan)';
                 $('wfGagal').checked = false;
-                $('wfGagalWrap').classList.add('d-none');
-                $('wfNoteAlert').classList.add('d-none');
                 noteModal.show();
             } else {
                 openWfConfirmModal(a);
@@ -421,13 +466,48 @@
         $('wfNoteSubmit').addEventListener('click', async function () {
             if (!pending) return;
             const text = $('wfNoteText').value.trim();
+
+            if (pending.action === 'batal_tolak') {
+                if (text.length < 3) {
+                    $('wfNoteAlert').textContent = 'Alasan penolakan / pembatalan wajib diisi (minimal 3 karakter).';
+                    $('wfNoteAlert').classList.remove('d-none');
+                    return;
+                }
+                const fileInput = $('wfSuratPenolakan');
+                if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+                    $('wfNoteAlert').textContent = 'Surat dinas resmi penolakan/pembatalan wajib diunggah (.pdf, .jpg, .png).';
+                    $('wfNoteAlert').classList.remove('d-none');
+                    return;
+                }
+                this.disabled = true;
+                const fd = new FormData();
+                fd.append('catatan', text);
+                fd.append('surat_penolakan', fileInput.files[0]);
+                await runAction(pending, fd);
+                this.disabled = false;
+                return;
+            }
+
+            if (pending.action === 'ulang') {
+                if (text.length < 3) {
+                    $('wfNoteAlert').textContent = 'Alasan pelaksanaan tender ulang wajib diisi (minimal 3 karakter).';
+                    $('wfNoteAlert').classList.remove('d-none');
+                    return;
+                }
+            }
+
             if (pending.note === 'required' && text.length < 3) {
                 $('wfNoteAlert').textContent = 'Catatan wajib diisi (minimal 3 karakter).';
                 $('wfNoteAlert').classList.remove('d-none');
                 return;
             }
+
             this.disabled = true;
             const extra = {catatan: text};
+            if (pending.action === 'distribusi') {
+                if ($('wfNoSkPokja')) extra.no_sk_pokja = $('wfNoSkPokja').value.trim();
+                if ($('wfTglSkPokja')) extra.tgl_sk_pokja = $('wfTglSkPokja').value;
+            }
             if (pending.action === 'selesai' && $('wfGagal').checked) extra.gagal = 1;
             await runAction(pending, extra);
             this.disabled = false;
@@ -614,7 +694,22 @@
             boxEl.querySelectorAll('.wf-pokja-del').forEach(b => b.addEventListener('click', async () => {
                 if (!confirm('Hapus personil ini dari Pokja paket?')) return;
                 const r = await postForm(`/paket/pokja/delete/${b.dataset.id}`);
-                r.ok ? (detailDirty = true, al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                if (r.ok) {
+                    detailDirty = true;
+                    al.show('success', r.j.message);
+                    const updatedActions = r.j.workflow_actions || (r.j.data && r.j.data.workflow_actions);
+                    if (updatedActions) {
+                        paketObj.workflow_actions = updatedActions;
+                        if (typeof currentDetailPaket !== 'undefined' && currentDetailPaket) {
+                            currentDetailPaket.workflow_actions = updatedActions;
+                        }
+                        renderWorkflowButtons(paketObj);
+                        updateTableRowWorkflowActions(paketObj.id, updatedActions);
+                    }
+                    renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl);
+                } else {
+                    al.show('danger', r.j.message);
+                }
             }));
 
             const add = boxEl.querySelector('.wf-pokja-add');
@@ -626,7 +721,22 @@
                     add.disabled = true;
                     const r = await postForm('/paket/pokja/store', {paket_id: paketObj.id, user_id: userId, role: roleVal});
                     add.disabled = false;
-                    r.ok ? (detailDirty = true, al.show('success', r.j.message), renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl)) : al.show('danger', r.j.message);
+                    if (r.ok) {
+                        detailDirty = true;
+                        al.show('success', r.j.message);
+                        const updatedActions = r.j.workflow_actions || (r.j.data && r.j.data.workflow_actions);
+                        if (updatedActions) {
+                            paketObj.workflow_actions = updatedActions;
+                            if (typeof currentDetailPaket !== 'undefined' && currentDetailPaket) {
+                                currentDetailPaket.workflow_actions = updatedActions;
+                            }
+                            renderWorkflowButtons(paketObj);
+                            updateTableRowWorkflowActions(paketObj.id, updatedActions);
+                        }
+                        renderPokjaInto(paketObj, boxEl, alertEl, badgeCountEl);
+                    } else {
+                        al.show('danger', r.j.message);
+                    }
                 });
             }
         }
@@ -724,6 +834,212 @@
             }
         }
 
+        // ---------- 3b. Render Berita Acara Review (BA Review) ----------
+        async function renderBaReviewInto(paketObj, boxEl, alertEl, badgeCountEl) {
+            if (!boxEl) return;
+            if (parseInt(paketObj.status_paket) < 6) { boxEl.innerHTML = ''; return; }
+            boxEl.innerHTML = '<div class="text-muted"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat Berita Acara Review...</div>';
+            const al = makeAlertHelpers(alertEl);
+
+            const res = await api(`/paket/ba-review/${paketObj.id}`);
+            if (!res.ok) {
+                boxEl.innerHTML = `<div class="text-danger">${esc(res.j.message)}</div>`;
+                return;
+            }
+
+            const list = res.j.data || [];
+            const canAdd = !!res.j.can_add;
+            const isDirect = !!res.j.is_direct;
+
+            if (badgeCountEl) {
+                if (list.length > 0) {
+                    badgeCountEl.textContent = list.length;
+                    badgeCountEl.classList.remove('d-none');
+                } else {
+                    badgeCountEl.classList.add('d-none');
+                }
+            }
+
+            let html = '';
+            if (list.length === 0) {
+                html += `<div class="alert alert-warning py-2 px-3 mb-3 fs-xs d-flex align-items-center gap-2">
+                    <svg class="sa-icon text-warning flex-shrink-0" style="width: 16px; height: 16px;"><use href="/icons/sprite.svg#alert-circle"></use></svg>
+                    <div>Belum ada Berita Acara Review untuk paket ini. Pokja Pemilihan / Pejabat Pengadaan wajib melakukan penelaahan dokumen dan menerbitkan BA Review sebelum paket dapat dilanjutkan ke pemilihan penyedia atau dikembalikan ke PPK.</div>
+                </div>`;
+            } else {
+                html += '<div class="d-flex flex-column gap-3 mb-3">';
+                list.forEach(ba => {
+                    const isPerlu = parseInt(ba.perlu_perbaikan) === 1;
+                    const badgeClass = isPerlu ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' : 'bg-success-subtle text-success-emphasis border border-success-subtle';
+                    const iconName = isPerlu ? 'alert-triangle' : 'check-circle';
+                    const statusText = isPerlu ? 'Perlu Perbaikan Dokumen (Dikembalikan)' : 'Dokumen Sesuai (Lolos Review)';
+
+                    html += `<div class="card border shadow-2xs">
+                        <div class="card-header bg-body-tertiary py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary fs-nano fw-bold">Putaran #${esc(ba.putaran)}</span>
+                                <span class="fw-semibold fs-xs text-body-emphasis">${ba.nomor_ba ? ('No. BA: ' + esc(ba.nomor_ba)) : 'Berita Acara Review'}</span>
+                                <span class="text-muted fs-nano">• ${fmtShortDate(ba.tgl_ba)}</span>
+                            </div>
+                            <span class="badge ${badgeClass} fs-nano d-inline-flex align-items-center gap-1">
+                                <svg class="sa-icon" style="width: 12px; height: 12px;"><use href="/icons/sprite.svg#${iconName}"></use></svg>
+                                <span>${statusText}</span>
+                            </span>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="mb-2">
+                                <label class="fs-nano text-uppercase text-muted fw-bold d-block mb-1">Hasil Pemeriksaan / Telaah Dokumen:</label>
+                                <div class="fs-xs text-body bg-light p-2 rounded border" style="white-space: pre-wrap;">${esc(ba.hasil_pemeriksaan)}</div>
+                            </div>`;
+
+                    if (ba.catatan_perbaikan) {
+                        html += `<div class="mb-2">
+                            <label class="fs-nano text-uppercase text-danger fw-bold d-block mb-1">Catatan Perbaikan Dokumen untuk PPK:</label>
+                            <div class="fs-xs text-danger-emphasis bg-danger-subtle bg-opacity-25 p-2 rounded border border-danger-subtle" style="white-space: pre-wrap;">${esc(ba.catatan_perbaikan)}</div>
+                        </div>`;
+                    }
+
+                    html += `<div class="d-flex align-items-center justify-content-between pt-2 border-top fs-nano text-muted">
+                            <div>Reviewer: <strong>${esc(ba.reviewer_name || 'Pokja/Pejabat Pengadaan')}</strong></div>
+                            <div>Dicatat: ${fmtDate(ba.created_at)}</div>
+                        </div>
+                    </div></div>`;
+                });
+                html += '</div>';
+            }
+
+            if (canAdd) {
+                const nextRound = list.length + 1;
+                const reviewerRole = isDirect ? 'Pejabat Pengadaan' : 'Pokja Pemilihan';
+                html += `<div class="p-3 bg-body-tertiary rounded border">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label fw-bold fs-xs text-uppercase mb-0 text-primary">
+                            Input Berita Acara Review Dokumen (Putaran #${nextRound})
+                        </label>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-nano">${reviewerRole}</span>
+                    </div>
+                    <form class="wf-ba-form">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-7">
+                                <label class="form-label fs-xs mb-1">Nomor BA Review <span class="text-muted">(opsional)</span></label>
+                                <input type="text" class="form-control form-control-sm wf-ba-nomor" placeholder="Contoh: BA.01/POKJA-ULP/2026" maxlength="100">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fs-xs mb-1">Tanggal BA <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-sm wf-ba-tgl" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-semibold mb-1">Kesimpulan Hasil Review <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input wf-ba-status" type="radio" name="perlu_perbaikan_${paketObj.id}" id="baStatusSesuai_${paketObj.id}" value="0" checked>
+                                    <label class="form-check-label fs-xs fw-medium text-success" for="baStatusSesuai_${paketObj.id}">
+                                        <strong>Dokumen Sesuai</strong> (Lolos Review)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input wf-ba-status" type="radio" name="perlu_perbaikan_${paketObj.id}" id="baStatusRevisi_${paketObj.id}" value="1">
+                                    <label class="form-check-label fs-xs fw-medium text-warning-emphasis" for="baStatusRevisi_${paketObj.id}">
+                                        <strong>Perlu Perbaikan Dokumen</strong> (Dikembalikan ke PPK)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fs-xs fw-semibold mb-1">Hasil Pemeriksaan / Telaah Dokumen <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-sm wf-ba-hasil" rows="3" placeholder="Uraikan poin-poin hasil pemeriksaan berkas persyaratan pengadaan..."></textarea>
+                        </div>
+
+                        <div class="mb-3 wf-ba-catatan-wrap d-none">
+                            <label class="form-label fs-xs fw-semibold mb-1 text-danger">Catatan Perbaikan untuk PPK <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-sm wf-ba-catatan" rows="3" placeholder="Uraikan secara spesifik dokumen apa saja yang harus diperbaiki oleh PPK..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-primary btn-sm wf-ba-save d-inline-flex align-items-center gap-1" type="button">
+                                <svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#save"></use></svg>
+                                <span>Simpan Berita Acara Review</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>`;
+            }
+
+            boxEl.innerHTML = html;
+
+            if (canAdd) {
+                const radioSesuai = boxEl.querySelector(`#baStatusSesuai_${paketObj.id}`);
+                const radioRevisi = boxEl.querySelector(`#baStatusRevisi_${paketObj.id}`);
+                const catatanWrap = boxEl.querySelector('.wf-ba-catatan-wrap');
+                const btnSave = boxEl.querySelector('.wf-ba-save');
+
+                const syncCatatanWrap = () => {
+                    if (radioRevisi && radioRevisi.checked) {
+                        catatanWrap.classList.remove('d-none');
+                    } else {
+                        catatanWrap.classList.add('d-none');
+                    }
+                };
+
+                if (radioSesuai) radioSesuai.addEventListener('change', syncCatatanWrap);
+                if (radioRevisi) radioRevisi.addEventListener('change', syncCatatanWrap);
+
+                if (btnSave) {
+                    btnSave.addEventListener('click', async () => {
+                        const nomorBa = boxEl.querySelector('.wf-ba-nomor').value.trim();
+                        const tglBa = boxEl.querySelector('.wf-ba-tgl').value;
+                        const hasilPemeriksaan = boxEl.querySelector('.wf-ba-hasil').value.trim();
+                        const catatanPerbaikan = boxEl.querySelector('.wf-ba-catatan').value.trim();
+                        const perluPerbaikan = radioRevisi && radioRevisi.checked ? 1 : 0;
+
+                        if (hasilPemeriksaan.length < 5) {
+                            al.show('danger', 'Hasil pemeriksaan wajib diisi (minimal 5 karakter).');
+                            return;
+                        }
+                        if (perluPerbaikan === 1 && catatanPerbaikan.length < 3) {
+                            al.show('danger', 'Catatan perbaikan wajib diisi jika dokumen memerlukan perbaikan dari PPK.');
+                            return;
+                        }
+
+                        btnSave.disabled = true;
+                        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Menyimpan...';
+
+                        const r = await postForm('/paket/ba-review/store', {
+                            paket_id: paketObj.id,
+                            nomor_ba: nomorBa,
+                            tgl_ba: tglBa,
+                            hasil_pemeriksaan: hasilPemeriksaan,
+                            catatan_perbaikan: catatanPerbaikan,
+                            perlu_perbaikan: perluPerbaikan
+                        });
+
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = '<svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#save"></use></svg> <span>Simpan Berita Acara Review</span>';
+
+                        if (r.ok) {
+                            detailDirty = true;
+                            al.show('success', r.j.message);
+                            const updatedActions = r.j.workflow_actions || (r.j.data && r.j.data.workflow_actions);
+                            if (updatedActions) {
+                                paketObj.workflow_actions = updatedActions;
+                                if (typeof currentDetailPaket !== 'undefined' && currentDetailPaket) {
+                                    currentDetailPaket.workflow_actions = updatedActions;
+                                }
+                                renderWorkflowButtons(paketObj);
+                                updateTableRowWorkflowActions(paketObj.id, updatedActions);
+                            }
+                            renderBaReviewInto(paketObj, boxEl, alertEl, badgeCountEl);
+                        } else {
+                            al.show('danger', r.j.message);
+                        }
+                    });
+                }
+            }
+        }
+
         function renderHasilInto(paketObj, boxEl, alertEl) {
             if (!boxEl) return;
             if (parseInt(paketObj.status_paket) < 9) { boxEl.innerHTML = ''; return; }
@@ -762,6 +1078,100 @@
             }
         }
 
+        // Sinkronisasi state disabled & tooltip tombol aksi di baris tabel
+        function updateTableRowWorkflowActions(paketId, updatedActions) {
+            if (!paketId || !Array.isArray(updatedActions)) return;
+
+            const rowLinks = document.querySelectorAll(`.btn-wf[data-id="${paketId}"]`);
+            rowLinks.forEach(link => {
+                const actionKey = link.dataset.action;
+                const wa = updatedActions.find(x => x.key === actionKey);
+                if (wa) {
+                    if (wa.blocked) {
+                        link.classList.add('disabled');
+                        link.title = wa.blocked;
+                    } else {
+                        link.classList.remove('disabled');
+                        link.removeAttribute('title');
+                    }
+                }
+            });
+
+            const viewBtns = document.querySelectorAll('.btn-view-paket');
+            viewBtns.forEach(btn => {
+                try {
+                    const parsed = JSON.parse(btn.dataset.paket || '{}');
+                    if (parseInt(parsed.id, 10) === parseInt(paketId, 10)) {
+                        parsed.workflow_actions = updatedActions;
+                        btn.dataset.paket = JSON.stringify(parsed);
+                    }
+                } catch (e) {}
+            });
+        }
+
+        // ---------- 4b. Render Tombol Aksi di Modal Footer ----------
+        function renderWorkflowButtons(p) {
+            const btnWrap = $('modalWorkflowActionButtons');
+            if (!btnWrap) return;
+            btnWrap.innerHTML = '';
+            const st = parseInt(p.status_paket || 0, 10);
+
+            (p.workflow_actions || []).forEach(wa => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.dataset.action = wa.key;
+                b.className = `btn btn-sm btn-${wa.variant || 'primary'} d-inline-flex align-items-center gap-1`;
+                if (wa.blocked) {
+                    b.disabled = true;
+                    b.title = wa.blocked;
+                }
+                b.textContent = wa.label;
+                b.addEventListener('click', () => {
+                    triggerWorkflowAction({
+                        id: p.id,
+                        action: wa.key,
+                        label: wa.label,
+                        note: wa.note || '',
+                        confirm: wa.confirm || '',
+                        paket: p
+                    });
+                });
+                btnWrap.appendChild(b);
+            });
+
+            // Tombol khusus Admin Agency: "Sudah di Proses" (Room LPSE)
+            if (p.wf && p.wf.lpse) {
+                const btnLpse = document.createElement('button');
+                btnLpse.type = 'button';
+                btnLpse.className = 'btn btn-sm btn-danger d-inline-flex align-items-center gap-1';
+                btnLpse.textContent = 'Sudah di Proses (Room LPSE)';
+                btnLpse.addEventListener('click', async () => {
+                    if (!confirm('Tandai bahwa paket ini sudah dibuatkan Room di LPSE?')) return;
+                    btnLpse.disabled = true;
+                    const r = await postForm(`/paket/lpse/${p.id}`);
+                    if (r.ok) {
+                        window.location.reload();
+                    } else {
+                        btnLpse.disabled = false;
+                        alert(r.j.message || 'Gagal memproses Room LPSE.');
+                    }
+                });
+                btnWrap.appendChild(btnLpse);
+            }
+
+            // Jika sudah diproses LPSE (is_lpse == 1) dan status >= 6, tampilkan tombol Cetak Surat Tugas Pokja
+            if (parseInt(p.is_lpse || 0, 10) === 1 && st >= 6) {
+                const btnSt = document.createElement('button');
+                btnSt.type = 'button';
+                btnSt.className = 'btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1';
+                btnSt.textContent = 'Surat Tugas Pokja';
+                btnSt.addEventListener('click', () => {
+                    window.print();
+                });
+                btnWrap.appendChild(btnSt);
+            }
+        }
+
         // ---------- Integrasi dengan Detail Paket Modal (Semua Role) ----------
         document.addEventListener('paket:detail-opened', function (ev) {
             const p = ev.detail;
@@ -772,7 +1182,7 @@
             const st = parseInt(p.status_paket || 0, 10);
 
             // Reset alert di masing-masing tab
-            ['detailCatatanAlert', 'detailPokjaAlert', 'detailDokumenAlert', 'detailHasilAlert'].forEach(id => {
+            ['detailCatatanAlert', 'detailPokjaAlert', 'detailBaReviewAlert', 'detailDokumenAlert', 'detailHasilAlert'].forEach(id => {
                 const el = $(id);
                 if (el) el.classList.add('d-none');
             });
@@ -799,6 +1209,17 @@
                 }
             }
 
+            // Tab BA Review (tampil saat status >= 6)
+            const navBaReview = $('navItemBaReviewDetail');
+            if (navBaReview) {
+                if (st >= 6) {
+                    navBaReview.classList.remove('d-none');
+                    renderBaReviewInto(p, $('detailBaReviewBox'), $('detailBaReviewAlert'), $('badgeBaReviewCount'));
+                } else {
+                    navBaReview.classList.add('d-none');
+                }
+            }
+
             // Tab Dokumen Lelang (tampil saat status >= 6: terdistribusi ke Pokja)
             const navDokumen = $('navItemDokumenDetail');
             if (navDokumen) {
@@ -821,67 +1242,8 @@
                 }
             }
 
-            // Render tombol aksi di footer modal detail:
-            // - Aksi transisi status (Pilih Paket, Verifikasi, Terima, Saran Distribusi, Distribusi, Saran Kaji, Tayangkan Paket, dll.)
-            // - Tombol khusus Admin Agency: "Sudah di Proses" (Room LPSE) & "Surat Tugas"
-            const btnWrap = $('modalWorkflowActionButtons');
-            if (btnWrap) {
-                btnWrap.innerHTML = '';
-                (p.workflow_actions || []).forEach(wa => {
-                    const b = document.createElement('button');
-                    b.type = 'button';
-                    b.dataset.action = wa.key;
-                    b.className = `btn btn-sm btn-${wa.variant || 'primary'} d-inline-flex align-items-center gap-1`;
-                    if (wa.blocked) {
-                        b.disabled = true;
-                        b.title = wa.blocked;
-                    }
-                    b.textContent = wa.label;
-                    b.addEventListener('click', () => {
-                        triggerWorkflowAction({
-                            id: p.id,
-                            action: wa.key,
-                            label: wa.label,
-                            note: wa.note || '',
-                            confirm: wa.confirm || '',
-                            paket: p
-                        });
-                    });
-                    btnWrap.appendChild(b);
-                });
-
-                // Langkah 3A: Tombol "Sudah di Proses" untuk Admin Agency (buat Room LPSE)
-                if (p.wf && p.wf.lpse) {
-                    const btnLpse = document.createElement('button');
-                    btnLpse.type = 'button';
-                    btnLpse.className = 'btn btn-sm btn-danger d-inline-flex align-items-center gap-1';
-                    btnLpse.textContent = 'Sudah di Proses (Room LPSE)';
-                    btnLpse.addEventListener('click', async () => {
-                        if (!confirm('Tandai bahwa paket ini sudah dibuatkan Room di LPSE?')) return;
-                        btnLpse.disabled = true;
-                        const r = await postForm(`/paket/lpse/${p.id}`);
-                        if (r.ok) {
-                            window.location.reload();
-                        } else {
-                            btnLpse.disabled = false;
-                            alert(r.j.message || 'Gagal memproses Room LPSE.');
-                        }
-                    });
-                    btnWrap.appendChild(btnLpse);
-                }
-
-                // Jika sudah diproses LPSE (is_lpse == 1) dan status >= 6, tampilkan tombol Cetak Surat Tugas Pokja
-                if (parseInt(p.is_lpse || 0, 10) === 1 && st >= 6) {
-                    const btnSt = document.createElement('button');
-                    btnSt.type = 'button';
-                    btnSt.className = 'btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1';
-                    btnSt.textContent = 'Surat Tugas Pokja';
-                    btnSt.addEventListener('click', () => {
-                        window.print();
-                    });
-                    btnWrap.appendChild(btnSt);
-                }
-            }
+            // Render tombol aksi di footer modal detail
+            renderWorkflowButtons(p);
         });
 
         const detailModalEl = $('detailPaketModal');

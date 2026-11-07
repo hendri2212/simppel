@@ -2,8 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Models\PejabatPengadaanSkpdModel;
 use App\Models\PpkModel;
 use App\Models\SkpdModel;
+use App\Models\UserModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
@@ -16,11 +18,15 @@ class SkpdPpkController extends BaseController
 {
     protected SkpdModel $skpdModel;
     protected PpkModel $ppkModel;
+    protected PejabatPengadaanSkpdModel $pejabatSkpdModel;
+    protected UserModel $userModel;
 
     public function __construct()
     {
-        $this->skpdModel = new SkpdModel();
-        $this->ppkModel  = new PpkModel();
+        $this->skpdModel         = new SkpdModel();
+        $this->ppkModel          = new PpkModel();
+        $this->pejabatSkpdModel  = new PejabatPengadaanSkpdModel();
+        $this->userModel         = new UserModel();
     }
 
     /**
@@ -98,43 +104,58 @@ class SkpdPpkController extends BaseController
                 $allPpk[]          = $item;
             }
 
+            // Ambil Pejabat Pengadaan (POKJA) terelasi per SKPD
+            $pejabatBySkpd = $this->pejabatSkpdModel->getGroupedBySkpd();
+            $allPokja      = $this->userModel->select('users.id, users.full_name, users.username, users.nip')
+                ->join('roles', 'roles.id = users.role_id', 'inner')
+                ->where('roles.name', 'POKJA')
+                ->where('users.is_active', 1)
+                ->orderBy('users.full_name', 'ASC')
+                ->findAll();
+
             foreach ($rawSkpd as $s) {
                 $sid      = (int) $s['id'];
                 $isActive = (int) ($s['is_active'] ?? 1) === 1;
                 $ppks     = $ppkBySkpd[$sid] ?? [];
+                $pejabat  = $pejabatBySkpd[$sid] ?? null;
 
                 $skpdList[] = [
-                    'id'           => $sid,
-                    'name'         => $s['name'],
-                    'abbreviation' => $s['abbreviation'] ?: '-',
-                    'raw_abbr'     => $s['abbreviation'] ?: '',
-                    'code'         => $s['code'] ?: '-',
-                    'raw_code'     => $s['code'] ?: '',
-                    'address'      => $s['address'] ?: '-',
-                    'raw_address'  => $s['address'] ?: '',
-                    'contact'      => $s['contact'] ?: '-',
-                    'raw_contact'  => $s['contact'] ?: '',
-                    'work_unit_id' => (int) ($s['work_unit_id'] ?? 0),
-                    'is_active'    => $isActive ? 1 : 0,
-                    'status'       => $isActive ? 'Active' : 'Inactive',
-                    'status_badge' => $isActive ? 'bg-success' : 'bg-secondary',
-                    'ppk_list'     => $ppks,
-                    'ppk_count'    => count($ppks),
-                    'has_ppk'      => count($ppks) > 0,
-                    'user_count'   => $userBySkpd[$sid] ?? 0,
-                    'rup_count'    => $rupBySkpd[$sid] ?? 0,
+                    'id'                => $sid,
+                    'name'              => $s['name'],
+                    'abbreviation'      => $s['abbreviation'] ?: '-',
+                    'raw_abbr'          => $s['abbreviation'] ?: '',
+                    'code'              => $s['code'] ?: '-',
+                    'raw_code'          => $s['code'] ?: '',
+                    'address'           => $s['address'] ?: '-',
+                    'raw_address'       => $s['address'] ?: '',
+                    'contact'           => $s['contact'] ?: '-',
+                    'raw_contact'       => $s['contact'] ?: '',
+                    'work_unit_id'      => (int) ($s['work_unit_id'] ?? 0),
+                    'is_active'         => $isActive ? 1 : 0,
+                    'status'            => $isActive ? 'Active' : 'Inactive',
+                    'status_badge'      => $isActive ? 'bg-success' : 'bg-secondary',
+                    'ppk_list'          => $ppks,
+                    'ppk_count'         => count($ppks),
+                    'has_ppk'           => count($ppks) > 0,
+                    'pejabat_pengadaan' => $pejabat,
+                    'pejabat_user_id'   => $pejabat ? (int) $pejabat['user_id'] : null,
+                    'has_pejabat'       => $pejabat !== null,
+                    'user_count'        => $userBySkpd[$sid] ?? 0,
+                    'rup_count'         => $rupBySkpd[$sid] ?? 0,
                 ];
             }
         } catch (\Throwable $e) {
             log_message('error', 'Error in SkpdPpkController::index: ' . $e->getMessage());
-            $skpdList = $allPpk = [];
+            $skpdList = $allPpk = $allPokja = [];
         }
 
         // Statistik ringkas
-        $totalSkpd      = count($skpdList);
-        $activeSkpd     = 0;
-        $skpdWithPpk    = 0;
-        $skpdWithoutPpk = 0;
+        $totalSkpd          = count($skpdList);
+        $activeSkpd         = 0;
+        $skpdWithPpk        = 0;
+        $skpdWithoutPpk     = 0;
+        $skpdWithPejabat    = 0;
+        $skpdWithoutPejabat = 0;
 
         foreach ($skpdList as $s) {
             $activeSkpd += $s['is_active'];
@@ -143,21 +164,29 @@ class SkpdPpkController extends BaseController
             } else {
                 $skpdWithoutPpk++;
             }
+            if ($s['has_pejabat']) {
+                $skpdWithPejabat++;
+            } else {
+                $skpdWithoutPejabat++;
+            }
         }
 
         $totalPpk  = count($allPpk);
         $activePpk = count(array_filter($allPpk, static fn($p) => $p['is_active'] === 1));
 
         return view('skpd_ppk', [
-            'pageTitle'      => 'SKPD & PPK',
-            'skpdList'       => $skpdList,
-            'allPpk'         => $allPpk,
-            'totalSkpd'      => $totalSkpd,
-            'activeSkpd'     => $activeSkpd,
-            'skpdWithPpk'    => $skpdWithPpk,
-            'skpdWithoutPpk' => $skpdWithoutPpk,
-            'totalPpk'       => $totalPpk,
-            'activePpk'      => $activePpk,
+            'pageTitle'          => 'SKPD & PPK',
+            'skpdList'           => $skpdList,
+            'allPpk'             => $allPpk,
+            'allPokja'           => $allPokja ?? [],
+            'totalSkpd'          => $totalSkpd,
+            'activeSkpd'         => $activeSkpd,
+            'skpdWithPpk'        => $skpdWithPpk,
+            'skpdWithoutPpk'     => $skpdWithoutPpk,
+            'skpdWithPejabat'    => $skpdWithPejabat,
+            'skpdWithoutPejabat' => $skpdWithoutPejabat,
+            'totalPpk'           => $totalPpk,
+            'activePpk'          => $activePpk,
         ]);
     }
 
@@ -215,6 +244,11 @@ class SkpdPpkController extends BaseController
                 ]);
             }
 
+            $pejabatUserId = (int) $post->getPost('pejabat_user_id');
+            if ($pejabatUserId > 0) {
+                $this->pejabatSkpdModel->setPejabatForSkpd($skpdId, $pejabatUserId);
+            }
+
             $db->transCommit();
 
             return $this->done('Data SKPD baru berhasil ditambahkan!', ['id' => $skpdId]);
@@ -266,6 +300,11 @@ class SkpdPpkController extends BaseController
 
         try {
             $this->skpdModel->update($id, $data);
+
+            if ($post->getPost('pejabat_user_id') !== null) {
+                $pejabatUserId = (int) $post->getPost('pejabat_user_id');
+                $this->pejabatSkpdModel->setPejabatForSkpd($id, $pejabatUserId);
+            }
 
             return $this->done('Data SKPD berhasil diperbarui!');
         } catch (\Throwable $e) {

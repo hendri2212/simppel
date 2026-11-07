@@ -199,9 +199,11 @@
                                         </div>
                                         <div class="col-md-3 col-lg-3">
                                             <select id="ppkRelFilter" class="form-select form-select-sm">
-                                                <option value="">Semua Status PPK / Bidang</option>
+                                                <option value="">Semua Relasi (PPK &amp; Pejabat)</option>
                                                 <option value="has_ppk">Sudah Memiliki PPK / Bidang (<?= $skpdWithPpk ?>)</option>
                                                 <option value="no_ppk">Belum Memiliki PPK / Bidang (<?= $skpdWithoutPpk ?>)</option>
+                                                <option value="has_pejabat">Sudah Ada Pejabat Pengadaan (<?= $skpdWithPejabat ?? 0 ?>)</option>
+                                                <option value="no_pejabat">Belum Ada Pejabat Pengadaan (<?= $skpdWithoutPejabat ?? 0 ?>)</option>
                                             </select>
                                         </div>
                                         <div class="col-md-2 col-lg-2">
@@ -242,12 +244,14 @@
                                                 <?php foreach ($skpdList as $skpd): ?>
                                                     <?php
                                                     $ppkNamesSearch = implode(' ', array_column($skpd['ppk_list'], 'name'));
+                                                    $pejabatSearch  = !empty($skpd['pejabat_pengadaan']) ? (' ' . $skpd['pejabat_pengadaan']['full_name'] . ' ' . $skpd['pejabat_pengadaan']['username']) : '';
                                                     $skpdJson = htmlspecialchars(json_encode($skpd, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8');
                                                     ?>
                                                     <tr class="skpd-row"
                                                         data-id="<?= (int) $skpd['id'] ?>"
-                                                        data-search="<?= esc(strtolower($skpd['name'] . ' ' . $skpd['abbreviation'] . ' ' . $skpd['code'] . ' ' . $ppkNamesSearch)) ?>"
+                                                        data-search="<?= esc(strtolower($skpd['name'] . ' ' . $skpd['abbreviation'] . ' ' . $skpd['code'] . ' ' . $ppkNamesSearch . $pejabatSearch)) ?>"
                                                         data-ppk-rel="<?= $skpd['has_ppk'] ? 'has_ppk' : 'no_ppk' ?>"
+                                                        data-pejabat-rel="<?= $skpd['has_pejabat'] ? 'has_pejabat' : 'no_pejabat' ?>"
                                                         data-status="<?= esc($skpd['status']) ?>"
                                                         data-skpd='<?= $skpdJson ?>'>
                                                         <td class="text-muted font-monospace fs-xs"><?= (int) $skpd['id'] ?></td>
@@ -263,6 +267,19 @@
                                                                     <?= esc($skpd['name']) ?>
                                                                 </a>
                                                             </div>
+                                                            <?php if (!empty($skpd['pejabat_pengadaan'])): ?>
+                                                                <div class="mt-1">
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-nano" title="Pejabat Pengadaan untuk Pengadaan Langsung pada SKPD ini">
+                                                                        <i class="fal fa-user-check me-1"></i>Pejabat: <?= esc($skpd['pejabat_pengadaan']['full_name']) ?>
+                                                                    </span>
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <div class="mt-1">
+                                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-nano" title="SKPD ini belum memiliki Pejabat Pengadaan. Pengadaan Langsung memerlukan Pejabat Pengadaan yang ditentukan.">
+                                                                        <i class="fal fa-exclamation-triangle me-1"></i>Pejabat: Belum Ditetapkan
+                                                                    </span>
+                                                                </div>
+                                                            <?php endif; ?>
                                                             <?php if (!empty($skpd['raw_address'])): ?>
                                                                 <div class="text-muted fs-nano mt-1 text-truncate" style="max-width: 300px;" title="<?= esc($skpd['address']) ?>">
                                                                     <i class="fal fa-map-marker-alt me-1"></i><?= esc($skpd['address']) ?>
@@ -634,6 +651,22 @@
                                     <small class="text-muted fs-nano">Jika diisi, sistem otomatis membuatkan Bidang/PPK pertama untuk SKPD baru ini.</small>
                                 </div>
                             </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded bg-light border">
+                                    <label class="form-label fs-xs text-uppercase fw-semibold text-primary mb-1">
+                                        <i class="fal fa-briefcase me-1"></i>Pejabat Pengadaan (Pengadaan Langsung)
+                                    </label>
+                                    <select class="form-select" name="pejabat_user_id">
+                                        <option value="">-- Belum Ditetapkan / Tanpa Pejabat Pengadaan --</option>
+                                        <?php foreach (($allPokja ?? []) as $pokja): ?>
+                                            <option value="<?= (int) $pokja['id'] ?>">
+                                                <?= esc($pokja['full_name']) ?><?= !empty($pokja['nip']) && $pokja['nip'] !== '-' ? (' (NIP: ' . esc($pokja['nip']) . ')') : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="text-muted fs-nano">Personil Pokja yang bertindak sebagai Pejabat Pengadaan untuk paket Pengadaan Langsung pada SKPD ini.</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer bg-light border-top py-2 px-4 d-flex justify-content-between">
@@ -692,6 +725,22 @@
                             <div class="col-12">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Alamat</label>
                                 <input type="text" class="form-control" name="address" id="editSkpdAddress">
+                            </div>
+                            <div class="col-12">
+                                <div class="p-3 rounded bg-light border">
+                                    <label class="form-label fs-xs text-uppercase fw-semibold text-primary mb-1" for="editSkpdPejabatUserId">
+                                        <i class="fal fa-briefcase me-1"></i>Pejabat Pengadaan (Pengadaan Langsung)
+                                    </label>
+                                    <select class="form-select" name="pejabat_user_id" id="editSkpdPejabatUserId">
+                                        <option value="">-- Belum Ditetapkan / Tanpa Pejabat Pengadaan --</option>
+                                        <?php foreach (($allPokja ?? []) as $pokja): ?>
+                                            <option value="<?= (int) $pokja['id'] ?>">
+                                                <?= esc($pokja['full_name']) ?><?= !empty($pokja['nip']) && $pokja['nip'] !== '-' ? (' (NIP: ' . esc($pokja['nip']) . ')') : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="text-muted fs-nano">Personil Pokja yang bertindak sebagai Pejabat Pengadaan untuk paket Pengadaan Langsung pada SKPD ini.</small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -793,7 +842,7 @@
 
                 filteredRows = rows.filter(row => {
                     const matchSearch = !q || (row.getAttribute('data-search') || '').includes(q);
-                    const matchRel    = !rel || row.getAttribute('data-ppk-rel') === rel;
+                    const matchRel    = !rel || row.getAttribute('data-ppk-rel') === rel || row.getAttribute('data-pejabat-rel') === rel;
                     const matchStatus = !st || row.getAttribute('data-status') === st;
                     return matchSearch && matchRel && matchStatus;
                 });
@@ -1114,6 +1163,10 @@
                 document.getElementById('editSkpdContact').value = skpd.raw_contact || '';
                 document.getElementById('editSkpdAddress').value = skpd.raw_address || '';
                 document.getElementById('editSkpdIsActive').value = String(skpd.is_active ?? 1);
+                const pejSelect = document.getElementById('editSkpdPejabatUserId');
+                if (pejSelect) {
+                    pejSelect.value = skpd.pejabat_user_id ? String(skpd.pejabat_user_id) : '';
+                }
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('editSkpdModal')).show();
             }
 

@@ -35,6 +35,10 @@ class PaketModel extends Model
         'no_surat',
         'tgl_surat',
         'is_lpse',
+        'no_sk_pokja',
+        'tgl_sk_pokja',
+        'alasan_penolakan',
+        'surat_penolakan',
     ];
 
     protected $useTimestamps = true;
@@ -126,6 +130,16 @@ class PaketModel extends Model
             'desc'  => 'Pengadaan dinyatakan gagal',
             'badge' => 'bg-danger text-white',
         ],
+        16 => [
+            'name'  => 'Hasil-Verifikator',
+            'desc'  => 'Pokja/Pejabat Pengadaan menyerahkan hasil pemilihan dan BA Review ke Verifikator (Admin ULP)',
+            'badge' => 'bg-info-subtle text-info-emphasis border border-info-subtle',
+        ],
+        17 => [
+            'name'  => 'Hasil-Kepala',
+            'desc'  => 'Verifikator mengunggah hasil pemilihan dan mengirim ke Kepala UKPBJ untuk diteruskan ke PPK',
+            'badge' => 'bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+        ],
     ];
 
     /**
@@ -161,6 +175,10 @@ class PaketModel extends Model
                 ppk.name as ppk_name,
                 jenis_pengadaan.name as jenis_pengadaan_name,
                 metode_pemilihan.name as metode_pemilihan_name,
+                metode_pemilihan.code as metode_pemilihan_code,
+                rup.metode_pemilihan_id as metode_pemilihan_id,
+                rup.skpd_id as skpd_id,
+                rup.ppk_id as ppk_id,
                 sumber_dana.name as sumber_dana_name,
                 admin_ukpbj.full_name as admin_ukpbj_name,
                 admin_distribusi.full_name as admin_distribusi_name,

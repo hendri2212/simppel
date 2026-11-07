@@ -4,17 +4,22 @@ namespace App\Controllers;
 
 use App\Controllers\Traits\ProcurementScope;
 use App\Libraries\PaketWorkflow;
+use App\Models\BaReviewModel;
 use App\Models\CatatanModel;
 use App\Models\DokumenModel;
 use App\Models\PaketModel;
 use App\Models\PaketPokjaModel;
+use App\Models\PejabatPengadaanSkpdModel;
 use App\Models\UserModel;
-use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * Tahapan paket setelah diajukan (P3 - P13): verifikasi ULP, distribusi Pokja,
- * kaji, lelang, addendum, hasil, dan selesai, termasuk catatan & dokumen lelang.
- * (Log aktivitas dan notifikasi WA sengaja belum diimplementasikan.)
+ * Tahapan paket setelah diajukan:
+ * - Jalur Tender/Seleksi (13 tahapan): Verifikasi -> Saran Distribusi -> Distribusi & SK Pokja ->
+ *   Review Pokja & BA Review -> Pemilihan -> Serahkan Hasil & BA ke Verifikator -> Unggah & Kirim ke Kepala UKPBJ ->
+ *   Teruskan ke PPK -> PPK Terima (Selesai) / Tolak (Tender Ulang kembali ke Review Pokja atau Tidak Dilanjutkan/Gagal).
+ * - Jalur Pengadaan Langsung (8 tahapan): Verifikasi -> Pejabat Pengadaan (otomatis berdasarkan SKPD) ->
+ *   Review & BA Review -> Serahkan Dokumen & BA ke Verifikator -> Unggah & Kirim ke Kepala UKPBJ ->
+ *   Teruskan ke PPK -> Selesai.
  */
 class PaketWorkflowController extends BaseController
 {
@@ -36,17 +41,21 @@ class PaketWorkflowController extends BaseController
 
     protected PaketModel $paketModel;
     protected PaketPokjaModel $pokjaModel;
+    protected PejabatPengadaanSkpdModel $pejabatSkpdModel;
+    protected BaReviewModel $baReviewModel;
     protected CatatanModel $catatanModel;
     protected DokumenModel $dokumenModel;
     protected UserModel $userModel;
 
     public function __construct()
     {
-        $this->paketModel   = new PaketModel();
-        $this->pokjaModel   = new PaketPokjaModel();
-        $this->catatanModel = new CatatanModel();
-        $this->dokumenModel = new DokumenModel();
-        $this->userModel    = new UserModel();
+        $this->paketModel       = new PaketModel();
+        $this->pokjaModel       = new PaketPokjaModel();
+        $this->pejabatSkpdModel = new PejabatPengadaanSkpdModel();
+        $this->baReviewModel    = new BaReviewModel();
+        $this->catatanModel     = new CatatanModel();
+        $this->dokumenModel     = new DokumenModel();
+        $this->userModel        = new UserModel();
     }
 
     // ------------------------------------------------------------------
@@ -66,7 +75,7 @@ class PaketWorkflowController extends BaseController
         }
 
         $ctx   = $this->context($paket);
-        $avail = PaketWorkflow::available($paket, $this->actor(), $ctx['isMember'], $ctx['pokjaCount']);
+        $avail = PaketWorkflow::available($paket, $this->actor(), $ctx['isMember'], $ctx['pokjaCount'], $ctx['latestBa']);
 
         if (! isset($avail[$action])) {
             return $this->failWith('Aksi ini tidak tersedia untuk peran Anda atau status paket saat ini.', 403, '/paket');
@@ -77,13 +86,12 @@ class PaketWorkflowController extends BaseController
 
         $note = trim((string) $this->request->getPost('catatan'));
         if (($def['note'] ?? null) === 'required' && mb_strlen($note) < 3) {
-            return $this->failWith('Catatan wajib diisi (minimal 3 karakter).', 422, '/paket');
+            return $this->failWith('Catatan / alasan wajib diisi (minimal 3 karakter).', 422, '/paket');
         }
 
-        // Pengembalian oleh Admin ULP / Pokja wajib memiliki catatan (baik yang sudah disimpan di tab Catatan maupun dari form)
+        // Pengembalian oleh Admin ULP / Pokja wajib memiliki catatan (atau BA Review untuk sarankaji)
         $expectedNoteStatus = match ($action) {
             'kembalikan' => 3,
-            'sarankaji'  => 7,
             'saranadd'   => 10,
             default      => null,
         };
@@ -115,55 +123,114 @@ class PaketWorkflowController extends BaseController
             }
         }
 
-        $actor  = $this->actor();
-        $from   = (int) $paket['status_paket'];
-        $to     = (int) $def['to'];
-        $now    = date('Y-m-d H:i:s');
-        $today  = date('Y-m-d');
-        $update = ['updated_at' => $now];
-        $rupSet = null;
+        $actor        = $this->actor();
+        $isDirect     = PaketWorkflow::isDirectProcurement($paket);
+        $from         = (int) $paket['status_paket'];
+        $to           = (int) $def['to'];
+        $now          = date('Y-m-d H:i:s');
+        $today        = date('Y-m-d');
+        $update       = ['updated_at' => $now];
+        $rupSet       = null;
+        $autoPejabat  = null;
+        $uploadedFile = null;
 
         switch ($action) {
             case 'pilih':
                 $update['admin_ukpbj_id'] = (int) $actor['id'];
                 $to = $from; // status tidak berubah
                 break;
+
             case 'kembalikan':
                 $update['status_verifikasi'] = 2;
                 $rupSet = 1;
                 break;
+
             case 'ajukan_kembali':
                 $update['status_verifikasi'] = 0;
                 $rupSet = 2;
                 break;
+
             case 'terima':
                 $update['status_verifikasi'] = 1;
+                if ($isDirect) {
+                    // Tahap 04 Pengadaan Langsung: otomatis masuk ke Pejabat Pengadaan yang mengampu SKPD terkait
+                    $pejabat = $this->pejabatSkpdModel->findPejabatBySkpd((int) ($paket['skpd_id'] ?? 0));
+                    if (! $pejabat) {
+                        return $this->failWith(
+                            'SKPD pada paket ini belum memiliki Pejabat Pengadaan (akun ber-role POKJA yang dihubungkan ke SKPD ini). Harap atur terlebih dahulu di menu Manajemen Akun.',
+                            422,
+                            '/paket'
+                        );
+                    }
+                    $to = 6; // Langsung diterima oleh Pejabat Pengadaan untuk direview (tanpa Saran/Distribusi Kepala)
+                    $update['tgl_distribusi'] = $today;
+                    $autoPejabat = $pejabat;
+                }
                 break;
+
             case 'saran':
                 $update['admin_distribusi_id'] = (int) $actor['id'];
                 break;
+
             case 'distribusi':
-                $update['tgl_distribusi']   = $today;
-                $update['kepala_ukpbj_id']  = (int) $actor['id'];
+                $noSk  = trim((string) $this->request->getPost('no_sk_pokja'));
+                $tglSk = trim((string) $this->request->getPost('tgl_sk_pokja')) ?: $today;
+                if ($noSk !== '') {
+                    $update['no_sk_pokja']  = mb_substr($noSk, 0, 100);
+                    $update['tgl_sk_pokja'] = $tglSk;
+                }
+                $update['tgl_distribusi']  = $today;
+                $update['kepala_ukpbj_id'] = (int) $actor['id'];
                 break;
+
             case 'sarankaji':
                 $rupSet = 1;
+                if ($note === '' && ! empty($ctx['latestBa']['catatan_perbaikan'])) {
+                    $note = '[BA Review Putaran #' . (int) $ctx['latestBa']['putaran'] . '] ' . trim((string) $ctx['latestBa']['catatan_perbaikan']);
+                }
                 break;
+
             case 'ajukan_kaji':
                 $rupSet = 2;
                 break;
+
             case 'lelang':
                 $update['tgl_tayang'] = $today;
                 break;
-            case 'selesai':
-                $gagal = (int) $this->request->getPost('gagal') === 1 || empty($paket['nama_pemenang']);
-                if ($gagal) {
-                    $to = 15;
-                    $update += [
-                        'nama_pemenang' => null, 'npwp' => null, 'alamat' => null,
-                        'nama_penanggung' => null, 'nilai_kontrak' => 0, 'tgl_penetapan' => null,
-                    ];
+
+            case 'teruskan_hasil':
+                $update['kepala_ukpbj_id'] = (int) $actor['id'];
+                if ($isDirect) {
+                    // Tahap 08 Pengadaan Langsung: Kepala UKPBJ meneruskan hasil ke PPK -> Status Paket langsung SELESAI
+                    $to = 14;
                 }
+                break;
+
+            case 'ulang':
+                // Tahap 12a Tender Ulang: dikembalikan oleh PPK langsung ke Review Pokja Pemilihan (status 6)
+                $to = 6;
+                $update['alasan_penolakan'] = $note;
+                break;
+
+            case 'batal_tolak':
+                // Tahap 12b Tidak Dilanjutkan: WAJIB isi alasan & unggah surat resmi penolakan / pembatalan -> Status GAGAL (15)
+                $file = $this->request->getFile('surat_penolakan');
+                $stored = $this->storeUpload($file, 'surat-penolakan-paket-' . (int) $paket['id'], $err);
+                if ($stored === null) {
+                    return $this->failWith('Surat resmi penolakan/pembatalan wajib diunggah: ' . $err, 422, '/paket');
+                }
+                $uploadedFile = $stored;
+                $to = 15;
+                $update += [
+                    'alasan_penolakan' => $note,
+                    'surat_penolakan'  => $stored,
+                    'nama_pemenang'    => null,
+                    'npwp'             => null,
+                    'alamat'           => null,
+                    'nama_penanggung'  => null,
+                    'nilai_kontrak'    => 0,
+                    'tgl_penetapan'    => null,
+                ];
                 break;
         }
 
@@ -177,17 +244,45 @@ class PaketWorkflowController extends BaseController
             $db->table('paket')->where('id', (int) $paket['id'])->where('status_paket', $from)->update($update);
             if ($db->affectedRows() !== 1) {
                 $db->transRollback();
+                if ($uploadedFile) {
+                    @unlink($this->uploadDir() . $uploadedFile);
+                }
 
                 return $this->failWith('Status paket sudah berubah. Muat ulang halaman.', 409, '/paket');
+            }
+
+            if ($autoPejabat !== null) {
+                $exists = $this->pokjaModel->where([
+                    'paket_id' => (int) $paket['id'],
+                    'user_id'  => (int) $autoPejabat['id'],
+                ])->countAllResults() > 0;
+
+                if (! $exists) {
+                    $this->pokjaModel->insert([
+                        'paket_id' => (int) $paket['id'],
+                        'user_id'  => (int) $autoPejabat['id'],
+                        'role'     => 'Pejabat Pengadaan',
+                    ]);
+                }
             }
 
             if ($rupSet !== null && ! empty($paket['rup_id'])) {
                 $db->table('rup')->where('id', (int) $paket['rup_id'])->update(['rup_status' => $rupSet, 'updated_at' => $now]);
             }
 
-            if ($action === 'hasil') {
+            if (in_array($action, ['hasil', 'serahkan_pl'], true)) {
                 $db->table('syarat')->where('paket_id', (int) $paket['id'])->update(['selesai' => 1, 'updated_at' => $now]);
                 $db->table('dokumen')->where('paket_id', (int) $paket['id'])->update(['selesai' => 1, 'updated_at' => $now]);
+            }
+
+            if ($uploadedFile !== null) {
+                $this->dokumenModel->insert([
+                    'paket_id'     => (int) $paket['id'],
+                    'nama_dokumen' => 'Surat Resmi Penolakan / Pembatalan PPK',
+                    'nama_file'    => $uploadedFile,
+                    'uploaded_by'  => (int) $actor['id'],
+                    'selesai'      => 1,
+                ]);
             }
 
             if ($note !== '') {
@@ -203,12 +298,106 @@ class PaketWorkflowController extends BaseController
             $db->transCommit();
         } catch (\Throwable $e) {
             $db->transRollback();
+            if ($uploadedFile) {
+                @unlink($this->uploadDir() . $uploadedFile);
+            }
             log_message('error', 'PaketWorkflow::transition ' . $action . ': ' . $e->getMessage());
 
             return $this->failWith('Gagal memproses aksi. Silakan coba lagi.', 500, '/paket');
         }
 
         return $this->okWith('Berhasil: ' . $def['label'] . '.', ['status_paket' => $to], '/paket');
+    }
+
+    // ------------------------------------------------------------------
+    // Berita Acara Review (BA Review)
+    // ------------------------------------------------------------------
+
+    public function baReview($id = null)
+    {
+        $paket = $this->loadPaket((int) $id);
+        if (! $paket) {
+            return $this->failWith('Data paket tidak ditemukan.', 404);
+        }
+
+        $ctx  = $this->context($paket);
+        $caps = PaketWorkflow::capabilities($paket, $this->actor(), $ctx['isMember']);
+        $rows = $this->baReviewModel->getByPaketId((int) $paket['id']);
+
+        return $this->response->setJSON([
+            'status'    => 'success',
+            'data'      => $rows,
+            'latest'    => $rows !== [] ? $rows[count($rows) - 1] : null,
+            'can_add'   => $caps['ba_review'],
+            'is_direct' => $caps['is_direct'],
+        ]);
+    }
+
+    public function baReviewStore()
+    {
+        $paket = $this->loadPaket((int) $this->request->getPost('paket_id'));
+        if (! $paket) {
+            return $this->failWith('Data paket tidak ditemukan.', 404);
+        }
+
+        $ctx  = $this->context($paket);
+        $caps = PaketWorkflow::capabilities($paket, $this->actor(), $ctx['isMember']);
+        if (! $caps['ba_review']) {
+            return $this->failWith('Anda tidak memiliki kewenangan menyusun Berita Acara Review pada tahap ini.', 403);
+        }
+
+        $nomorBa          = trim((string) $this->request->getPost('nomor_ba'));
+        $tglBa            = trim((string) $this->request->getPost('tgl_ba')) ?: date('Y-m-d');
+        $hasilPemeriksaan = trim((string) $this->request->getPost('hasil_pemeriksaan'));
+        $catatanPerbaikan = trim((string) $this->request->getPost('catatan_perbaikan'));
+        $perluPerbaikan   = (int) $this->request->getPost('perlu_perbaikan') === 1 ? 1 : 0;
+
+        if (mb_strlen($hasilPemeriksaan) < 5) {
+            return $this->failWith('Hasil pemeriksaan wajib diisi (minimal 5 karakter).', 422);
+        }
+        if ($perluPerbaikan === 1 && mb_strlen($catatanPerbaikan) < 3) {
+            return $this->failWith('Catatan perbaikan wajib diisi apabila dokumen memerlukan perbaikan dari PPK.', 422);
+        }
+
+        $latest      = $this->baReviewModel->getLatestByPaketId((int) $paket['id']);
+        $nextPutaran = $latest ? ((int) $latest['putaran'] + 1) : 1;
+
+        $insertId = $this->baReviewModel->insert([
+            'paket_id'          => (int) $paket['id'],
+            'putaran'           => $nextPutaran,
+            'nomor_ba'          => $nomorBa !== '' ? mb_substr($nomorBa, 0, 100) : null,
+            'tgl_ba'            => $tglBa,
+            'hasil_pemeriksaan' => $hasilPemeriksaan,
+            'catatan_perbaikan' => $catatanPerbaikan !== '' ? $catatanPerbaikan : null,
+            'perlu_perbaikan'   => $perluPerbaikan,
+            'reviewer_id'       => (int) $this->actor()['id'],
+        ]);
+
+        // Ambil ulang state tombol aksi terbaru agar UI bisa langsung mengaktifkan tombol Lelang / Kembalikan
+        $updatedCtx = $this->context($paket);
+        $actions    = array_values(PaketWorkflow::available(
+            $paket,
+            $this->actor(),
+            $updatedCtx['isMember'],
+            $updatedCtx['pokjaCount'],
+            $updatedCtx['latestBa']
+        ));
+
+        return $this->okWith(
+            "Berita Acara Review Putaran #{$nextPutaran} berhasil disimpan.",
+            [
+                'ba_id'            => $insertId,
+                'putaran'          => $nextPutaran,
+                'perlu_perbaikan'  => $perluPerbaikan,
+                'workflow_actions' => $actions,
+                'data'             => [
+                    'ba_id'            => $insertId,
+                    'putaran'          => $nextPutaran,
+                    'perlu_perbaikan'  => $perluPerbaikan,
+                    'workflow_actions' => $actions,
+                ],
+            ]
+        );
     }
 
     // ------------------------------------------------------------------
@@ -238,12 +427,13 @@ class PaketWorkflowController extends BaseController
         }
 
         return $this->response->setJSON([
-            'status'   => 'success',
-            'members'  => $members,
+            'status'     => 'success',
+            'members'    => $members,
             'candidates' => $candidates,
-            'can_edit' => $caps['pokja'],
-            'sizes'    => PaketWorkflow::POKJA_SIZES,
-            'roles'    => ['Ketua', 'Sekretaris', 'Anggota'],
+            'can_edit'   => $caps['pokja'],
+            'is_direct'  => $caps['is_direct'],
+            'sizes'      => PaketWorkflow::POKJA_SIZES,
+            'roles'      => ['Ketua', 'Sekretaris', 'Anggota'],
         ]);
     }
 
@@ -276,7 +466,19 @@ class PaketWorkflowController extends BaseController
 
         $this->pokjaModel->insert(['paket_id' => $paketId, 'user_id' => $userId, 'role' => $jabatan]);
 
-        return $this->okWith('Anggota Pokja ditambahkan.');
+        $updatedCtx = $this->context($paket);
+        $actions    = array_values(PaketWorkflow::available(
+            $paket,
+            $this->actor(),
+            $updatedCtx['isMember'],
+            $updatedCtx['pokjaCount'],
+            $updatedCtx['latestBa']
+        ));
+
+        return $this->okWith('Anggota Pokja ditambahkan.', [
+            'workflow_actions' => $actions,
+            'data'             => ['workflow_actions' => $actions],
+        ]);
     }
 
     public function pokjaDelete($id = null)
@@ -289,7 +491,19 @@ class PaketWorkflowController extends BaseController
 
         $this->pokjaModel->delete((int) $id);
 
-        return $this->okWith('Anggota Pokja dihapus.');
+        $updatedCtx = $this->context($paket);
+        $actions    = array_values(PaketWorkflow::available(
+            $paket,
+            $this->actor(),
+            $updatedCtx['isMember'],
+            $updatedCtx['pokjaCount'],
+            $updatedCtx['latestBa']
+        ));
+
+        return $this->okWith('Anggota Pokja dihapus.', [
+            'workflow_actions' => $actions,
+            'data'             => ['workflow_actions' => $actions],
+        ]);
     }
 
     // ------------------------------------------------------------------
@@ -342,10 +556,6 @@ class PaketWorkflowController extends BaseController
         $statusCode = (int) $this->request->getPost('status_paket');
         if ($statusCode <= 0) {
             $curStatus = (int) $paket['status_paket'];
-            // Petakan id_proses catatan sesuai rekonstruksi:
-            // - Admin ULP saat status 2 -> 3 (Dikembalikan ULP)
-            // - Pokja saat status 6 atau 8 -> 7 (Saran Kaji)
-            // - Pokja saat status 9 atau 11 -> 10 (Saran Addendum)
             if ($role === 'ADMIN ULP' && $curStatus === 2) {
                 $statusCode = 3;
             } elseif ($role === 'POKJA' && in_array($curStatus, [6, 8], true)) {
@@ -432,7 +642,7 @@ class PaketWorkflowController extends BaseController
         }
         $isMember = $this->context($paket)['isMember'];
         if (! PaketWorkflow::capabilities($paket, $this->actor(), $isMember)['hasil']) {
-            return $this->failWith('Data hasil lelang tidak dapat diubah pada tahap ini.', 403);
+            return $this->failWith('Data hasil pemilihan tidak dapat diubah pada tahap ini.', 403);
         }
 
         $rules = [
@@ -468,7 +678,7 @@ class PaketWorkflowController extends BaseController
             'tgl_surat'       => $val('tgl_surat'),
         ]);
 
-        return $this->okWith('Data hasil lelang disimpan.');
+        return $this->okWith('Data hasil pemilihan disimpan.');
     }
 
     public function lpse($id = null)
@@ -484,7 +694,7 @@ class PaketWorkflowController extends BaseController
     }
 
     // ------------------------------------------------------------------
-    // Dokumen lelang
+    // Dokumen lelang / hasil pengadaan
     // ------------------------------------------------------------------
 
     public function dokumen($id = null)
@@ -512,7 +722,7 @@ class PaketWorkflowController extends BaseController
         }
         $isMember = $this->context($paket)['isMember'];
         if (! PaketWorkflow::capabilities($paket, $this->actor(), $isMember)['dokumen']) {
-            return $this->failWith('Dokumen lelang hanya dapat diunggah Pokja saat proses lelang/addendum.', 403);
+            return $this->failWith('Dokumen hanya dapat diunggah oleh Pokja/Pejabat Pengadaan atau Verifikator pada tahapan yang sesuai.', 403);
         }
 
         $nama = trim((string) $this->request->getPost('nama_dokumen'));
@@ -587,28 +797,30 @@ class PaketWorkflowController extends BaseController
     // Helpers
     // ------------------------------------------------------------------
 
-    /** Paket + skpd/ppk RUP; null bila tidak ada atau di luar cakupan user. */
+    /** Paket + skpd/ppk/metode RUP; null bila tidak ada atau di luar cakupan user. */
     private function loadPaket(int $id): ?array
     {
         if ($id <= 0) {
             return null;
         }
 
-        $paket = $this->paketModel->select('paket.*, rup.skpd_id, rup.ppk_id')
+        $paket = $this->paketModel->select('paket.*, rup.skpd_id, rup.ppk_id, rup.metode_pemilihan_id, metode_pemilihan.name as metode_pemilihan_name, metode_pemilihan.code as metode_pemilihan_code')
             ->join('rup', 'rup.id = paket.rup_id', 'left')
+            ->join('metode_pemilihan', 'metode_pemilihan.id = rup.metode_pemilihan_id', 'left')
             ->where('paket.id', $id)->first();
 
         return ($paket && $this->inScope($paket)) ? $paket : null;
     }
 
-    /** @return array{isMember: bool, pokjaCount: int} */
+    /** @return array{isMember: bool, pokjaCount: int, latestBa: ?array} */
     private function context(array $paket): array
     {
-        $paketId = (int) $paket['id'];
-        $count   = $this->pokjaModel->where('paket_id', $paketId)->countAllResults();
-        $member  = $this->pokjaModel->where(['paket_id' => $paketId, 'user_id' => (int) $this->actor()['id']])->countAllResults() > 0;
+        $paketId  = (int) $paket['id'];
+        $count    = $this->pokjaModel->where('paket_id', $paketId)->countAllResults();
+        $member   = $this->pokjaModel->where(['paket_id' => $paketId, 'user_id' => (int) $this->actor()['id']])->countAllResults() > 0;
+        $latestBa = $this->baReviewModel->getLatestByPaketId($paketId);
 
-        return ['isMember' => $member, 'pokjaCount' => $count];
+        return ['isMember' => $member, 'pokjaCount' => $count, 'latestBa' => $latestBa];
     }
 
     private function uploadDir(): string

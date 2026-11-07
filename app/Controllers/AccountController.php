@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\SkpdModel;
 use App\Models\PpkModel;
+use App\Models\PejabatPengadaanSkpdModel;
 use App\Models\RoleModel;
 use App\Models\UserModel;
 
@@ -32,13 +33,15 @@ class AccountController extends BaseController
     protected SkpdModel $skpdModel;
     protected RoleModel $roleModel;
     protected PpkModel $ppkModel;
+    protected PejabatPengadaanSkpdModel $pejabatSkpdModel;
 
     public function __construct()
     {
-        $this->userModel = new UserModel();
-        $this->skpdModel = new SkpdModel();
-        $this->roleModel = new RoleModel();
-        $this->ppkModel  = new PpkModel();
+        $this->userModel        = new UserModel();
+        $this->skpdModel        = new SkpdModel();
+        $this->roleModel        = new RoleModel();
+        $this->ppkModel         = new PpkModel();
+        $this->pejabatSkpdModel = new PejabatPengadaanSkpdModel();
     }
 
     /**
@@ -53,41 +56,46 @@ class AccountController extends BaseController
         $usersList = $allSkpd = $allRoles = $ppkList = [];
 
         try {
-            $allSkpd  = $this->skpdModel->select('id, name, abbreviation')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
-            $allRoles = $this->roleModel->select('id, name')->orderBy('id', 'ASC')->findAll();
-            $ppkList  = $this->ppkModel->select('id, name, skpd_id')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $allSkpd      = $this->skpdModel->select('id, name, abbreviation')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $allRoles     = $this->roleModel->select('id, name')->orderBy('id', 'ASC')->findAll();
+            $ppkList      = $this->ppkModel->select('id, name, skpd_id')->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+            $pejabatSkpds = $this->pejabatSkpdModel->getGroupedByUser();
 
             foreach ($this->userModel->getUsersWithDetails() as $u) {
                 $roleName = $u['role_name'] ?? 'USER';
                 $isActive = (int) ($u['is_active'] ?? 0) === 1;
                 $nip      = ! empty($u['nip']) && $u['nip'] !== '-' ? $u['nip'] : '';
                 $username = ltrim((string) $u['username'], '@');
+                $uid      = (int) $u['id'];
+                $pSkpd    = $pejabatSkpds[$uid] ?? [];
 
                 $usersList[] = [
-                    'id'           => (int) $u['id'],
-                    'name'         => $u['full_name'],
-                    'username'     => '@' . $username,
-                    'raw_username' => $username,
-                    'nip'          => $nip !== '' ? $nip : '-',
-                    'raw_nip'      => $nip,
-                    'email'        => $u['email'] ?: '-',
-                    'raw_email'    => $u['email'] ?: '',
-                    'whatsapp'     => $u['whatsapp_number'] ?: '-',
-                    'raw_whatsapp' => $u['whatsapp_number'] ?: '',
-                    'role'         => $roleName,
-                    'role_id'      => $u['role_id'] ?? null,
-                    'role_badge'   => self::ROLE_BADGES[$roleName] ?? self::DEFAULT_BADGE,
-                    'skpd_id'      => $u['skpd_id'] ?? null,
-                    'skpd_name'    => $u['skpd_name'] ?? null,
-                    'skpd_abbr'    => $u['skpd_abbr'] ?? null,
-                    'skpd_code'    => $u['skpd_code'] ?? null,
-                    'ppk_id'       => $u['ppk_id'] ?? null,
-                    'ppk_name'     => $u['ppk_name'] ?? null,
-                    'status'       => $isActive ? 'Active' : 'Inactive',
-                    'is_active'    => $isActive ? 1 : 0,
-                    'status_badge' => $isActive ? 'bg-success' : 'bg-secondary',
-                    'avatar'       => '/img/demo/avatars/avatar-admin.png',
-                    'created_at'   => ! empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
+                    'id'                => $uid,
+                    'name'              => $u['full_name'],
+                    'username'          => '@' . $username,
+                    'raw_username'      => $username,
+                    'nip'               => $nip !== '' ? $nip : '-',
+                    'raw_nip'           => $nip,
+                    'email'             => $u['email'] ?: '-',
+                    'raw_email'         => $u['email'] ?: '',
+                    'whatsapp'          => $u['whatsapp_number'] ?: '-',
+                    'raw_whatsapp'      => $u['whatsapp_number'] ?: '',
+                    'role'              => $roleName,
+                    'role_id'           => $u['role_id'] ?? null,
+                    'role_badge'        => self::ROLE_BADGES[$roleName] ?? self::DEFAULT_BADGE,
+                    'skpd_id'           => $u['skpd_id'] ?? null,
+                    'skpd_name'         => $u['skpd_name'] ?? null,
+                    'skpd_abbr'         => $u['skpd_abbr'] ?? null,
+                    'skpd_code'         => $u['skpd_code'] ?? null,
+                    'ppk_id'            => $u['ppk_id'] ?? null,
+                    'ppk_name'          => $u['ppk_name'] ?? null,
+                    'pejabat_skpds'     => $pSkpd,
+                    'pejabat_skpd_ids'  => array_column($pSkpd, 'skpd_id'),
+                    'status'            => $isActive ? 'Active' : 'Inactive',
+                    'is_active'         => $isActive ? 1 : 0,
+                    'status_badge'      => $isActive ? 'bg-success' : 'bg-secondary',
+                    'avatar'            => '/img/demo/avatars/avatar-admin.png',
+                    'created_at'        => ! empty($u['created_at']) ? date('d M Y', strtotime($u['created_at'])) : '-',
                 ];
             }
         } catch (\Throwable $e) {
@@ -100,7 +108,7 @@ class AccountController extends BaseController
         $usersWithSkpd = 0;
         foreach ($usersList as $u) {
             $activeCount   += $u['is_active'];
-            $usersWithSkpd += empty($u['skpd_name']) ? 0 : 1;
+            $usersWithSkpd += (! empty($u['skpd_name']) || ! empty($u['pejabat_skpds'])) ? 1 : 0;
         }
         $totalCount = count($usersList);
 
@@ -177,6 +185,11 @@ class AccountController extends BaseController
         try {
             $insertId = $this->userModel->insert($data);
 
+            if ((int) $data['role_id'] === 7) {
+                $pejabatSkpdIds = (array) $this->request->getPost('pejabat_skpd_ids');
+                $this->pejabatSkpdModel->syncForUser((int) $insertId, $pejabatSkpdIds);
+            }
+
             return $this->done('Akun pengguna baru berhasil ditambahkan!', ['id' => $insertId]);
         } catch (\Throwable $e) {
             log_message('error', 'Error store user: ' . $e->getMessage());
@@ -233,6 +246,13 @@ class AccountController extends BaseController
 
         try {
             $this->userModel->update($id, $data);
+
+            if ((int) $data['role_id'] === 7) {
+                $pejabatSkpdIds = (array) $this->request->getPost('pejabat_skpd_ids');
+                $this->pejabatSkpdModel->syncForUser((int) $id, $pejabatSkpdIds);
+            } else {
+                $this->pejabatSkpdModel->syncForUser((int) $id, []);
+            }
 
             return $this->done('Data akun pengguna berhasil diperbarui!');
         } catch (\Throwable $e) {

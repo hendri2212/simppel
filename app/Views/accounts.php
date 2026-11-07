@@ -255,6 +255,13 @@
                                                             <?php else: ?>
                                                                 <span class="text-muted fs-xs fst-italic">-</span>
                                                             <?php endif; ?>
+                                                            <?php if (!empty($user['pejabat_skpds'])): ?>
+                                                                <div class="mt-1">
+                                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-nano" title="<?= esc(implode(', ', array_column($user['pejabat_skpds'], 'name'))) ?>">
+                                                                        <i class="fal fa-briefcase me-1"></i>Pejabat Pengadaan (<?= count($user['pejabat_skpds']) ?> SKPD)
+                                                                    </span>
+                                                                </div>
+                                                            <?php endif; ?>
                                                         </td>
                                                         <td class="text-nowrap">
                                                             <span class="text-muted fs-xs"><?= esc($user['email']) ?></span>
@@ -395,6 +402,10 @@
                                                 <i class="fal fa-user-tie me-1"></i><span id="detailModalPpkName">-</span>
                                             </span>
                                         </div>
+                                    </div>
+                                    <div class="mb-3" id="detailModalPejabatSkpdContainer" style="display: none;">
+                                        <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">SKPD Binaan Pejabat Pengadaan</label>
+                                        <div id="detailModalPejabatSkpdList" class="d-flex flex-wrap gap-1"></div>
                                     </div>
                                     <div>
                                         <label class="text-muted fs-xs text-uppercase fw-semibold mb-1 d-block">Role / Hak Akses Sistem</label>
@@ -581,6 +592,26 @@
                                 </select>
                             </div>
 
+                            <!-- SKPD Binaan Pejabat Pengadaan (Khusus Role POKJA) -->
+                            <div class="col-12" id="editUserPejabatSkpdContainer" style="display: none;">
+                                <div class="p-3 bg-light rounded-2 border">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label class="form-label fs-xs text-uppercase fw-semibold text-primary mb-0" for="editUserPejabatSkpdSelect">
+                                            <i class="fal fa-briefcase me-1"></i> SKPD Binaan Pejabat Pengadaan (Pengadaan Langsung)
+                                        </label>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Khusus Role POKJA</span>
+                                    </div>
+                                    <select class="form-select" name="pejabat_skpd_ids[]" id="editUserPejabatSkpdSelect" multiple style="width: 100%;">
+                                        <?php foreach ($allSkpd as $ag): ?>
+                                            <option value="<?= (int) $ag['id'] ?>">
+                                                <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="text-muted fs-nano mt-1 d-block">Pilih satu atau lebih SKPD yang diampu oleh personil Pokja ini sebagai Pejabat Pengadaan. Paket Pengadaan Langsung pada SKPD terpilih akan otomatis masuk ke penugasan personil ini saat diterima ULP.</small>
+                                </div>
+                            </div>
+
                             <!-- Password Baru (Opsional) -->
                             <div class="col-12">
                                 <div class="p-3 bg-light rounded-2 border">
@@ -718,6 +749,26 @@
                                         <option value="<?= esc($role['id']) ?>"><?= esc($role['name']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
+                            </div>
+
+                            <!-- SKPD Binaan Pejabat Pengadaan (Khusus Role POKJA) -->
+                            <div class="col-12" id="addUserPejabatSkpdContainer" style="display: none;">
+                                <div class="p-3 bg-light rounded-2 border">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <label class="form-label fs-xs text-uppercase fw-semibold text-primary mb-0" for="addUserPejabatSkpdSelect">
+                                            <i class="fal fa-briefcase me-1"></i> SKPD Binaan Pejabat Pengadaan (Pengadaan Langsung)
+                                        </label>
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Khusus Role POKJA</span>
+                                    </div>
+                                    <select class="form-select" name="pejabat_skpd_ids[]" id="addUserPejabatSkpdSelect" multiple style="width: 100%;">
+                                        <?php foreach ($allSkpd as $ag): ?>
+                                            <option value="<?= (int) $ag['id'] ?>">
+                                                <?= esc($ag['abbreviation'] ? $ag['abbreviation'] . ' - ' : '') ?><?= esc($ag['name']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <small class="text-muted fs-nano mt-1 d-block">Pilih satu atau lebih SKPD yang diampu oleh personil Pokja ini sebagai Pejabat Pengadaan. Paket Pengadaan Langsung pada SKPD terpilih akan otomatis masuk ke penugasan personil ini saat diterima ULP.</small>
+                                </div>
                             </div>
 
                             <!-- SKPD Select2 -->
@@ -881,6 +932,41 @@
                 width: '100%'
             });
 
+            // Inisialisasi Select2 Multi-SKPD Pejabat Pengadaan
+            $('#addUserPejabatSkpdSelect').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#addUserModal'),
+                placeholder: '-- Pilih SKPD Binaan (Bisa Lebih Dari 1) --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('#editUserPejabatSkpdSelect').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#editUserModal'),
+                placeholder: '-- Pilih SKPD Binaan (Bisa Lebih Dari 1) --',
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Toggle Pejabat Pengadaan SKPD Container pada Modal Tambah (Role ID 7 = POKJA)
+            $('#addUserRoleId').on('change', function () {
+                const isPokja = String($(this).val()) === '7';
+                $('#addUserPejabatSkpdContainer').toggle(isPokja);
+                if (!isPokja) {
+                    $('#addUserPejabatSkpdSelect').val([]).trigger('change');
+                }
+            });
+
+            // Toggle Pejabat Pengadaan SKPD Container pada Modal Edit (Role ID 7 = POKJA)
+            $('#editUserRoleId').on('change', function () {
+                const isPokja = String($(this).val()) === '7';
+                $('#editUserPejabatSkpdContainer').toggle(isPokja);
+                if (!isPokja) {
+                    $('#editUserPejabatSkpdSelect').val([]).trigger('change');
+                }
+            });
+
             // Event saat SKPD berubah pada Modal Tambah Akun
             $('#addUserSkpdSelect').on('change', function () {
                 const skpdId = $(this).val();
@@ -902,6 +988,8 @@
             // Reset Select2 dan form ketika modal ditutup
             $('#addUserModal').on('hidden.bs.modal', function () {
                 $('#addUserSkpdSelect').val(null).trigger('change');
+                $('#addUserPejabatSkpdSelect').val([]).trigger('change');
+                $('#addUserPejabatSkpdContainer').hide();
                 const ppkSelect = document.getElementById('addUserPpkSelect');
                 if (ppkSelect) {
                     populatePpk(ppkSelect, null);
@@ -910,6 +998,8 @@
             });
 
             $('#editUserModal').on('hidden.bs.modal', function () {
+                $('#editUserPejabatSkpdSelect').val([]).trigger('change');
+                $('#editUserPejabatSkpdContainer').hide();
                 $('#editAlertContainer').addClass('d-none').empty();
             });
         });
@@ -1168,6 +1258,22 @@
                         officerNameEl.textContent = '-';
                     }
 
+                    // Pejabat Pengadaan Multi-SKPD
+                    const pejContainer = document.getElementById('detailModalPejabatSkpdContainer');
+                    const pejList = document.getElementById('detailModalPejabatSkpdList');
+                    if (pejContainer && pejList) {
+                        if (u.pejabat_skpds && u.pejabat_skpds.length > 0) {
+                            pejContainer.style.display = 'block';
+                            pejList.innerHTML = u.pejabat_skpds.map(s => {
+                                const abbr = s.abbreviation ? (s.abbreviation + ' - ') : '';
+                                return `<span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-nano me-1 mb-1">${escapeHtml(abbr + s.name)}</span>`;
+                            }).join('');
+                        } else {
+                            pejContainer.style.display = 'none';
+                            pejList.innerHTML = '';
+                        }
+                    }
+
                     // Email Link
                     const emailLink = document.getElementById('detailModalEmailLink');
                     if (u.email && u.email !== '-') {
@@ -1369,6 +1475,12 @@
                 }
 
                 $('#editUserSkpdSelect').val(skpdVal).trigger('change');
+
+                // Set SKPD Binaan Pejabat Pengadaan (Khusus Role POKJA - ID 7)
+                const isPokja = String(u.role_id) === '7' || (u.role || '').toUpperCase() === 'POKJA';
+                $('#editUserPejabatSkpdContainer').toggle(isPokja);
+                const assignedSkpdIds = (u.pejabat_skpd_ids || []).map(String);
+                $('#editUserPejabatSkpdSelect').val(isPokja ? assignedSkpdIds : []).trigger('change');
 
                 // Buka modal
                 const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));

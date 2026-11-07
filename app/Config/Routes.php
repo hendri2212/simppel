@@ -115,8 +115,10 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/paket/syarat/delete/(:num)', 'PaketController::deleteSyarat/$1', $writeMutate);
     $routes->get('/paket/syarat/download/(:num)', 'PaketController::downloadSyarat/$1');
 
-    // Tahapan paket setelah diajukan (verifikasi ULP, Pokja, lelang, hasil, selesai)
+    // Tahapan paket setelah diajukan (verifikasi ULP, Pokja/Pejabat Pengadaan, BA Review, lelang, hasil, selesai)
     $routes->post('/paket/aksi/(:segment)/(:num)', 'PaketWorkflowController::transition/$1/$2', $writeAny);
+    $routes->get('/paket/ba-review/(:num)', 'PaketWorkflowController::baReview/$1');
+    $routes->post('/paket/ba-review/store', 'PaketWorkflowController::baReviewStore', $writeAny);
     $routes->get('/paket/pokja/(:num)', 'PaketWorkflowController::pokja/$1');
     $routes->post('/paket/pokja/store', 'PaketWorkflowController::pokjaStore', $writeAny);
     $routes->post('/paket/pokja/delete/(:num)', 'PaketWorkflowController::pokjaDelete/$1', $writeAny);
