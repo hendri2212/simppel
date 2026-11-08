@@ -424,7 +424,7 @@
                     $isAdminUlp = in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR', 'KEPALA ULP', 'DISTRIBUSI'], true);
                     $isPpk = in_array($currentRoleName, ['PPK', 'ADMIN PPK'], true) || !$isAdminUlp;
                     $canWritePaket = ! $isStrictAdminUlp && in_array($currentRoleName, \App\Controllers\PaketController::WRITE_ROLES, true);
-                    $canAjukanPaket = $canAjukanPaket ?? in_array($currentRoleName, ['ADMINISTRATOR', 'PPK'], true);
+                    $canAjukanPaket = $canAjukanPaket ?? in_array($currentRoleName, \App\Controllers\PaketController::AJUKAN_ROLES, true);
                         ?>
 
                     <div class="main-content">
@@ -578,7 +578,7 @@
                                                 <span class="badge bg-secondary badge-count" id="countPillAll"><?= count($pakets) ?></span>
                                             </button>
 
-                                            <?php if (in_array($currentRoleName, ['ADMIN ULP', 'ADMINISTRATOR'], true)): ?>
+                                            <?php if ($currentRoleName === 'ADMIN ULP'): ?>
                                                 <!-- 5 Tab Antrean Admin ULP -->
                                                 <button type="button" class="status-pill-btn pill-warning" data-filter-type="ulp_daftar" title="Antrean bersama paket baru dari PPK yang belum diambil Admin ULP (status = 2, admin_ulp = kosong)">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#inbox"></use></svg>
@@ -701,13 +701,13 @@
                                                     <span class="badge bg-success-subtle text-success badge-count" id="countPillAgencySudah">0</span>
                                                 </button>
 
-                                            <?php else: /* TAMPILAN ROLE PPK / ADMIN PPK */ ?>
+                                            <?php else: /* TAMPILAN ROLE ADMINISTRATOR / MONEV / PPK / ADMIN PPK */ ?>
 
                                                 <!-- Pill: Draft (Status 1) -->
                                                 <button type="button" class="status-pill-btn pill-warning" data-filter-type="status" data-status-codes="1" title="Draf paket yang belum diajukan ke ULP">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#edit-3"></use></svg>
                                                     <span>Draft</span>
-                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillDraft">0</span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis badge-count" id="countPillDraft"><?= $draftCount ?></span>
                                                 </button>
 
                                                 <!-- Pill: Dikembalikan (Status 3) -->
@@ -735,7 +735,7 @@
                                                 <button type="button" class="status-pill-btn pill-info" data-filter-type="status" data-status-codes="2,4,5,6,8,9,11,13,16,17" title="Sedang berjalan di UKPBJ / Pokja / Tayang Lelang">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#activity"></use></svg>
                                                     <span>Sedang Diproses</span>
-                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillProses">0</span>
+                                                    <span class="badge bg-info-subtle text-info badge-count" id="countPillProses"><?= $prosesCount ?></span>
                                                 </button>
 
                                                 <!-- Pill: Hasil Lelang (Status 12) -->
@@ -749,7 +749,14 @@
                                                 <button type="button" class="status-pill-btn pill-success" data-filter-type="status" data-status-codes="14" title="Kontrak / SPK telah diinput dan pengadaan tuntas">
                                                     <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
                                                     <span>Paket Selesai</span>
-                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillSelesai">0</span>
+                                                    <span class="badge bg-success-subtle text-success badge-count" id="countPillSelesai"><?= $selesaiCount ?></span>
+                                                </button>
+
+                                                <!-- Pill: Batal / Gagal (Status 0, 15) -->
+                                                <button type="button" class="status-pill-btn pill-danger" data-filter-type="status" data-status-codes="0,15" title="Paket dibatalkan atau gagal lelang">
+                                                    <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#x-circle"></use></svg>
+                                                    <span>Batal / Gagal</span>
+                                                    <span class="badge bg-danger-subtle text-danger badge-count" id="countPillBatalGagal">0</span>
                                                 </button>
 
                                             <?php endif; ?>
@@ -770,16 +777,22 @@
                                             </div>
                                         </div>
 
-                                        <!-- Filter Status Tahapan Paket (0 - 15) -->
+                                        <!-- Filter Status Tahapan Paket (0 - 17) -->
                                         <div class="col-6 col-md-3 col-lg-2">
                                             <select id="statusPaketFilter" class="form-select form-select-sm">
-                                                <option value="">Semua Tahapan Paket</option>
+                                                <option value="">Semua Tahapan Paket (<?= count($pakets) ?>)</option>
                                                 <?php 
                                                 $stMap = $statusPaketList ?? \App\Models\PaketModel::STATUS_PAKET;
+                                                $stCountsInit = [];
+                                                foreach ($pakets as $pkItem) {
+                                                    $cKey = (int) ($pkItem['status_paket'] ?? 0);
+                                                    $stCountsInit[$cKey] = ($stCountsInit[$cKey] ?? 0) + 1;
+                                                }
                                                 foreach ($stMap as $code => $st): 
+                                                    $initCnt = $stCountsInit[(int) $code] ?? 0;
                                                 ?>
-                                                    <option value="<?= $code ?>">
-                                                        <?= $code ?> - <?= esc($st['name']) ?>
+                                                    <option value="<?= $code ?>" data-base-label="<?= $code ?> - <?= esc($st['name']) ?>">
+                                                        <?= $code ?> - <?= esc($st['name']) ?> (<?= $initCnt ?>)
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
@@ -2146,6 +2159,7 @@
                     proses: 0,
                     hasil: 0,
                     selesai: 0,
+                    batalGagal: 0,
                     ulpDaftar: 0,
                     ulpVerifikasi: 0,
                     ulpDikembalikan: 0,
@@ -2165,9 +2179,11 @@
                     agencyBaru: 0,
                     agencySudah: 0,
                 };
+                const perStatusCounts = {};
 
                 baseRows.forEach(row => {
                     const st = parseInt(row.getAttribute('data-status-paket') || '0', 10);
+                    perStatusCounts[st] = (perStatusCounts[st] || 0) + 1;
                     const adminUkpbjId = parseInt(row.getAttribute('data-admin-ukpbj-id') || '0', 10);
                     const isLpse = parseInt(row.getAttribute('data-is-lpse') || '0', 10);
                     const pokjaUsers = (row.getAttribute('data-pokja-users') || '')
@@ -2182,6 +2198,7 @@
                     if ([2, 4, 5, 6, 8, 9, 11, 13, 16, 17].includes(st)) counts.proses++;
                     if (st === 12) counts.hasil++;
                     if (st === 14) counts.selesai++;
+                    if (st === 0 || st === 15) counts.batalGagal++;
 
                     // 5 Tab Antrean Admin ULP
                     if (st === 2 && adminUkpbjId === 0) counts.ulpDaftar++;
@@ -2236,6 +2253,7 @@
                 setElCount('countPillProses', counts.proses);
                 setElCount('countPillHasil', counts.hasil);
                 setElCount('countPillSelesai', counts.selesai);
+                setElCount('countPillBatalGagal', counts.batalGagal);
                 setElCount('countPillUlpDaftar', counts.ulpDaftar);
                 setElCount('countPillUlpVerifikasi', counts.ulpVerifikasi);
                 setElCount('countPillUlpDikembalikan', counts.ulpDikembalikan);
@@ -2254,6 +2272,20 @@
                 setElCount('countPillPokjaHasil', counts.pokjaHasil);
                 setElCount('countPillAgencyBaru', counts.agencyBaru);
                 setElCount('countPillAgencySudah', counts.agencySudah);
+
+                // Update hitungan per status pada dropdown Semua Tahapan Paket
+                if (statusFilter) {
+                    Array.from(statusFilter.options).forEach(opt => {
+                        if (opt.value === '') {
+                            opt.textContent = `Semua Tahapan Paket (${counts.all})`;
+                        } else {
+                            const baseLabel = opt.getAttribute('data-base-label') || opt.textContent;
+                            const stCode = parseInt(opt.value, 10);
+                            const stCnt = perStatusCounts[stCode] || 0;
+                            opt.textContent = `${baseLabel} (${stCnt})`;
+                        }
+                    });
+                }
             }
 
             // Filter logic

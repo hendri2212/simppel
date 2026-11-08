@@ -85,9 +85,9 @@ $routes->group('', ['filter' => ['auth', 'role:ADMINISTRATOR']], static function
 // Protected Routes (Requires Login / AuthFilter)
 $routes->group('', ['filter' => 'auth'], static function ($routes) {
     // Filter per-route menimpa filter group, jadi auth disebut ulang di sini
-    $writeMutate = ['filter' => ['auth', 'role:ADMINISTRATOR,ADMIN PPK,PPK', 'csrf']];
-    // Khusus pengajuan paket ke UKPBJ (PPK & Administrator, sesuai simppel level 3)
-    $ppkMutate   = ['filter' => ['auth', 'role:ADMINISTRATOR,PPK', 'csrf']];
+    $writeMutate = ['filter' => ['auth', 'role:ADMIN PPK,PPK', 'csrf']];
+    // Khusus pengajuan paket ke UKPBJ (PPK, sesuai simppel level 3)
+    $ppkMutate   = ['filter' => ['auth', 'role:PPK', 'csrf']];
     // Semua role proses (kecuali MONEV); hak aksi sebenarnya dicek per paket di PaketWorkflow
     $writeAny = ['filter' => ['auth', 'role:!MONEV', 'csrf']];
 

@@ -107,27 +107,27 @@
 
                                         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start fs-xs">
                                             <?php if (! empty($user['skpd_name'])): ?>
-                                                <span class="badge bg-light text-secondary border">
-                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#home"></use></svg>
-                                                    <?= esc($user['skpd_name']) ?>
+                                                <span class="badge bg-light text-secondary border d-inline-flex align-items-center gap-1">
+                                                    <svg class="sa-icon inline-text"><use href="/icons/sprite.svg#home"></use></svg>
+                                                    <span><?= esc($user['skpd_name']) ?></span>
                                                 </span>
                                             <?php endif; ?>
 
                                             <?php if (! empty($user['ppk_name'])): ?>
-                                                <span class="badge bg-light text-secondary border">
-                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#briefcase"></use></svg>
-                                                    <?= esc($user['ppk_name']) ?>
+                                                <span class="badge bg-light text-secondary border d-inline-flex align-items-center gap-1">
+                                                    <svg class="sa-icon inline-text"><use href="/icons/sprite.svg#briefcase"></use></svg>
+                                                    <span><?= esc($user['ppk_name']) ?></span>
                                                 </span>
                                             <?php endif; ?>
 
-                                            <span class="badge bg-light text-secondary border">
-                                                <svg class="sa-icon me-1"><use href="/icons/sprite.svg#mail"></use></svg>
+                                            <span class="badge bg-light text-secondary border d-inline-flex align-items-center gap-1">
+                                                <svg class="sa-icon inline-text"><use href="/icons/sprite.svg#mail"></use></svg>
                                                 <span id="headerEmailText"><?= esc($user['email']) ?></span>
                                             </span>
 
                                             <?php if (! empty($user['whatsapp_number'])): ?>
-                                                <span class="badge bg-light text-success border">
-                                                    <svg class="sa-icon me-1"><use href="/icons/sprite.svg#phone"></use></svg>
+                                                <span class="badge bg-light text-success border d-inline-flex align-items-center gap-1">
+                                                    <svg class="sa-icon inline-text"><use href="/icons/sprite.svg#phone"></use></svg>
                                                     <span id="headerWaText"><?= esc($user['whatsapp_number']) ?></span>
                                                 </span>
                                             <?php endif; ?>
@@ -151,28 +151,28 @@
                                 <div class="profile-page-nav border-top">
                                     <ul class="nav nav-tabs-clean" id="profileTabs" role="tablist">
                                         <li class="nav-item" role="presentation">
-                                            <a class="nav-link active" id="tab-overview-link" data-bs-toggle="tab" href="#tab-overview" role="tab">
-                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#user"></use></svg>
-                                                Ringkasan Akun
+                                            <a class="nav-link active d-inline-flex align-items-center" id="tab-overview-link" data-bs-toggle="tab" href="#tab-overview" role="tab">
+                                                <svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#user"></use></svg>
+                                                <span>Ringkasan Akun</span>
                                             </a>
                                         </li>
                                         <li class="nav-item" role="presentation">
-                                            <a class="nav-link" id="tab-edit-profile-link" data-bs-toggle="tab" href="#tab-edit-profile" role="tab">
-                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#edit"></use></svg>
-                                                Data Pribadi & Kepegawaian
+                                            <a class="nav-link d-inline-flex align-items-center" id="tab-edit-profile-link" data-bs-toggle="tab" href="#tab-edit-profile" role="tab">
+                                                <svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#edit"></use></svg>
+                                                <span>Data Pribadi & Kepegawaian</span>
                                             </a>
                                         </li>
                                         <li class="nav-item" role="presentation">
-                                            <a class="nav-link" id="tab-security-link" data-bs-toggle="tab" href="#tab-security" role="tab">
-                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#lock"></use></svg>
-                                                Keamanan & Password
+                                            <a class="nav-link d-inline-flex align-items-center" id="tab-security-link" data-bs-toggle="tab" href="#tab-security" role="tab">
+                                                <svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                <span>Keamanan & Password</span>
                                             </a>
                                         </li>
                                         <?php if (! empty($skpdDetail)): ?>
                                         <li class="nav-item" role="presentation">
-                                            <a class="nav-link" id="tab-skpd-link" data-bs-toggle="tab" href="#tab-skpd" role="tab">
-                                                <svg class="sa-icon me-2"><use href="/icons/sprite.svg#layers"></use></svg>
-                                                Instansi & SKPD
+                                            <a class="nav-link d-inline-flex align-items-center" id="tab-skpd-link" data-bs-toggle="tab" href="#tab-skpd" role="tab">
+                                                <svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#layers"></use></svg>
+                                                <span>Instansi & SKPD</span>
                                             </a>
                                         </li>
                                         <?php endif; ?>
@@ -337,15 +337,15 @@
                                                 <div class="panel-container">
                                                     <div class="panel-content d-grid gap-2">
                                                         <a href="/dashboard-control-center" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
-                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#grid"></use></svg> Dashboard Pengadaan</span>
+                                                            <span class="d-inline-flex align-items-center"><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#grid"></use></svg> Dashboard Pengadaan</span>
                                                             <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
                                                         </a>
                                                         <a href="/paket" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
-                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#box"></use></svg> Daftar Paket Pekerjaan</span>
+                                                            <span class="d-inline-flex align-items-center"><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#box"></use></svg> Daftar Paket Pekerjaan</span>
                                                             <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
                                                         </a>
                                                         <a href="/monev" class="btn btn-outline-default text-start d-flex align-items-center justify-content-between">
-                                                            <span><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#trending-up"></use></svg> e-Monev & Laporan</span>
+                                                            <span class="d-inline-flex align-items-center"><svg class="sa-icon me-2 inline-text"><use href="/icons/sprite.svg#trending-up"></use></svg> e-Monev & Laporan</span>
                                                             <svg class="sa-icon fs-sm text-muted"><use href="/icons/sprite.svg#chevron-right"></use></svg>
                                                         </a>
                                                     </div>
@@ -383,9 +383,10 @@
                                                                 <div>
                                                                     <div class="fw-600 text-dark mb-1">Foto Profil Pengguna</div>
                                                                     <div class="fs-xs text-muted mb-2">Format: JPG, JPEG, PNG, atau WEBP. Ukuran file maksimal 2 MB.</div>
-                                                                    <div class="d-flex gap-2">
-                                                                        <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('avatarFileInput').click();">
-                                                                            <svg class="sa-icon me-1"><use href="/icons/sprite.svg#upload"></use></svg> Unggah Foto Baru
+                                                                    <div class="d-flex flex-wrap align-items-center gap-2">
+                                                                        <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1" onclick="document.getElementById('avatarFileInput').click();">
+                                                                            <svg class="sa-icon inline-text"><use href="/icons/sprite.svg#upload"></use></svg>
+                                                                            <span>Unggah Foto Baru</span>
                                                                         </button>
                                                                         <span id="selectedFileName" class="fs-xs text-muted align-self-center fst-italic"></span>
                                                                     </div>

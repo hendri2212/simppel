@@ -309,6 +309,8 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                     $lockedCount      = $lockedCount ?? count(array_filter($plans, fn($p) => (int)($p['rup_status'] ?? 1) === 2));
                     $syncedCount      = $syncedCount ?? count(array_filter($plans, fn($p) => (int)($p['is_synced'] ?? 0) === 1));
                     $dakCount         = $dakCount ?? count(array_filter($plans, fn($p) => (int)($p['jenis_dak_id'] ?? 2) === 1));
+                    $currentRoleName  = strtoupper(trim((string) (session()->get('role_name') ?? ($currentUser['role_name'] ?? ''))));
+                    $canWriteRup      = in_array($currentRoleName, \App\Controllers\RupController::WRITE_ROLES, true);
 
                     // Helper format rupiah singkat untuk stat cards
                     $formatShortRupiah = function($amount) {
@@ -405,6 +407,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                 <h2>
                                     Daftar <span class="fw-300"><i>Paket RUP</i></span>
                                 </h2>
+                                <?php if ($canWriteRup): ?>
                                 <div class="panel-toolbar d-flex gap-2">
                                     <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" onclick="simulateSyncSirup()">
                                         <svg class="sa-icon" style="width: 14px; height: 14px;">
@@ -419,6 +422,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                         <span>Tambah RUP</span>
                                     </button>
                                 </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="panel-container show">
@@ -504,13 +508,14 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                 <?php foreach ($plans as $p): ?>
                                                     <?php
                                                     $planJson = htmlspecialchars(json_encode($p), ENT_QUOTES, 'UTF-8');
-                                                    $canEdit = (int) ($p['rup_status'] ?? 1) === 1;
+                                                    $isRupUnlocked = (int) ($p['rup_status'] ?? 1) === 1;
+                                                    $canEdit = $canWriteRup && $isRupUnlocked;
                                                     $canDelete = $canEdit && empty($p['paket_id']);
                                                     $isSynced = (int) ($p['is_synced'] ?? 0) === 1;
                                                     $isDak = ($p['jenis_dak_name'] ?? '') === 'DAK';
                                                     ?>
-                                                    <tr class="plan-row <?= $canEdit ? 'rup-row-editable' : '' ?>"
-                                                        title="<?= $canEdit ? 'Paket RUP dapat diubah/diedit' : 'Paket RUP sudah terkunci karena telah dibuatkan Paket Pengadaan' ?>"
+                                                    <tr class="plan-row <?= $isRupUnlocked ? 'rup-row-editable' : '' ?>"
+                                                        title="<?= $isRupUnlocked ? 'Paket RUP belum dibuatkan Paket Pengadaan' : 'Paket RUP sudah terkunci karena telah dibuatkan Paket Pengadaan' ?>"
                                                         data-id="<?= $p['id'] ?>"
                                                         data-code="<?= esc(strtolower($p['package_code'] ?? '')) ?>"
                                                         data-name="<?= esc(strtolower($p['package_name'] ?? '')) ?>"
@@ -519,7 +524,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                                                         data-mak="<?= esc(strtolower($p['account_code'] ?? '')) ?>"
                                                         data-proc-type="<?= esc($p['jenis_pengadaan_name'] ?? '') ?>"
                                                         data-method="<?= esc($p['metode_pemilihan_name'] ?? '') ?>"
-                                                        data-rup-status="<?= $canEdit ? 1 : 2 ?>"
+                                                        data-rup-status="<?= $isRupUnlocked ? 1 : 2 ?>"
                                                         data-dak="<?= esc($p['jenis_dak_name'] ?? 'NON DAK') ?>"
                                                         data-year="<?= esc($p['fiscal_year'] ?? '') ?>">
                                                         
