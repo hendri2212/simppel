@@ -57,19 +57,21 @@ document.addEventListener('DOMContentLoaded', function () {
     /* initialize smartApp.js */
     appDOM.checkActiveStyles().debug(false);
     /* Initialize the list filter */
-    var listFilter = new ListFilter('#js-nav-menu', '#searchInput',
-        {
-            messageSelector: '.js-filter-message',
-            debounceWait: 200,
-            minLength: 1,
-            caseSensitive: false,
-            onFilter: function (filter) {
-                console.log('Filtering with:', filter);
-            },
-            onReset: function () {
-                console.log('Filter reset');
-            }
-        });
+    if (document.querySelector('#searchInput')) {
+        var listFilter = new ListFilter('#js-nav-menu', '#searchInput',
+            {
+                messageSelector: '.js-filter-message',
+                debounceWait: 200,
+                minLength: 1,
+                caseSensitive: false,
+                onFilter: function (filter) {
+                    console.log('Filtering with:', filter);
+                },
+                onReset: function () {
+                    console.log('Filter reset');
+                }
+            });
+    }
     /* Panel Sorting : sortable.js 
 
        Initialize Sortable for each column 
