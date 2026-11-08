@@ -1,4 +1,4 @@
-<a href="/dashboard-control-center" class="app-logo flex-shrink-0" data-prefix="v5.2.0" data-action="playsound" data-soundpath="media/sound/" data-soundfile="sawhisp.mp3">
+<a href="/dashboard-control-center" class="app-logo flex-shrink-0" data-prefix="v5.2.0">
 
     <svg class="custom-logo">
         <use href="/img/app-logo.svg#custom-logo"></use>

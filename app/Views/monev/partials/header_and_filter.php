@@ -148,11 +148,28 @@ $currentPath  = current_url(true)->getPath();
 </div>
 
 <!-- Panel Filter & Tombol Export -->
+<?php
+// Mode filter lengkap (memiliki filter Jenis Pengadaan / Pokja / Pencarian)
+// menggunakan layout 2 baris simetris agar 4 tombol aksi di kanan tidak terpotong/turun berantakan.
+$isDetailedFilter = ($showJenis || $showPokja || $showSearch);
+
+if ($isDetailedFilter) {
+    $skpdColClass  = $showPokja ? 'col-12 col-md-6 col-xl-4' : 'col-12 col-md-4 col-xl-5';
+    $tahunColClass = $showPokja ? 'col-6 col-md-2 col-xl-1'  : 'col-6 col-md-2 col-xl-2';
+    $jenisColClass = $showPokja ? 'col-6 col-md-4 col-xl-2'  : 'col-6 col-md-3 col-xl-3';
+    $dakColClass   = $showPokja ? 'col-6 col-md-6 col-xl-2'  : 'col-12 col-md-3 col-xl-2';
+    $pokjaColClass = 'col-6 col-md-6 col-xl-3';
+} else {
+    $skpdColClass  = 'col-12 col-md-6 col-lg';
+    $tahunColClass = 'col-6 col-md-3 col-lg-2';
+    $dakColClass   = 'col-6 col-md-3 col-lg-2';
+}
+?>
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-3">
         <form method="get" action="<?= esc($currentPath) ?>" class="row g-2 align-items-end">
             <!-- Dinas / Instansi -->
-            <div class="col-12 col-md-4 col-xl-3">
+            <div class="<?= $skpdColClass ?>">
                 <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Dinas / Instansi (SKPD)</label>
                 <?php if (! empty($filters['is_skpd_locked'])): ?>
                     <input type="hidden" name="skpd_id" value="<?= (int) $filters['skpd_id'] ?>">
@@ -170,7 +187,7 @@ $currentPath  = current_url(true)->getPath();
             </div>
 
             <!-- Tahun Anggaran -->
-            <div class="col-6 col-md-2 col-xl-1">
+            <div class="<?= $tahunColClass ?>">
                 <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Tahun</label>
                 <select name="tahun" class="form-select form-select-sm">
                     <?php foreach ($filters['available_years'] as $yr): ?>
@@ -183,7 +200,7 @@ $currentPath  = current_url(true)->getPath();
 
             <!-- Jenis Pengadaan -->
             <?php if ($showJenis): ?>
-                <div class="col-6 col-md-3 col-xl-2">
+                <div class="<?= $jenisColClass ?>">
                     <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Jenis Pengadaan</label>
                     <select name="jenis_pengadaan_id" class="form-select form-select-sm">
                         <option value="0">-- SEMUA JENIS --</option>
@@ -197,7 +214,7 @@ $currentPath  = current_url(true)->getPath();
             <?php endif; ?>
 
             <!-- DAK / Non-DAK -->
-            <div class="col-6 col-md-3 col-xl-2">
+            <div class="<?= $dakColClass ?>">
                 <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">DAK / Non-DAK</label>
                 <select name="jenis_dak_id" class="form-select form-select-sm">
                     <option value="0">-- SEMUA --</option>
@@ -211,7 +228,7 @@ $currentPath  = current_url(true)->getPath();
 
             <!-- Filter Personil Pokja (Khusus Modul 4) -->
             <?php if ($showPokja): ?>
-                <div class="col-6 col-md-3 col-xl-2">
+                <div class="<?= $pokjaColClass ?>">
                     <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Anggota Pokja</label>
                     <?php if (! empty($filters['is_pokja_locked'])): ?>
                         <input type="hidden" name="pokja_user_id" value="<?= (int) $filters['pokja_user_id'] ?>">
@@ -229,36 +246,49 @@ $currentPath  = current_url(true)->getPath();
                 </div>
             <?php endif; ?>
 
+            <?php if ($isDetailedFilter): ?>
+                <!-- Pemisah baris paksa pada layar besar agar Baris 2 (Search + 4 Button) rapi & sejajar penuh -->
+                <div class="w-100 d-none d-xl-block m-0"></div>
+            <?php endif; ?>
+
             <!-- Pencarian Nama Paket / Kode RUP -->
             <?php if ($showSearch): ?>
-                <div class="col-12 col-md-4 col-xl-2">
+                <div class="col-12 col-lg">
                     <label class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Nama Paket / Kode RUP</label>
-                    <input type="text" name="q" class="form-control form-control-sm" placeholder="Cari paket..." value="<?= esc($filters['q']) ?>">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-body-tertiary text-muted">
+                            <svg class="sa-icon" style="width: 14px; height: 14px;">
+                                <use href="/icons/sprite.svg#search"></use>
+                            </svg>
+                        </span>
+                        <input type="text" name="q" class="form-control form-control-sm" placeholder="Cari nama paket atau kode RUP..." value="<?= esc($filters['q']) ?>">
+                    </div>
                 </div>
             <?php endif; ?>
 
             <!-- Tombol Aksi Filter & Export -->
-            <div class="col-12 col-xl-auto ms-xl-auto d-flex flex-wrap gap-2 mt-2 mt-xl-0">
-                <button type="submit" class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1">
+            <div class="col-12 col-lg-auto ms-lg-auto d-flex flex-wrap align-items-center justify-content-end gap-2 pt-1 pt-lg-0">
+                <button type="submit" class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1 text-nowrap">
                     <svg class="sa-icon" style="width: 14px; height: 14px;">
                         <use href="/icons/sprite.svg#filter"></use>
                     </svg>
                     <span>Tampilkan</span>
                 </button>
-                <a href="<?= esc($currentPath) ?>" class="btn btn-outline-secondary btn-sm px-2" title="Reset Filter">
+                <a href="<?= esc($currentPath) ?>" class="btn btn-outline-secondary btn-sm px-3 text-nowrap" title="Reset Filter">
                     Reset
                 </a>
 
                 <?php if ($showExport): ?>
+                    <span class="vr d-none d-sm-inline-block mx-1 my-1 opacity-25"></span>
                     <a href="<?= esc($currentPath . '?' . http_build_query($pdfQuery)) ?>" target="_blank"
-                       class="btn btn-danger btn-sm px-3 d-inline-flex align-items-center gap-1" title="Cetak / Export PDF">
+                       class="btn btn-danger btn-sm px-3 d-inline-flex align-items-center gap-1 text-nowrap" title="Cetak / Export PDF">
                         <svg class="sa-icon" style="width: 14px; height: 14px;">
                             <use href="/icons/sprite.svg#printer"></use>
                         </svg>
                         <span>Export PDF</span>
                     </a>
                     <a href="<?= esc($currentPath . '?' . http_build_query($excelQuery)) ?>"
-                       class="btn btn-success btn-sm px-3 d-inline-flex align-items-center gap-1" title="Download Microsoft Excel (.xls)">
+                       class="btn btn-success btn-sm px-3 d-inline-flex align-items-center gap-1 text-nowrap" title="Download Microsoft Excel (.xls)">
                         <svg class="sa-icon" style="width: 14px; height: 14px;">
                             <use href="/icons/sprite.svg#download"></use>
                         </svg>

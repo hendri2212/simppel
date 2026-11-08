@@ -14,11 +14,6 @@
 
 		<div class="info-container">
 			Unlock limitless design potential with 16+ layout combinations and extensive customization options—tailor your dashboard to fit your exact needs.
-			<button type="button" class="btn btn-sm btn-outline-secondary ms-1" data-action="playsound" data-soundpath="media/sound/" data-soundfile="settings-voice.mp3" aria-label="Play Settings Voice">
-				<svg class="sa-icon">
-					<use href="/icons/sprite.svg#volume-2"></use>
-				</svg>
-			</button>
 		</div>
 
 		<div class="d-flex justify-content-spaced w-100 app-fob-showcase-text" data-prefix="Preview">

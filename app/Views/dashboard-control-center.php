@@ -89,31 +89,38 @@
                         "pageSubText"   => "Ringkasan visual RUP, paket, alur proses UKPBJ, Pokja, dan efisiensi anggaran.",
                     )) ?>
 
-                    <form id="ccFilter" class="d-flex flex-wrap align-items-end justify-content-start gap-2 mb-4">
-                        <div>
-                            <label for="ccTahun" class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Tahun Anggaran</label>
-                            <select id="ccTahun" name="tahun" class="form-select form-select-sm">
-                                <?php foreach ($years as $y): ?>
-                                    <option value="<?= (int) $y ?>" <?= (int) $y === (int) $defaultYear ? 'selected' : '' ?>><?= (int) $y ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                    <!-- Filter Form Full Width 100% -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-3">
+                            <form id="ccFilter" class="row g-2 align-items-end w-100 m-0">
+                                <div class="<?= $isGlobal ? 'col-12 col-sm-4 col-md-3 col-xl-2' : 'col-12 col-sm-8 col-md-9' ?>">
+                                    <label for="ccTahun" class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Tahun Anggaran</label>
+                                    <select id="ccTahun" name="tahun" class="form-select form-select-sm w-100">
+                                        <?php foreach ($years as $y): ?>
+                                            <option value="<?= (int) $y ?>" <?= (int) $y === (int) $defaultYear ? 'selected' : '' ?>><?= (int) $y ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <?php if ($isGlobal): ?>
+                                    <div class="col-12 col-sm-8 col-md-6 col-xl-8">
+                                        <label for="ccSkpd" class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Dinas / Instansi</label>
+                                        <select id="ccSkpd" name="skpd_id" class="form-select form-select-sm w-100">
+                                            <option value="0">Semua Instansi</option>
+                                            <?php foreach ($skpdList as $s): ?>
+                                                <option value="<?= (int) $s['id'] ?>"><?= esc($s['name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="<?= $isGlobal ? 'col-12 col-md-3 col-xl-2' : 'col-12 col-sm-4 col-md-3' ?>">
+                                    <button type="button" id="ccRefresh" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center justify-content-center gap-1 w-100">
+                                        <svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#refresh-cw"></use></svg>
+                                        <span>Muat Ulang</span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <?php if ($isGlobal): ?>
-                            <div>
-                                <label for="ccSkpd" class="form-label fs-xs fw-bold text-uppercase text-muted mb-1">Dinas / Instansi</label>
-                                <select id="ccSkpd" name="skpd_id" class="form-select form-select-sm" style="min-width: 240px;">
-                                    <option value="0">Semua Instansi</option>
-                                    <?php foreach ($skpdList as $s): ?>
-                                        <option value="<?= (int) $s['id'] ?>"><?= esc($s['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        <?php endif; ?>
-                        <button type="button" id="ccRefresh" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1">
-                            <svg class="sa-icon" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#refresh-cw"></use></svg>
-                            <span>Muat Ulang</span>
-                        </button>
-                    </form>
+                    </div>
 
                     <div class="main-content" id="ccRoot">
 
