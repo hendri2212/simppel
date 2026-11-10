@@ -102,8 +102,14 @@ class CreatePejabatPengadaanAndBaReview extends Migration
         $this->forge->createTable('ba_review', true);
 
         // 3. Kolom tambahan pada tabel `paket` untuk SK Pokja & Penolakan/Pembatalan PPK
+        // Gunakan SHOW COLUMNS langsung (bukan fieldExists) agar tidak terkena stale dataCache saat migrate:refresh
+        $existingCols = array_column(
+            $this->db->query('SHOW COLUMNS FROM ' . $this->db->protectIdentifiers('paket'))->getResultArray(),
+            'Field'
+        );
+
         $fields = [];
-        if (! $this->db->fieldExists('no_sk_pokja', 'paket')) {
+        if (! in_array('no_sk_pokja', $existingCols, true)) {
             $fields['no_sk_pokja'] = [
                 'type'       => 'VARCHAR',
                 'constraint' => 100,
@@ -112,7 +118,7 @@ class CreatePejabatPengadaanAndBaReview extends Migration
                 'comment'    => 'Nomor SK Pokja yang diterbitkan Kepala UKPBJ',
             ];
         }
-        if (! $this->db->fieldExists('tgl_sk_pokja', 'paket')) {
+        if (! in_array('tgl_sk_pokja', $existingCols, true)) {
             $fields['tgl_sk_pokja'] = [
                 'type'    => 'DATE',
                 'null'    => true,
@@ -120,7 +126,7 @@ class CreatePejabatPengadaanAndBaReview extends Migration
                 'comment' => 'Tanggal SK Pokja',
             ];
         }
-        if (! $this->db->fieldExists('alasan_penolakan', 'paket')) {
+        if (! in_array('alasan_penolakan', $existingCols, true)) {
             $fields['alasan_penolakan'] = [
                 'type'    => 'TEXT',
                 'null'    => true,
@@ -128,7 +134,7 @@ class CreatePejabatPengadaanAndBaReview extends Migration
                 'comment' => 'Alasan resmi penolakan / pembatalan hasil pemilihan oleh PPK',
             ];
         }
-        if (! $this->db->fieldExists('surat_penolakan', 'paket')) {
+        if (! in_array('surat_penolakan', $existingCols, true)) {
             $fields['surat_penolakan'] = [
                 'type'       => 'VARCHAR',
                 'constraint' => 255,
@@ -144,9 +150,15 @@ class CreatePejabatPengadaanAndBaReview extends Migration
 
     public function down()
     {
-        foreach (['surat_penolakan', 'alasan_penolakan', 'tgl_sk_pokja', 'no_sk_pokja'] as $col) {
-            if ($this->db->fieldExists($col, 'paket')) {
-                $this->forge->dropColumn('paket', $col);
+        if ($this->db->tableExists('paket')) {
+            $existingCols = array_column(
+                $this->db->query('SHOW COLUMNS FROM ' . $this->db->protectIdentifiers('paket'))->getResultArray(),
+                'Field'
+            );
+            foreach (['surat_penolakan', 'alasan_penolakan', 'tgl_sk_pokja', 'no_sk_pokja'] as $col) {
+                if (in_array($col, $existingCols, true)) {
+                    $this->forge->dropColumn('paket', $col);
+                }
             }
         }
         $this->forge->dropTable('ba_review', true);

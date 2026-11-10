@@ -241,7 +241,21 @@ class PaketWorkflowController extends BaseController
             $db->transBegin();
 
             // Update bersyarat (optimistic): hanya jika status belum berubah oleh pengguna lain
-            $db->table('paket')->where('id', (int) $paket['id'])->where('status_paket', $from)->update($update);
+            $updated = $db->table('paket')->where('id', (int) $paket['id'])->where('status_paket', $from)->update($update);
+            if (! $updated) {
+                $dbErr = $db->error();
+                $db->transRollback();
+                if ($uploadedFile) {
+                    @unlink($this->uploadDir() . $uploadedFile);
+                }
+                log_message('error', 'PaketWorkflow::transition DB error (' . $action . '): ' . ($dbErr['message'] ?? 'unknown'));
+
+                return $this->failWith(
+                    'Gagal memperbarui data paket' . (! empty($dbErr['message']) ? ': ' . $dbErr['message'] : '.'),
+                    500,
+                    '/paket'
+                );
+            }
             if ($db->affectedRows() !== 1) {
                 $db->transRollback();
                 if ($uploadedFile) {
