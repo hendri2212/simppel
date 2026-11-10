@@ -2724,7 +2724,8 @@
                                 const isWajib = parseInt(item.wajib) === 1;
                                 const isHps = parseInt(item.hps) === 1;
                                 const isAuto = parseInt(item.auto) === 1;
-                                const isUploaded = item.is_uploaded && item.nama_file;
+                                const isUploaded = !!item.is_uploaded;
+                                const isRestricted = !!item.is_restricted;
 
                                 const tr = document.createElement('tr');
                                 if (isWajib && !isUploaded) {
@@ -2740,7 +2741,7 @@
                                     : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle fs-nano">Tidak Wajib</span>`;
                                 
                                 let badgeHps = isHps 
-                                    ? `<span class="badge bg-danger text-white border fs-nano ms-1" title="Dokumen ini bersifat rahasia">Rahasia</span>` 
+                                    ? `<span class="badge bg-danger text-white border fs-nano ms-1" title="Dokumen ini bersifat rahasia (Hanya PPK & Pokja)">Rahasia</span>` 
                                     : '';
 
                                 const tdNama = `
@@ -2772,17 +2773,31 @@
                                 // Kolom File Terunggah
                                 let fileContent = '';
                                 if (isUploaded) {
-                                    fileContent = `
-                                        <div>
-                                            <a href="/paket/syarat/download/${item.id}" target="_blank" class="fw-bold font-monospace text-primary text-decoration-none d-inline-flex align-items-center gap-1 text-break" title="Unduh / Buka Dokumen">
-                                                <svg class="sa-icon text-primary flex-shrink-0" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#file-text"></use></svg>
-                                                <span>${escapeHtml(item.nama_file)}</span>
-                                            </a>
-                                            <div class="fs-nano text-success mt-1">
-                                                <svg class="sa-icon text-success me-1" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
-                                                Terunggah
-                                            </div>
-                                        </div>`;
+                                    if (isRestricted) {
+                                        fileContent = `
+                                            <div>
+                                                <span class="fw-semibold text-danger d-inline-flex align-items-center gap-1" title="Dokumen bersifat rahasia — hanya dapat dilihat oleh PPK dan Pokja">
+                                                    <svg class="sa-icon text-danger flex-shrink-0" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                    <span>Dokumen Rahasia (PPK &amp; Pokja)</span>
+                                                </span>
+                                                <div class="fs-nano text-success mt-1">
+                                                    <svg class="sa-icon text-success me-1" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    Terunggah
+                                                </div>
+                                            </div>`;
+                                    } else {
+                                        fileContent = `
+                                            <div>
+                                                <a href="/paket/syarat/download/${item.id}" target="_blank" class="fw-bold font-monospace text-primary text-decoration-none d-inline-flex align-items-center gap-1 text-break" title="Unduh / Buka Dokumen">
+                                                    <svg class="sa-icon text-primary flex-shrink-0" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#file-text"></use></svg>
+                                                    <span>${escapeHtml(item.nama_file)}</span>
+                                                </a>
+                                                <div class="fs-nano text-success mt-1">
+                                                    <svg class="sa-icon text-success me-1" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#check-circle"></use></svg>
+                                                    Terunggah
+                                                </div>
+                                            </div>`;
+                                    }
                                 } else {
                                     fileContent = `
                                         <div class="text-muted fst-italic">
@@ -2797,15 +2812,23 @@
                                 let actionButtons = '';
                                 if (canEditSyarat) {
                                     if (isUploaded) {
-                                        actionButtons = `
-                                            <div class="d-inline-flex align-items-center gap-1">
-                                                <button type="button" class="btn btn-xs btn-outline-primary btn-ganti-syarat" data-id="${item.id}" data-name="${escapeHtml(item.nama_persyaratan)}" data-format="${escapeHtml(item.format || '')}" title="Ganti File">
-                                                    Ganti
-                                                </button>
-                                                <button type="button" class="btn btn-xs btn-outline-danger btn-hapus-syarat" data-id="${item.id}" data-name="${escapeHtml(item.nama_persyaratan)}" data-auto="${item.auto}" title="Hapus File Dokumen">
-                                                    <svg class="sa-icon" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#trash-2"></use></svg>
-                                                </button>
-                                            </div>`;
+                                        if (isRestricted) {
+                                            actionButtons = `
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-nano d-inline-flex align-items-center gap-1" title="Hanya PPK dan Pokja yang dapat mengakses dokumen rahasia">
+                                                    <svg class="sa-icon" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                    Rahasia
+                                                </span>`;
+                                        } else {
+                                            actionButtons = `
+                                                <div class="d-inline-flex align-items-center gap-1">
+                                                    <button type="button" class="btn btn-xs btn-outline-primary btn-ganti-syarat" data-id="${item.id}" data-name="${escapeHtml(item.nama_persyaratan)}" data-format="${escapeHtml(item.format || '')}" title="Ganti File">
+                                                        Ganti
+                                                    </button>
+                                                    <button type="button" class="btn btn-xs btn-outline-danger btn-hapus-syarat" data-id="${item.id}" data-name="${escapeHtml(item.nama_persyaratan)}" data-auto="${item.auto}" title="Hapus File Dokumen">
+                                                        <svg class="sa-icon" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#trash-2"></use></svg>
+                                                    </button>
+                                                </div>`;
+                                        }
                                     } else {
                                         actionButtons = `
                                             <div class="d-inline-flex align-items-center gap-1">
@@ -2821,11 +2844,19 @@
                                     }
                                 } else {
                                     if (isUploaded) {
-                                        actionButtons = `
-                                            <a href="/paket/syarat/download/${item.id}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1">
-                                                <svg class="sa-icon" style="width: 12px; height: 12px;"><use href="/icons/sprite.svg#download"></use></svg>
-                                                Unduh
-                                            </a>`;
+                                        if (isRestricted) {
+                                            actionButtons = `
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fs-nano d-inline-flex align-items-center gap-1" title="Hanya PPK dan Pokja yang dapat melihat dokumen rahasia">
+                                                    <svg class="sa-icon" style="width: 11px; height: 11px;"><use href="/icons/sprite.svg#lock"></use></svg>
+                                                    Rahasia
+                                                </span>`;
+                                        } else {
+                                            actionButtons = `
+                                                <a href="/paket/syarat/download/${item.id}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1">
+                                                    <svg class="sa-icon" style="width: 12px; height: 12px;"><use href="/icons/sprite.svg#download"></use></svg>
+                                                    Unduh
+                                                </a>`;
+                                        }
                                     } else {
                                         actionButtons = `<span class="fs-nano text-muted">Terkunci</span>`;
                                     }

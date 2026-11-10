@@ -38,6 +38,9 @@ class PaketController extends BaseController
     /** Status saat PPK boleh mengubah dokumen persyaratan (Draft, Dikembalikan ULP, Saran-Kaji, Saran-Add). */
     private const SYARAT_EDITABLE = [1, 3, 7, 10];
 
+    /** Role yang diizinkan melihat & mengunduh dokumen persyaratan yang bersifat Rahasia (hps = 1). */
+    private const RAHASIA_VIEW_ROLES = ['PPK', 'POKJA'];
+
     protected PaketModel $paketModel;
     protected PaketPokjaModel $paketPokjaModel;
     protected RupModel $rupModel;
@@ -504,12 +507,24 @@ class PaketController extends BaseController
 
             $totalWajib = $wajibUploaded = 0;
             $missingWajib = [];
+            $canViewRahasia = $this->canViewRahasia();
 
             foreach ($syaratList as &$s) {
-                $isUploaded       = ! empty($s['nama_file']);
-                $s['is_uploaded'] = $isUploaded;
-                // Dokumen dilayani lewat route terotorisasi, bukan URL publik
-                $s['file_url']    = $isUploaded ? site_url('paket/syarat/download/' . $s['id']) : null;
+                $isUploaded         = ! empty($s['nama_file']);
+                $isRahasia          = (int) ($s['hps'] ?? 0) === 1;
+                $restricted         = $isRahasia && ! $canViewRahasia;
+
+                $s['is_uploaded']   = $isUploaded;
+                $s['is_restricted'] = $restricted;
+
+                if ($restricted) {
+                    // Jangan kirim nama file asli atau link unduh untuk dokumen Rahasia bagi role yang tidak berhak
+                    $s['nama_file'] = null;
+                    $s['file_url']  = null;
+                } else {
+                    // Dokumen dilayani lewat route terotorisasi, bukan URL publik
+                    $s['file_url']  = $isUploaded ? site_url('paket/syarat/download/' . $s['id']) : null;
+                }
 
                 if ((int) $s['wajib'] === 1) {
                     $totalWajib++;
@@ -526,13 +541,14 @@ class PaketController extends BaseController
                 'status'  => 'success',
                 'data'    => $syaratList,
                 'summary' => [
-                    'total'          => count($syaratList),
-                    'total_wajib'    => $totalWajib,
-                    'wajib_uploaded' => $wajibUploaded,
-                    'missing_wajib'  => $missingWajib,
-                    'is_lengkap'     => empty($missingWajib),
-                    'can_edit'       => in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true) && $this->canWrite(),
-                    'can_ajukan'     => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canAjukan(),
+                    'total'            => count($syaratList),
+                    'total_wajib'      => $totalWajib,
+                    'wajib_uploaded'   => $wajibUploaded,
+                    'missing_wajib'    => $missingWajib,
+                    'is_lengkap'       => empty($missingWajib),
+                    'can_edit'         => in_array((int) $paket['status_paket'], self::SYARAT_EDITABLE, true) && $this->canWrite(),
+                    'can_ajukan'       => empty($missingWajib) && (int) $paket['status_paket'] === 1 && $this->canAjukan(),
+                    'can_view_rahasia' => $canViewRahasia,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -677,6 +693,10 @@ class PaketController extends BaseController
             return redirect()->to('/paket')->with('error', 'Dokumen belum diunggah.');
         }
 
+        if ((int) ($syarat['hps'] ?? 0) === 1 && ! $this->canViewRahasia()) {
+            return redirect()->to('/paket')->with('error', 'Dokumen ini bersifat Rahasia dan hanya dapat dilihat oleh PPK dan Pokja.');
+        }
+
         $paket = $this->findPaketForActor((int) $syarat['paket_id'], false, $error);
         if (! $paket) {
             return redirect()->to('/paket')->with('error', 'Anda tidak memiliki akses ke dokumen ini.');
@@ -694,6 +714,14 @@ class PaketController extends BaseController
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
+
+    /**
+     * Apakah aktor saat ini berhak melihat / mengunduh dokumen persyaratan Rahasia (hps = 1).
+     */
+    private function canViewRahasia(): bool
+    {
+        return in_array(strtoupper((string) $this->actor()['role_name']), self::RAHASIA_VIEW_ROLES, true);
+    }
 
     /**
      * Muat paket beserta SKPD/PPK pemilik RUP-nya dan pastikan berada dalam cakupan user.
