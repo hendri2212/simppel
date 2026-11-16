@@ -57,6 +57,24 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="fiscal_year" class="form-label text-white d-flex justify-content-between align-items-center">
+                                    <span>Tahun Anggaran</span>
+                                    <span class="fs-nano text-white-50">Filter data aktif</span>
+                                </label>
+                                <?php
+                                $yearsList   = $availableYears ?? \App\Controllers\Auth::getAvailableYears();
+                                $selectedYear = (int) (old('fiscal_year') ?: ($defaultYear ?? date('Y')));
+                                ?>
+                                <select name="fiscal_year" id="fiscal_year" class="form-select form-select-lg text-white bg-dark border-light border-opacity-25 bg-opacity-25" required>
+                                    <?php foreach ($yearsList as $yr): ?>
+                                        <option value="<?= (int) $yr ?>" <?= (int) $yr === $selectedYear ? 'selected' : '' ?> class="bg-dark text-white">
+                                            Tahun Anggaran <?= (int) $yr ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
                             <div class="d-flex justify-content-between align-items-center mb-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="remember" id="rememberMe">

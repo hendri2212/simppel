@@ -288,7 +288,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
                     <?php echo view("partials/app-pagetitle", array(
                         "pageTitle" => "Daftar Paket RUP",
                         "pageSubTitle1" => "Perencanaan Pengadaan",
-                        "pageSubTitle2" => "Procurement Plans",
+                        "pageSubTitle2" => "Tahun Anggaran " . ($activeFiscalYear ?? session('fiscal_year') ?? date('Y')),
                         "pageSubText" => "Rencana Umum Pengadaan (RUP) SiRUP LKPP, informasi pagu anggaran, metode pemilihan, dan progres paket perencanaan."
                     )) ?>
 
@@ -890,7 +890,7 @@ if ((int) session()->get('role_id') === 4 || strtoupper((string) session()->get(
 
                             <div class="col-md-4">
                                 <label class="form-label fs-xs text-uppercase fw-semibold text-muted">Tahun Anggaran <span class="text-danger">*</span></label>
-                                <input type="number" name="fiscal_year" class="form-control form-control-sm font-monospace" value="<?= date('Y') ?>" required>
+                                <input type="number" name="fiscal_year" class="form-control form-control-sm font-monospace" value="<?= (int) ($activeFiscalYear ?? session('fiscal_year') ?? date('Y')) ?>" required>
                             </div>
 
                             <!-- Preview Metadata dari API INAPROC -->

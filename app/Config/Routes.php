@@ -97,6 +97,10 @@ $routes->group('', ['filter' => 'auth'], static function ($routes) {
     $routes->post('/profile/update', 'ProfileController::update', ['filter' => ['auth', 'csrf']]);
     $routes->post('/profile/update-password', 'ProfileController::updatePassword', ['filter' => ['auth', 'csrf']]);
 
+    // Ganti Tahun Anggaran Aktif
+    $routes->get('/switch-year/(:num)', 'Auth::switchYear/$1');
+    $routes->post('/switch-year', 'Auth::switchYear', ['filter' => ['auth', 'csrf']]);
+
     // Dashboard Control Center (data grafik dibatasi sesuai cakupan role)
     $routes->get('/dashboard-control-center', 'DashboardController::index');
     $routes->get('/dashboard-control-center/data', 'DashboardController::data');

@@ -157,7 +157,7 @@ class MonevController extends BaseController
             $availableYears[] = $currentYear;
             rsort($availableYears);
         }
-        $defaultYear = $availableYears[0] ?? $currentYear;
+        $defaultYear = (int) (session('fiscal_year') ?: ($availableYears[0] ?? $currentYear));
 
         $tahunReq = $this->request->getGet('tahun');
         $tahun    = ($tahunReq !== null && $tahunReq !== '') ? (int) $tahunReq : $defaultYear;

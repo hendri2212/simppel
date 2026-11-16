@@ -390,7 +390,7 @@
                     <?php echo view("partials/app-pagetitle", array(
                         "pageTitle" => "Daftar Paket Pengadaan",
                         "pageSubTitle1" => "Proses Pengadaan",
-                        "pageSubTitle2" => "Paket Tender & Seleksi",
+                        "pageSubTitle2" => "Tahun Anggaran " . ($activeFiscalYear ?? session('fiscal_year') ?? date('Y')),
                         "pageSubText" => "Daftar paket pengadaan tender dan seleksi, pemantauan alur verifikasi berkas UKPBJ, penugasan Pokja, dan hasil penetapan pemenang."
                     )) ?>
 

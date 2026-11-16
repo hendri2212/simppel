@@ -21,6 +21,33 @@ class Auth extends BaseController
     private const LOCK_SECONDS             = 900;
 
     /**
+     * Ambil daftar seluruh tahun anggaran yang tersedia di database + tahun berjalan.
+     *
+     * @return list<int>
+     */
+    public static function getAvailableYears(): array
+    {
+        $cached = session()->get('available_years');
+        if (is_array($cached) && $cached !== []) {
+            return $cached;
+        }
+
+        $db = db_connect();
+        $yearRows = $db->table('rup')->select('DISTINCT(fiscal_year) AS fiscal_year')
+            ->where('fiscal_year IS NOT NULL')->orderBy('fiscal_year', 'DESC')->get()->getResultArray();
+        $years = array_filter(array_map(static fn($r) => (int) $r['fiscal_year'], $yearRows));
+        $currentYear = (int) date('Y');
+        $years[] = $currentYear;
+        $years[] = $currentYear + 1;
+        $years = array_values(array_unique($years));
+        rsort($years);
+
+        session()->set('available_years', $years);
+
+        return $years;
+    }
+
+    /**
      * Tampilkan halaman login
      */
     public function login()
@@ -29,7 +56,10 @@ class Auth extends BaseController
             return redirect()->to('/dashboard-control-center');
         }
 
-        return view('auth/login');
+        return view('auth/login', [
+            'availableYears' => self::getAvailableYears(),
+            'defaultYear'    => (int) (session('fiscal_year') ?: date('Y')),
+        ]);
     }
 
     /**
@@ -38,16 +68,18 @@ class Auth extends BaseController
     public function loginProcess()
     {
         $rules = [
-            'login'    => 'required|max_length[150]',
-            'password' => 'required|max_length[255]',
+            'login'       => 'required|max_length[150]',
+            'password'    => 'required|max_length[255]',
+            'fiscal_year' => 'permit_empty|is_natural_no_zero|greater_than_equal_to[2000]|less_than_equal_to[2100]',
         ];
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('error', 'Username/Email dan Password wajib diisi.');
         }
 
-        $login    = strtolower(trim((string) $this->request->getPost('login')));
-        $password = (string) $this->request->getPost('password');
+        $login      = strtolower(trim((string) $this->request->getPost('login')));
+        $password   = (string) $this->request->getPost('password');
+        $fiscalYear = (int) ($this->request->getPost('fiscal_year') ?: date('Y'));
 
         $ip         = $this->request->getIPAddress();
         $accountKey = 'login_try_' . sha1($ip . '|' . $login);
@@ -82,7 +114,7 @@ class Auth extends BaseController
         // Cegah session fixation: ganti ID sesi dan buang data sesi lama
         session()->regenerate(true);
 
-        self::setUserSession($user);
+        self::setUserSession($user, $fiscalYear);
 
         // Tangani fitur "Ingat saya" (Remember Me)
         $remember = ! empty($this->request->getPost('remember'));
@@ -112,8 +144,10 @@ class Auth extends BaseController
     /**
      * Set data sesi autentikasi pengguna
      */
-    public static function setUserSession(array $user): void
+    public static function setUserSession(array $user, ?int $fiscalYear = null): void
     {
+        $year = $fiscalYear ?: (int) (session('fiscal_year') ?: date('Y'));
+
         session()->set([
             'is_logged_in' => true,
             'user_id'      => $user['id'],
@@ -130,7 +164,46 @@ class Auth extends BaseController
             'whatsapp_number' => $user['whatsapp_number'] ?? null,
             'nip'          => $user['nip'] ?? null,
             'avatar'       => $user['avatar'] ?? null,
+            'fiscal_year'  => $year,
         ]);
+    }
+
+    /**
+     * Alihkan Tahun Anggaran aktif di sesi secara cepat
+     */
+    public function switchYear($year = null)
+    {
+        $newYear = (int) ($this->request->getPost('fiscal_year') ?? $year ?? $this->request->getGet('year'));
+        if ($newYear >= 2000 && $newYear <= 2100) {
+            session()->set('fiscal_year', $newYear);
+            session()->setFlashdata('success', "Tahun Anggaran aktif dialihkan ke {$newYear}.");
+        }
+
+        $redirect = $this->request->getGet('redirect');
+        if (! empty($redirect)) {
+            // Jika redirect adalah URL lengkap
+            if (str_starts_with($redirect, 'http://') || str_starts_with($redirect, 'https://')) {
+                $targetHost = parse_url($redirect, PHP_URL_HOST);
+                $myHost     = parse_url(base_url(), PHP_URL_HOST);
+                if ($targetHost === $myHost || empty($targetHost)) {
+                    // Bersihkan jika URL memuat double index.php
+                    $cleanUrl = preg_replace('#/index\.php/index\.php(/|$)#', '/index.php$1', $redirect);
+                    return redirect()->to($cleanUrl);
+                }
+            } elseif (str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+                // Jika path relatif, hapus prefix index.php agar site_url() tidak menggandakannya
+                $path = preg_replace('#^/index\.php(/|$)#', '$1', $redirect);
+                return redirect()->to(site_url(ltrim($path, '/')));
+            }
+        }
+
+        $referer = $this->request->getServer('HTTP_REFERER');
+        if ($referer && str_contains($referer, (string) parse_url(base_url(), PHP_URL_HOST))) {
+            $cleanReferer = preg_replace('#/index\.php/index\.php(/|$)#', '/index.php$1', $referer);
+            return redirect()->to($cleanReferer);
+        }
+
+        return redirect()->to(site_url('dashboard-control-center'));
     }
 
     /**

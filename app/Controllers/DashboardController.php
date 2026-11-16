@@ -51,7 +51,7 @@ class DashboardController extends BaseController
 
         return view('dashboard-control-center', [
             'years'       => $years,
-            'defaultYear' => $years[0] ?? (int) date('Y'),
+            'defaultYear' => (int) (session('fiscal_year') ?: ($years[0] ?? date('Y'))),
             'skpdList'    => $skpdList,
             'isGlobal'    => $this->hasGlobalScope(),
             'roleName'    => strtoupper((string) $actor['role_name']),
@@ -64,7 +64,8 @@ class DashboardController extends BaseController
      */
     public function data(): ResponseInterface
     {
-        $tahun  = (int) ($this->request->getGet('tahun') ?: date('Y'));
+        $defaultYear = (int) (session('fiscal_year') ?: date('Y'));
+        $tahun  = (int) ($this->request->getGet('tahun') ?: $defaultYear);
         $skpdId = $this->hasGlobalScope() ? (int) ($this->request->getGet('skpd_id') ?? 0) : 0;
 
         $rups   = $this->loadRups($tahun, $skpdId);

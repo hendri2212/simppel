@@ -67,8 +67,9 @@ class PaketController extends BaseController
         $currentUser = null;
 
         try {
-            // Hanya paket dalam cakupan user (SKPD/PPK) atau seluruhnya untuk role pusat
+            // Hanya paket dalam cakupan user (SKPD/PPK) atau seluruhnya untuk role pusat, serta difilter tahun anggaran aktif
             $this->scopeToActor($this->paketModel, 'rup.skpd_id', 'rup.ppk_id');
+            $this->scopeToFiscalYear($this->paketModel, 'rup.fiscal_year');
             $paketsFromDb = $this->paketModel->getWithRelations();
 
             // Anggota pokja hanya untuk paket yang ditampilkan
@@ -155,6 +156,7 @@ class PaketController extends BaseController
                 }
 
                 $this->scopeToActor($availableRupQuery, 'rup.skpd_id', 'rup.ppk_id');
+                $this->scopeToFiscalYear($availableRupQuery, 'rup.fiscal_year');
                 $availableRups = $availableRupQuery->orderBy('rup.id', 'DESC')->findAll();
             }
         } catch (\Throwable $e) {
@@ -177,10 +179,11 @@ class PaketController extends BaseController
         }
 
         return view('paket', [
-            'pageTitle'       => 'Daftar Paket Pengadaan',
-            'pakets'          => $pakets,
-            'skpdList'        => $skpdList,
-            'availableRups'   => $availableRups,
+            'pageTitle'        => 'Daftar Paket Pengadaan',
+            'activeFiscalYear' => $this->activeFiscalYear(),
+            'pakets'           => $pakets,
+            'skpdList'         => $skpdList,
+            'availableRups'    => $availableRups,
             'statusPaketList' => PaketModel::STATUS_PAKET,
             'currentUser'     => $currentUser,
             'canAjukanPaket'  => $this->canAjukan(),

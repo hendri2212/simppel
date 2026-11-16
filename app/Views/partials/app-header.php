@@ -19,6 +19,32 @@
         </button>
     </div>
 
+    <!-- Year Switcher (Tahun Anggaran) -->
+    <?php
+    $headerActiveYear = (int) (session('fiscal_year') ?: date('Y'));
+    $headerYears      = \App\Controllers\Auth::getAvailableYears();
+    $currentFullUrl   = current_url();
+    ?>
+    <div class="dropdown me-2">
+        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 dropdown-toggle px-2 py-1 fs-xs fw-semibold rounded-pill shadow-2xs" data-bs-toggle="dropdown" aria-expanded="false" title="Tahun Anggaran Aktif">
+            <svg class="sa-icon text-primary" style="width: 14px; height: 14px;"><use href="/icons/sprite.svg#calendar"></use></svg>
+            <span>TA <?= $headerActiveYear ?></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm fs-xs py-1" style="min-width: 175px;">
+            <li class="dropdown-header text-uppercase fs-nano text-muted fw-bold">Pilih Tahun Anggaran</li>
+            <?php foreach ($headerYears as $yr): ?>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center justify-content-between py-2 <?= $yr === $headerActiveYear ? 'active fw-bold' : '' ?>" href="<?= site_url('switch-year/' . $yr) ?>?redirect=<?= urlencode($currentFullUrl) ?>">
+                        <span>Tahun <?= $yr ?></span>
+                        <?php if ($yr === $headerActiveYear): ?>
+                            <svg class="sa-icon" style="width: 13px; height: 13px;"><use href="/icons/sprite.svg#check"></use></svg>
+                        <?php endif; ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+
     <!-- Settings -->
     <button type="button" class="btn btn-system hidden-mobile" data-action="toggle-swap" data-toggleclass="open" data-target="aside.js-drawer-settings" aria-label="Open Settings">
         <svg class="sa-icon sa-icon-2x">

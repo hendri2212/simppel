@@ -67,8 +67,9 @@ class RupController extends BaseController
         }
         try {
             // Ambil data langsung dari tabel rup beserta relasinya
-            // Hanya RUP dalam cakupan user (SKPD/PPK), atau seluruhnya untuk role pusat
+            // Hanya RUP dalam cakupan user (SKPD/PPK), atau seluruhnya untuk role pusat, serta difilter tahun anggaran aktif
             $this->scopeToActor($this->rupModel, 'rup.skpd_id', 'rup.ppk_id');
+            $this->scopeToFiscalYear($this->rupModel, 'rup.fiscal_year');
             $plansFromDb = $this->rupModel->getWithRelations();
             $plans       = array_map([$this, 'formatPlanRow'], $plansFromDb);
 
@@ -150,6 +151,7 @@ class RupController extends BaseController
 
         return view('rup', [
             'pageTitle'        => 'Daftar Paket RUP',
+            'activeFiscalYear' => $this->activeFiscalYear(),
             'plans'            => $plans,
             'skpd'             => $skpd,
             'officers'         => $officers,

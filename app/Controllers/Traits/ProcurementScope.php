@@ -60,6 +60,32 @@ trait ProcurementScope
     }
 
     /**
+     * Ambil tahun anggaran aktif dari session (default tahun berjalan jika belum terset).
+     */
+    protected function activeFiscalYear(): int
+    {
+        $year = (int) session()->get('fiscal_year');
+        if ($year >= 2000 && $year <= 2100) {
+            return $year;
+        }
+
+        $defaultYear = (int) date('Y');
+        session()->set('fiscal_year', $defaultYear);
+
+        return $defaultYear;
+    }
+
+    /**
+     * Batasi query (model/builder) pada tahun anggaran aktif.
+     *
+     * @param object $query Model atau BaseBuilder
+     */
+    protected function scopeToFiscalYear(object $query, string $fiscalYearColumn = 'rup.fiscal_year'): object
+    {
+        return $query->where($fiscalYearColumn, $this->activeFiscalYear());
+    }
+
+    /**
      * Batasi query (model/builder) pada data milik user berdasarkan SKPD dan Bidang (PPK).
      *
      * @param object $query Model atau BaseBuilder
